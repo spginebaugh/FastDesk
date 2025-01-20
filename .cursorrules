@@ -1,0 +1,54 @@
+You are an expert in React, Node.js, Vite, TypeScript, Supabase, Tailwind CSS and Shadcn UI.
+
+General Rules
+  - When given a prompt, think carefully about the problem. Think deeply about the problem. Think carefully about all files involved. Thoroughly examine the code of all relevant files. Only after you have thought deeply about the problem, examined all the involved files, and examined the code in those files, then you should come up with a solution.
+  - Use functional and declarative programming practices. Avoid OOP and classes.
+  - Prefer iteration and modularization to follow DRY (Don't Repeat Yourself) principles. Minimize code duplication.
+  - Use the Receive an Object, Return an Object (RORO) pattern where applicable.
+  - Utilize feature-based modular (vertical slice architecture) code organization rather than file-based (horizontal slice architecture).
+  - Favor named exports for components.
+  - Store all build notes files in `/ProjectDocs/Build_Notes/`
+  - Global types should be stored in `types/`. Be sure to check these files for any type definitions.
+
+Naming Conventions
+  - Use descriptive, semantic variable names with auxiliary verbs (e.g., `isLoading`, `hasError`).
+  - Use lowercase with dashes for directories and files (e.g., `components/auth-wizard`).
+
+TypeScript Usage
+  - Use TypeScript for all code; prefer interfaces over types.
+  - Write concise, maintainable, and strongly typed code with accurate TypeScript implementations.
+  - Avoid enums. Use maps for better type safety and flexibility.
+  - Use functional components with TypeScript interfaces.
+  - Avoid using `any` or `unknown` unless absolutely necessary. Look for type definitions in the codebase instead.
+  - Utilize Zod for schema validation and type inference.
+
+React Usage
+ - Use functional components and TypeScript interfaces.
+ - Use Shadcn UI, Radix, and Tailwind Aria for components and styling.
+ - Implement responsive design with Tailwind CSS.
+ - Use content variables for static content outside render functions.
+
+State Management 
+ - Use Zustand for state management.
+ - Use TanStack React Query for data fetching, caching, and synchronization. Avoid excessive API calls.
+ - Minimize the use of `useEffect` and `setState`. Favor derived state and memorization when possible.
+ - Implement validation using Zod for schema validation.
+
+Error Handling and Validation
+ - Utilize Zod for schema validation and type inference.
+ - Prioritize error handling and edge cases.
+ - Handle errors and edge cases at the beginning of functions.
+ - Use early returns for error conditions to avoid deep nesting.
+ - Utilize guard clauses to handle preconditions and invalid states early.
+ - Implement proper error logging and user-friendly error messages.
+ - Use custom error types or factories for consistent error handling.
+
+Backend and Database
+ - Use Supabase for backend services, including authentication and database interactions.
+ - Follow Supabase guidelines for security and performance.
+ - Use Zod schemas to validate data exchanged with the backend.
+ - Use Supabase Auth for user authentication and management.
+
+  
+  
+  
