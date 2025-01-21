@@ -242,6 +242,58 @@ export type Database = {
           },
         ]
       }
+      ticket_assignments: {
+        Row: {
+          agent_id: string | null
+          created_at: string | null
+          id: string
+          is_primary: boolean | null
+          team_id: string | null
+          ticket_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          team_id?: string | null
+          ticket_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          team_id?: string | null
+          ticket_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_assignments_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_assignments_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_assignments_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_attachments: {
         Row: {
           created_at: string | null
@@ -324,36 +376,69 @@ export type Database = {
       }
       ticket_messages: {
         Row: {
+          agent_sender_id: string | null
           content: string
           created_at: string | null
+          customer_sender_id: string | null
           id: string
           is_internal: boolean | null
-          sender_id: string | null
+          parent_message_id: string | null
           sender_type: string
+          thread_id: string | null
+          thread_position: number | null
           ticket_id: string
           updated_at: string | null
         }
         Insert: {
+          agent_sender_id?: string | null
           content: string
           created_at?: string | null
+          customer_sender_id?: string | null
           id?: string
           is_internal?: boolean | null
-          sender_id?: string | null
+          parent_message_id?: string | null
           sender_type: string
+          thread_id?: string | null
+          thread_position?: number | null
           ticket_id: string
           updated_at?: string | null
         }
         Update: {
+          agent_sender_id?: string | null
           content?: string
           created_at?: string | null
+          customer_sender_id?: string | null
           id?: string
           is_internal?: boolean | null
-          sender_id?: string | null
+          parent_message_id?: string | null
           sender_type?: string
+          thread_id?: string | null
+          thread_position?: number | null
           ticket_id?: string
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ticket_messages_agent_sender_id_fkey"
+            columns: ["agent_sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_messages_customer_sender_id_fkey"
+            columns: ["customer_sender_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_messages_parent_message_id_fkey"
+            columns: ["parent_message_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_messages"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ticket_messages_ticket_id_fkey"
             columns: ["ticket_id"]
@@ -398,10 +483,9 @@ export type Database = {
       }
       tickets: {
         Row: {
-          assigned_to: string | null
           created_at: string | null
+          custom_fields: Json | null
           customer_id: string
-          description: string | null
           due_date: string | null
           first_response_at: string | null
           id: string
@@ -414,10 +498,9 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          assigned_to?: string | null
           created_at?: string | null
+          custom_fields?: Json | null
           customer_id: string
-          description?: string | null
           due_date?: string | null
           first_response_at?: string | null
           id?: string
@@ -430,10 +513,9 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          assigned_to?: string | null
           created_at?: string | null
+          custom_fields?: Json | null
           customer_id?: string
-          description?: string | null
           due_date?: string | null
           first_response_at?: string | null
           id?: string
@@ -446,13 +528,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "tickets_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "tickets_customer_id_fkey"
             columns: ["customer_id"]

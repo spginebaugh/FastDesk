@@ -6,17 +6,20 @@ INSERT INTO teams (id, name, description) VALUES
     ('f9b2c49c-f34d-4c5b-8d54-d123f229a86e', 'Customer Success', 'Customer success and account management'),
     ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'Billing Support', 'Billing and payment support');
 
--- Insert test users (profiles)
+-- Insert test users (auth.users and profiles)
 INSERT INTO auth.users (id, email, encrypted_password) VALUES
-    ('a1b2c49c-f34d-4c5b-8d54-d123f229a123', 'john.doe@fastdesk.com', '$2a$10$kX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.'),
+    ('a1b2c49c-f34d-4c5b-8d54-d123f229a123', 'john.doe@fastdesk.com', '$2a$10$RgZM/1PPVI6GKw0oNAmo7OZlGR8Yh0H8vrK3F3OxuXBX9CMPeXm2e'),
     ('b2c3d49c-f34d-4c5b-8d54-d123f229a456', 'jane.smith@fastdesk.com', '$2a$10$kX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.'),
     ('c3d4e49c-f34d-4c5b-8d54-d123f229a789', 'mike.wilson@fastdesk.com', '$2a$10$kX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.KX1.');
 
--- Insert profiles for the test users
-INSERT INTO profiles (id, full_name, role, avatar_url) VALUES
-    ('a1b2c49c-f34d-4c5b-8d54-d123f229a123', 'John Doe', 'admin', 'https://api.dicebear.com/7.x/avataaars/svg?seed=John'),
-    ('b2c3d49c-f34d-4c5b-8d54-d123f229a456', 'Jane Smith', 'agent', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jane'),
-    ('c3d4e49c-f34d-4c5b-8d54-d123f229a789', 'Mike Wilson', 'agent', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike');
+-- Insert/Update profiles for the users
+INSERT INTO profiles (id, full_name, role) VALUES
+    ('a1b2c49c-f34d-4c5b-8d54-d123f229a123', 'John Doe', 'agent'),
+    ('b2c3d49c-f34d-4c5b-8d54-d123f229a456', 'Jane Smith', 'agent'),
+    ('c3d4e49c-f34d-4c5b-8d54-d123f229a789', 'Mike Wilson', 'agent')
+ON CONFLICT (id) DO UPDATE 
+SET full_name = EXCLUDED.full_name,
+    role = EXCLUDED.role;
 
 -- Insert team members
 INSERT INTO team_members (team_id, profile_id, role_in_team) VALUES
@@ -42,16 +45,22 @@ INSERT INTO templates (id, title, content, team_id, created_by) VALUES
     ('e5e6c49c-f34d-4c5b-8d54-d123f229e555', 'Billing FAQ', 'Here are our most common billing questions and answers...', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'c3d4e49c-f34d-4c5b-8d54-d123f229a789');
 
 -- Insert tickets
-INSERT INTO tickets (id, title, description, customer_id, assigned_to, team_id, status, priority) VALUES
-    ('f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'Cannot access dashboard', 'Getting 403 error when trying to access the dashboard', 'd4e5f49c-f34d-4c5b-8d54-d123f229abcd', 'a1b2c49c-f34d-4c5b-8d54-d123f229a123', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'open', 'high'),
-    ('a7a8c49c-f34d-4c5b-8d54-d123f229a777', 'Billing cycle question', 'Need clarification about the billing cycle', 'e5f6a49c-f34d-4c5b-8d54-d123f229bcde', 'c3d4e49c-f34d-4c5b-8d54-d123f229a789', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'new', 'medium'),
-    ('b8b9c49c-f34d-4c5b-8d54-d123f229b888', 'Feature suggestion', 'Would love to see dark mode', 'f6a7b49c-f34d-4c5b-8d54-d123f229cdef', 'b2c3d49c-f34d-4c5b-8d54-d123f229a456', 'f9b2c49c-f34d-4c5b-8d54-d123f229a86e', 'pending', 'low');
+INSERT INTO tickets (id, title, customer_id, team_id, status, priority) VALUES
+    ('f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'Cannot access dashboard', 'd4e5f49c-f34d-4c5b-8d54-d123f229abcd', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'open', 'high'),
+    ('a7a8c49c-f34d-4c5b-8d54-d123f229a777', 'Billing cycle question', 'e5f6a49c-f34d-4c5b-8d54-d123f229bcde', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'new', 'medium'),
+    ('b8b9c49c-f34d-4c5b-8d54-d123f229b888', 'Feature suggestion', 'f6a7b49c-f34d-4c5b-8d54-d123f229cdef', 'f9b2c49c-f34d-4c5b-8d54-d123f229a86e', 'pending', 'low');
+
+-- Insert ticket assignments
+INSERT INTO ticket_assignments (ticket_id, agent_id, team_id, is_primary) VALUES
+    ('f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'a1b2c49c-f34d-4c5b-8d54-d123f229a123', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true),
+    ('a7a8c49c-f34d-4c5b-8d54-d123f229a777', 'c3d4e49c-f34d-4c5b-8d54-d123f229a789', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', true),
+    ('b8b9c49c-f34d-4c5b-8d54-d123f229b888', 'b2c3d49c-f34d-4c5b-8d54-d123f229a456', 'f9b2c49c-f34d-4c5b-8d54-d123f229a86e', true);
 
 -- Insert ticket messages
-INSERT INTO ticket_messages (ticket_id, sender_type, sender_id, content, is_internal) VALUES
-    ('f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'customer', 'd4e5f49c-f34d-4c5b-8d54-d123f229abcd', 'I keep getting a 403 error when trying to access the dashboard. Can you help?', false),
-    ('f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'agent', 'a1b2c49c-f34d-4c5b-8d54-d123f229a123', 'I''ll look into this right away. Can you confirm when this started happening?', false),
-    ('a7a8c49c-f34d-4c5b-8d54-d123f229a777', 'customer', 'e5f6a49c-f34d-4c5b-8d54-d123f229bcde', 'When exactly does the billing cycle start?', false);
+INSERT INTO ticket_messages (id, ticket_id, sender_type, customer_sender_id, agent_sender_id, content, is_internal, thread_id, thread_position) VALUES
+    ('aabbcc49-f34d-4c5b-8d54-d123f229f111', 'f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'customer', 'd4e5f49c-f34d-4c5b-8d54-d123f229abcd', null, 'I keep getting a 403 error when trying to access the dashboard. Can you help?', false, 'aabbcc49-f34d-4c5b-8d54-d123f229f111', 0),
+    ('aabbcc49-f34d-4c5b-8d54-d123f229f222', 'f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'agent', null, 'a1b2c49c-f34d-4c5b-8d54-d123f229a123', 'I''ll look into this right away. Can you confirm when this started happening?', false, 'aabbcc49-f34d-4c5b-8d54-d123f229f111', 1),
+    ('aabbcc49-f34d-4c5b-8d54-d123f229f333', 'a7a8c49c-f34d-4c5b-8d54-d123f229a777', 'customer', 'e5f6a49c-f34d-4c5b-8d54-d123f229bcde', null, 'When exactly does the billing cycle start?', false, 'aabbcc49-f34d-4c5b-8d54-d123f229f333', 0);
 
 -- Insert ticket tags
 INSERT INTO ticket_tags (ticket_id, tag_id) VALUES

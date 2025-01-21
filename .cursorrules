@@ -49,6 +49,85 @@ Backend and Database
  - Use Zod schemas to validate data exchanged with the backend.
  - Use Supabase Auth for user authentication and management.
 
+----------------------------------------------------------------
+Here is the project structure:
+
+```
+fastdesk/
+├─ public/
+│  ├─ favicon.ico
+│  └─ ...
+├─ src/
+│  ├─ assets/
+│  │  └─ images/ ...
+│  ├─ config/
+│  │  └─ supabase/                
+│  │     ├─ client.ts
+│  │     └─ auth.ts
+│  ├─ features/
+│  │  ├─ tickets/
+│  │  │  ├─ components/
+│  │  │  │  ├─ TicketCard.tsx
+│  │  │  │  └─ TicketForm.tsx
+│  │  │  ├─ hooks/
+│  │  │  │  └─ useTicket.ts
+│  │  │  ├─ pages/
+│  │  │  │  ├─ TicketListPage.tsx
+│  │  │  │  └─ TicketDetailPage.tsx
+│  │  │  ├─ services/
+│  │  │  │  └─ ticketService.ts
+│  │  │  ├─ store/
+│  │  │  │  └─ ticketStore.ts
+│  │  │  ├─ types.ts
+│  │  │  └─ index.ts
+│  │  └─ ... // more features like knowledgeBase, users, etc.
+│  ├─ layouts/
+│  │  ├─ DashboardLayout.tsx
+│  │  └─ AuthLayout.tsx
+│  ├─ components/
+│  │  ├─ ui/
+│  │  │  ├─ Button.tsx
+│  │  │  ├─ Input.tsx
+│  │  │  ├─ ... // more shadcn ui components
+│  │  │  └─  index.ts
+│  │  ├─ Navbar.tsx
+│  │  └─  Footer.tsx
+│  ├─ providers/
+│  │  ├─ AuthProvider.tsx
+│  │  ├─ ToastProvider.tsx
+│  │  ├─ ThemeProvider.tsx
+│  │  └─ index.ts
+│  ├─ routes/
+│  │  └─ Router.tsx
+│  ├─ store/
+│  │  ├─ authStore.ts
+│  │  └─ uiStore.ts
+│  ├─ utils/
+│  │  ├─ formatDate.ts
+│  │  └─ stringHelpers.ts
+│  ├─ validations/
+│  │  ├─ ticketSchema.ts
+│  │  ├─ userSchema.ts
+│  │  └─ ...
+│  ├─ App.tsx
+│  ├─ main.tsx
+│  └─ index.css
+├─ supabase/
+│  ├─ migrations/
+│  ├─ seed.sql
+│  └─ config.toml
+├─ ProjectDocs/
+│  ├─ Build_Notes/
+│  ├─ Context/
+│  └─ ...
+├─ types/
+│  ├─ database.ts
+│  └─ ... // more global types
+├─ package.json
+├─ tsconfig.json
+├─ vite.config.ts
+├─ postcss.config.js
+├─ tailwind.config.js
+└─ ...
   
-  
-  
+  ```
