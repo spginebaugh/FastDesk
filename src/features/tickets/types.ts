@@ -5,13 +5,26 @@ export type TicketStatus = Database['public']['Enums']['ticket_status']
 export type TicketPriority = Database['public']['Enums']['ticket_priority']
 export type Customer = Database['public']['Tables']['customers']['Row']
 export type Profile = Database['public']['Tables']['profiles']['Row']
+export type SenderType = 'customer' | 'agent' | 'system'
+
+export interface MessageSender {
+  full_name: string | null
+  avatar_url: string | null
+}
 
 export interface TicketWithCustomer extends Omit<Ticket, 'customer'> {
   customer: Customer & Partial<Profile>
 }
 
-export type TicketMessage = Database['public']['Tables']['ticket_messages']['Row'] & {
-  sender?: Profile
+export type BaseTicketMessage = Database['public']['Tables']['ticket_messages']['Row']
+
+export interface TicketMessageJoinResult extends BaseTicketMessage {
+  agent: Profile | null
+  customer: Customer | null
+}
+
+export interface TicketMessage extends BaseTicketMessage {
+  sender?: MessageSender
 }
 
 export const TICKET_STATUS_MAP = {
@@ -27,6 +40,4 @@ export const TICKET_PRIORITY_MAP = {
   medium: { label: 'Medium', color: 'text-blue-500' },
   high: { label: 'High', color: 'text-orange-500' },
   urgent: { label: 'Urgent', color: 'text-red-500' },
-} as const
-
-export type SenderType = 'customer' | 'agent' | 'system' 
+} as const 

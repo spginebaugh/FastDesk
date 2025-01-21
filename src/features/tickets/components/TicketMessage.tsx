@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import type { TicketMessage as TicketMessageType, Customer } from '../types'
+import type { TicketMessage as TicketMessageType, Customer, MessageSender } from '../types'
 
 interface TicketMessageProps {
   message: TicketMessageType
@@ -9,14 +9,14 @@ interface TicketMessageProps {
 }
 
 export function TicketMessage({ message, isInitialMessage, customer }: TicketMessageProps) {
-  const sender = message.sender_type === 'customer' 
+  const sender: MessageSender = message.sender_type === 'customer' 
     ? { 
         full_name: customer.full_name || customer.email,
         avatar_url: null 
       }
-    : message.sender
+    : message.sender || { full_name: 'Unknown User', avatar_url: null }
 
-  const initials = sender?.full_name?.split(' ').map((n: string) => n[0]).join('') || '??'
+  const initials = sender.full_name?.split(' ').map((n: string) => n[0]).join('') || '??'
 
   return (
     <div 
@@ -26,14 +26,14 @@ export function TicketMessage({ message, isInitialMessage, customer }: TicketMes
     >
       <div className="flex items-start gap-4">
         <Avatar className="h-10 w-10">
-          <AvatarImage src={sender?.avatar_url || undefined} />
+          <AvatarImage src={sender.avatar_url || undefined} />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-medium text-gray-900">
-                {sender?.full_name || 'Unknown User'}
+                {sender.full_name || 'Unknown User'}
                 {!isInitialMessage && message.is_internal && (
                   <span className="ml-2 text-xs text-yellow-600 font-normal">
                     Internal Note

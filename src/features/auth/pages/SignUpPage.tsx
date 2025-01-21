@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
 import { useAuthStore } from '@/store/authStore'
+import { ticketService } from '@/features/tickets/services/ticketService'
+import { supabase } from '@/config/supabase/client'
 
 export function SignUpPage() {
   const navigate = useNavigate()
@@ -22,6 +24,20 @@ export function SignUpPage() {
 
     try {
       await signUp(email, password, name)
+      
+      // Get the user data from supabase
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      // Create a sample ticket for the new user
+      if (user?.id) {
+        try {
+          await ticketService.createSampleTicket(user.id)
+        } catch (error) {
+          console.error('Failed to create sample ticket:', error)
+          // Don't throw here - we still want to complete signup even if sample ticket fails
+        }
+      }
+
       toast({
         title: 'Success',
         description: 'Please check your email to confirm your account',
