@@ -5,6 +5,8 @@ import { SignUpPage } from '@/features/auth/pages/SignUpPage'
 import { DashboardLayout } from '@/layouts/DashboardLayout'
 import { TicketListPage } from '@/features/tickets/pages/TicketListPage'
 import { TicketDetailPage } from '@/features/tickets/pages/TicketDetailPage'
+import { NewTicketPage } from '@/features/tickets/pages/NewTicketPage'
+import { ProfilePage } from '@/features/profile/pages/ProfilePage'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -50,7 +52,11 @@ export function Router() {
           <Route path="tickets/unassigned" element={<TicketListPage view="unassigned" />} />
           <Route path="tickets/all" element={<TicketListPage view="all" />} />
           <Route path="tickets/recently-updated" element={<TicketListPage view="recent" />} />
+          <Route path="tickets/new" element={<NewTicketPage />} />
           <Route path="tickets/:ticketId" element={<TicketDetailPage />} />
+
+          {/* Profile Route */}
+          <Route path="profile" element={<ProfilePage />} />
         </Route>
 
         {/* Catch all route */}

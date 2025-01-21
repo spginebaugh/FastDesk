@@ -7,7 +7,7 @@ interface AuthState {
   session: any | null
   isLoading: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string) => Promise<void>
+  signUp: (email: string, password: string, fullName: string) => Promise<void>
   signOut: () => Promise<void>
   setUser: (user: User | null) => void
   setSession: (session: any | null) => void
@@ -25,12 +25,27 @@ export const useAuthStore = create<AuthState>((set) => ({
     })
     if (error) throw error
   },
-  signUp: async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
+  signUp: async (email: string, password: string, fullName: string) => {
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: fullName
+        }
+      }
     })
-    if (error) throw error
+    if (signUpError) throw signUpError
+
+    // Update the profile directly since the trigger might not have access to the metadata
+    if (signUpData.user?.id) {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ full_name: fullName })
+        .eq('id', signUpData.user.id)
+
+      if (updateError) throw updateError
+    }
   },
   signOut: async () => {
     const { error } = await supabase.auth.signOut()

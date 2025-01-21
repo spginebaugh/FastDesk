@@ -88,6 +88,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           role: string
+          status: Database["public"]["Enums"]["user_status"]
           updated_at: string | null
         }
         Insert: {
@@ -97,6 +98,7 @@ export type Database = {
           id: string
           is_active?: boolean | null
           role?: string
+          status?: Database["public"]["Enums"]["user_status"]
           updated_at?: string | null
         }
         Update: {
@@ -106,6 +108,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           role?: string
+          status?: Database["public"]["Enums"]["user_status"]
           updated_at?: string | null
         }
         Relationships: []
@@ -602,6 +605,7 @@ export type Database = {
     Enums: {
       ticket_priority: "low" | "medium" | "high" | "urgent"
       ticket_status: "new" | "open" | "pending" | "resolved" | "closed"
+      user_status: "offline" | "online" | "away" | "transfers_only"
     }
     CompositeTypes: {
       [_ in never]: never

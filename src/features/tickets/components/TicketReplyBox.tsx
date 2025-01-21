@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Textarea } from '@/components/ui/textarea'
 import { ticketService } from '../services/ticketService'
 import { useToast } from '@/components/ui/use-toast'
@@ -55,21 +61,22 @@ export function TicketReplyBox({ ticketId }: TicketReplyBoxProps) {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Type your reply..."
-          className="min-h-[100px]"
+          className="min-h-[100px] text-black"
         />
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Checkbox
-              id="internal"
-              checked={isInternal}
-              onCheckedChange={(checked) => setIsInternal(checked as boolean)}
-            />
-            <label
-              htmlFor="internal"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            <Select
+              onValueChange={(value: 'public' | 'internal') => setIsInternal(value === 'internal')}
+              defaultValue="public"
             >
-              Internal note
-            </label>
+              <SelectTrigger className="w-[140px] text-black">
+                <SelectValue placeholder="Select reply type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="public">Public reply</SelectItem>
+                <SelectItem value="internal">Internal note</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <Button type="submit" disabled={isPending || !content.trim()}>
             {isPending ? 'Sending...' : 'Send Reply'}

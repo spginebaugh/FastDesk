@@ -1,8 +1,10 @@
 import { useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
+import { useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { ticketService } from '../services/ticketService'
 import { TICKET_STATUS_MAP, TICKET_PRIORITY_MAP } from '../types'
 import { TicketReplyBox } from '../components/TicketReplyBox'
@@ -10,6 +12,9 @@ import { TicketMessage } from '../components/TicketMessage'
 
 export function TicketDetailPage() {
   const { ticketId } = useParams()
+  const queryClient = useQueryClient()
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [editedTitle, setEditedTitle] = useState('')
 
   const { data: ticket, isLoading: isLoadingTicket } = useQuery({
     queryKey: ['ticket', ticketId],
@@ -22,6 +27,34 @@ export function TicketDetailPage() {
     queryFn: () => ticketService.getTicketMessages(ticketId!),
     enabled: !!ticketId
   })
+
+  const handleTitleClick = () => {
+    if (!isEditingTitle) {
+      setEditedTitle(ticket?.title || '')
+      setIsEditingTitle(true)
+    }
+  }
+
+  const handleTitleSubmit = async () => {
+    if (!ticketId || !editedTitle.trim()) return
+    
+    try {
+      await ticketService.updateTicket(ticketId, { title: editedTitle.trim() })
+      await queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
+      setIsEditingTitle(false)
+    } catch (error) {
+      console.error('Failed to update ticket title:', error)
+    }
+  }
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleTitleSubmit()
+    } else if (e.key === 'Escape') {
+      setIsEditingTitle(false)
+      setEditedTitle(ticket?.title || '')
+    }
+  }
 
   if (isLoadingTicket || isLoadingMessages) {
     return <div className="flex items-center justify-center h-full">Loading...</div>
@@ -38,7 +71,25 @@ export function TicketDetailPage() {
     <div className="h-full flex flex-col bg-gray-50">
       <div className="border-b bg-white px-6 py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">{ticket.title}</h1>
+          <div className="flex-1 max-w-2xl">
+            {isEditingTitle ? (
+              <Input
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+                onBlur={handleTitleSubmit}
+                onKeyDown={handleTitleKeyDown}
+                className="text-2xl font-semibold"
+                autoFocus
+              />
+            ) : (
+              <h1 
+                className="text-2xl font-semibold text-gray-900 cursor-pointer hover:text-gray-700"
+                onClick={handleTitleClick}
+              >
+                {ticket.title}
+              </h1>
+            )}
+          </div>
           <div className="flex items-center gap-4">
             <Badge 
               variant="outline" 

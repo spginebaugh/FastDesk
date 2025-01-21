@@ -17,6 +17,12 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Override checkbox sizing */
+[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+}
+
 a {
   font-weight: 500;
   color: #646cff;

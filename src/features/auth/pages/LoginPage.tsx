@@ -68,7 +68,7 @@ export function LoginPage() {
                   required
                 />
               </div>
-              <Button className="w-full" type="submit" disabled={isLoading}>
+              <Button className="w-full text-white" type="submit" disabled={isLoading}>
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
             </CardContent>
@@ -79,7 +79,7 @@ export function LoginPage() {
                   Sign up
                 </Link>
               </div>
-              <Button variant="link" className="text-sm text-gray-500">
+              <Button variant="link" className="text-sm text-white">
                 Forgot your password?
               </Button>
             </CardFooter>

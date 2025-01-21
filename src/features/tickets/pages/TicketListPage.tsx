@@ -76,14 +76,19 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
       <div className="border-b bg-white px-6 py-4">
         <h1 className="text-2xl font-semibold text-gray-900">{titles[view]}</h1>
         
-        <div className="flex items-center gap-2 mt-4">
-          <Button variant="outline" size="sm" className="text-gray-700">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="text-gray-900 bg-gray-100 hover:bg-gray-200">
+              <Filter className="h-4 w-4 mr-2" />
+              Filter
+            </Button>
+            <span className="text-sm text-gray-500">
+              {tickets.length} ticket{tickets.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <Button onClick={() => navigate('/tickets/new')}>
+            New Ticket
           </Button>
-          <span className="text-sm text-gray-500">
-            {tickets.length} ticket{tickets.length !== 1 ? 's' : ''}
-          </span>
         </div>
       </div>
 
@@ -94,6 +99,7 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
               <TableRow>
                 <TableHead className="w-12">
                   <Checkbox 
+                    className="border-gray-300 bg-white data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                     onCheckedChange={(checked) => {
                       if (checked) {
                         setSelectedTickets(tickets.map(t => t.id))
@@ -118,6 +124,7 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
                 >
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox 
+                      className="border-gray-300 bg-white data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                       checked={selectedTickets.includes(ticket.id)}
                       onCheckedChange={(checked: boolean) => {
                         if (checked) {

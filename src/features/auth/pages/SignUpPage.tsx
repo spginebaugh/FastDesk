@@ -21,7 +21,7 @@ export function SignUpPage() {
     setIsLoading(true)
 
     try {
-      await signUp(email, password)
+      await signUp(email, password, name)
       toast({
         title: 'Success',
         description: 'Please check your email to confirm your account',
@@ -84,7 +84,7 @@ export function SignUpPage() {
                   required
                 />
               </div>
-              <Button className="w-full" type="submit" disabled={isLoading}>
+              <Button className="w-full text-white" type="submit" disabled={isLoading}>
                 {isLoading ? 'Creating account...' : 'Create Account'}
               </Button>
             </CardContent>

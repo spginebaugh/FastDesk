@@ -5,6 +5,7 @@ create extension if not exists "citext";
 -- Create custom types and enums
 create type ticket_priority as enum ('low', 'medium', 'high', 'urgent');
 create type ticket_status as enum ('new', 'open', 'pending', 'resolved', 'closed');
+create type user_status as enum ('offline', 'online', 'away', 'transfers_only');
 
 -- Profiles table (extends auth.users)
 create table profiles (
@@ -12,6 +13,7 @@ create table profiles (
     full_name text,
     avatar_url text,
     role text not null default 'agent',
+    status user_status not null default 'offline',
     is_active boolean default true,
     created_at timestamptz default now(),
     updated_at timestamptz default now()
@@ -299,6 +301,18 @@ begin
         'medium'
     )
     returning id into v_ticket_id;
+
+    -- Create ticket assignment for the new user
+    insert into public.ticket_assignments (
+        ticket_id,
+        agent_id,
+        is_primary
+    )
+    values (
+        v_ticket_id,
+        new.id,
+        true
+    );
 
     -- Add the initial message
     insert into public.ticket_messages (
