@@ -2,6 +2,14 @@
 create extension if not exists "uuid-ossp";
 create extension if not exists "citext";
 
+-- Create function to execute dynamic SQL
+create or replace function exec_sql(sql_query text)
+returns void as $$
+begin
+  execute sql_query;
+end;
+$$ language plpgsql security definer;
+
 -- Create custom types and enums
 create type ticket_priority as enum ('low', 'medium', 'high', 'urgent');
 create type ticket_status as enum ('new', 'open', 'pending', 'resolved', 'closed');
