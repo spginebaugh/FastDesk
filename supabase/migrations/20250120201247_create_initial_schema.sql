@@ -48,7 +48,7 @@ create table user_profiles (
 );
 
 -- Teams table
-create table teams (
+create table organizations (
     id uuid primary key default uuid_generate_v4(),
     name text not null,
     description text,
@@ -57,10 +57,10 @@ create table teams (
 );
 
 -- Team members table
-create table team_members (
-    team_id uuid references teams(id) on delete cascade,
+create table organization_members (
+    organization_id uuid references organizations(id) on delete cascade,
     profile_id uuid references user_profiles(id) on delete cascade,
-    team_role text not null default 'member',
+    organization_role text not null default 'member',
     created_at timestamptz default now(),
     updated_at timestamptz default now()
 );
@@ -79,7 +79,7 @@ create table templates (
     id uuid primary key default uuid_generate_v4(),
     title text not null,
     content text not null,
-    team_id uuid references teams(id) on delete cascade,
+    organization_id uuid references organizations(id) on delete cascade,
     created_by uuid references user_profiles(id) on delete set null,
     created_at timestamptz default now(),
     updated_at timestamptz default now()
@@ -112,7 +112,7 @@ create table tickets (
     id uuid primary key default uuid_generate_v4(),
     title text not null check (length(trim(title)) > 0),
     customer_id uuid not null references user_profiles(id) on delete cascade,
-    team_id uuid references teams(id) on delete set null,
+    organization_id uuid references organizations(id) on delete set null,
     status ticket_status not null default 'new',
     priority ticket_priority not null default 'medium',
     source ticket_source not null default 'customer_portal',
@@ -161,7 +161,7 @@ create table ticket_assignments (
     id uuid primary key default uuid_generate_v4(),
     ticket_id uuid references tickets(id) on delete cascade,
     agent_id uuid references user_profiles(id) on delete cascade,
-    team_id uuid references teams(id) on delete cascade,
+    organization_id uuid references organizations(id) on delete cascade,
     is_primary boolean default false,
     created_at timestamptz default now(),
     updated_at timestamptz default now()
@@ -223,8 +223,8 @@ create index idx_user_profiles_user_type on user_profiles(user_type);
 create index idx_user_profiles_external_id on user_profiles(external_id);
 
 -- Enable Realtime for relevant tables
-alter publication supabase_realtime add table teams;
-alter publication supabase_realtime add table team_members;
+alter publication supabase_realtime add table organizations;
+alter publication supabase_realtime add table organization_members;
 alter publication supabase_realtime add table tickets;
 alter publication supabase_realtime add table ticket_messages;
 alter publication supabase_realtime add table ticket_assignments;
@@ -331,7 +331,7 @@ create trigger track_ticket_first_response
 -- Additional indexes for common query patterns
 create index idx_tickets_created_at on tickets(created_at);
 create index idx_tickets_updated_at on tickets(updated_at);
-create index idx_tickets_team_status on tickets(team_id, status);
+create index idx_tickets_organization_status on tickets(organization_id, status);
 create index idx_ticket_messages_created_at on ticket_messages(created_at);
 
 -- Grant permissions

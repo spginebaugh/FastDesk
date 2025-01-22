@@ -1,8 +1,8 @@
 -- Seed data for FastDesk platform
 
 -- Insert Teams
-INSERT INTO teams (id, name, description) VALUES
-    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'Technical Support', 'Primary technical support team'),
+INSERT INTO organizations (id, name, description) VALUES
+    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'Technical Support', 'Primary technical support organization'),
     ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'Billing Support', 'Billing and payment support');
 
 -- Insert/Update profiles for all users (both agents and customers)
@@ -12,7 +12,27 @@ INSERT INTO user_profiles (id, email, full_name, user_type, status, company, met
     ('USER_ID_3', 'USER_EMAIL_3', 'USER_FULL_NAME_3', 'USER_TYPE_3', 'offline', null, '{}'::jsonb, '{}'::jsonb),
     ('USER_ID_4', 'USER_EMAIL_4', 'USER_FULL_NAME_4', 'USER_TYPE_4', 'offline', null, '{}'::jsonb, '{}'::jsonb),
     ('USER_ID_5', 'USER_EMAIL_5', 'USER_FULL_NAME_5', 'USER_TYPE_5', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_6', 'USER_EMAIL_6', 'USER_FULL_NAME_6', 'USER_TYPE_6', 'offline', null, '{}'::jsonb, '{}'::jsonb)
+    ('USER_ID_6', 'USER_EMAIL_6', 'USER_FULL_NAME_6', 'USER_TYPE_6', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_7', 'USER_EMAIL_7', 'USER_FULL_NAME_7', 'USER_TYPE_7', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_8', 'USER_EMAIL_8', 'USER_FULL_NAME_8', 'USER_TYPE_8', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_9', 'USER_EMAIL_9', 'USER_FULL_NAME_9', 'USER_TYPE_9', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_10', 'USER_EMAIL_10', 'USER_FULL_NAME_10', 'USER_TYPE_10', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_11', 'USER_EMAIL_11', 'USER_FULL_NAME_11', 'USER_TYPE_11', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_12', 'USER_EMAIL_12', 'USER_FULL_NAME_12', 'USER_TYPE_12', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_13', 'USER_EMAIL_13', 'USER_FULL_NAME_13', 'USER_TYPE_13', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_14', 'USER_EMAIL_14', 'USER_FULL_NAME_14', 'USER_TYPE_14', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_15', 'USER_EMAIL_15', 'USER_FULL_NAME_15', 'USER_TYPE_15', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_16', 'USER_EMAIL_16', 'USER_FULL_NAME_16', 'USER_TYPE_16', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_17', 'USER_EMAIL_17', 'USER_FULL_NAME_17', 'USER_TYPE_17', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_18', 'USER_EMAIL_18', 'USER_FULL_NAME_18', 'USER_TYPE_18', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_19', 'USER_EMAIL_19', 'USER_FULL_NAME_19', 'USER_TYPE_19', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_20', 'USER_EMAIL_20', 'USER_FULL_NAME_20', 'USER_TYPE_20', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_21', 'USER_EMAIL_21', 'USER_FULL_NAME_21', 'USER_TYPE_21', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_22', 'USER_EMAIL_22', 'USER_FULL_NAME_22', 'USER_TYPE_22', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_23', 'USER_EMAIL_23', 'USER_FULL_NAME_23', 'USER_TYPE_23', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_24', 'USER_EMAIL_24', 'USER_FULL_NAME_24', 'USER_TYPE_24', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_25', 'USER_EMAIL_25', 'USER_FULL_NAME_25', 'USER_TYPE_25', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_26', 'USER_EMAIL_26', 'USER_FULL_NAME_26', 'USER_TYPE_26', 'offline', null, '{}'::jsonb, '{}'::jsonb)
 ON CONFLICT (id) DO UPDATE 
 SET email = EXCLUDED.email,
     full_name = EXCLUDED.full_name,
@@ -22,8 +42,8 @@ SET email = EXCLUDED.email,
     metadata = EXCLUDED.metadata,
     external_metadata = EXCLUDED.external_metadata;
 
--- Insert team members
-INSERT INTO team_members (team_id, profile_id, team_role) VALUES
+-- Insert organization members
+INSERT INTO organization_members (organization_id, profile_id, organization_role) VALUES
     ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_1', 'lead'),
     ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_2', 'member'),
     ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_3', 'member');
@@ -35,18 +55,18 @@ INSERT INTO tags (id, name, color, description) VALUES
     ('c3c4c49c-f34d-4c5b-8d54-d123f229c333', 'billing', '#0000FF', 'Billing related issues');
 
 -- Insert templates
-INSERT INTO templates (id, title, content, team_id, created_by) VALUES
+INSERT INTO templates (id, title, content, organization_id, created_by) VALUES
     ('d4d5c49c-f34d-4c5b-8d54-d123f229d444', 'Welcome Response', 'Thank you for contacting FastDesk support. I''ll be happy to help you today.', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_1'),
     ('e5e6c49c-f34d-4c5b-8d54-d123f229e555', 'Billing FAQ', 'Here are our most common billing questions and answers...', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_3');
 
 -- Insert tickets
-INSERT INTO tickets (id, title, customer_id, team_id, status, priority, source, created_by_type, created_by_id) VALUES
+INSERT INTO tickets (id, title, customer_id, organization_id, status, priority, source, created_by_type, created_by_id) VALUES
     ('f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'Cannot access dashboard', 'd4e5f49c-f34d-4c5b-8d54-d123f229abcd', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'open', 'high', 'customer_portal', 'customer', 'd4e5f49c-f34d-4c5b-8d54-d123f229abcd'),
     ('a7a8c49c-f34d-4c5b-8d54-d123f229a777', 'Billing cycle question', 'e5f6a49c-f34d-4c5b-8d54-d123f229bcde', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'new', 'medium', 'email', 'customer', 'e5f6a49c-f34d-4c5b-8d54-d123f229bcde'),
     ('b8b9c49c-f34d-4c5b-8d54-d123f229b888', 'Feature suggestion', 'f6a7b49c-f34d-4c5b-8d54-d123f229cdef', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'pending', 'low', 'api', 'api', null);
 
 -- Insert ticket assignments
-INSERT INTO ticket_assignments (ticket_id, agent_id, team_id, is_primary) VALUES
+INSERT INTO ticket_assignments (ticket_id, agent_id, organization_id, is_primary) VALUES
     ('f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'USER_ID_1', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true),
     ('a7a8c49c-f34d-4c5b-8d54-d123f229a777', 'USER_ID_3', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', true),
     ('b8b9c49c-f34d-4c5b-8d54-d123f229b888', 'USER_ID_2', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true);

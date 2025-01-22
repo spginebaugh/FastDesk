@@ -50,6 +50,69 @@ export type Database = {
           },
         ]
       }
+      organization_members: {
+        Row: {
+          created_at: string | null
+          organization_id: string | null
+          organization_role: string
+          profile_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          organization_id?: string | null
+          organization_role?: string
+          profile_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          organization_id?: string | null
+          organization_role?: string
+          profile_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tags: {
         Row: {
           color: string | null
@@ -74,76 +137,13 @@ export type Database = {
         }
         Relationships: []
       }
-      team_members: {
-        Row: {
-          created_at: string | null
-          profile_id: string | null
-          team_id: string | null
-          team_role: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          profile_id?: string | null
-          team_id?: string | null
-          team_role?: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          profile_id?: string | null
-          team_id?: string | null
-          team_role?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "team_members_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "team_members_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      teams: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: string
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       templates: {
         Row: {
           content: string
           created_at: string | null
           created_by: string | null
           id: string
-          team_id: string | null
+          organization_id: string | null
           title: string
           updated_at: string | null
         }
@@ -152,7 +152,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           id?: string
-          team_id?: string | null
+          organization_id?: string | null
           title: string
           updated_at?: string | null
         }
@@ -161,7 +161,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           id?: string
-          team_id?: string | null
+          organization_id?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -174,10 +174,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "templates_team_id_fkey"
-            columns: ["team_id"]
+            foreignKeyName: "templates_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: "teams"
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -188,7 +188,7 @@ export type Database = {
           created_at: string | null
           id: string
           is_primary: boolean | null
-          team_id: string | null
+          organization_id: string | null
           ticket_id: string | null
           updated_at: string | null
         }
@@ -197,7 +197,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_primary?: boolean | null
-          team_id?: string | null
+          organization_id?: string | null
           ticket_id?: string | null
           updated_at?: string | null
         }
@@ -206,7 +206,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_primary?: boolean | null
-          team_id?: string | null
+          organization_id?: string | null
           ticket_id?: string | null
           updated_at?: string | null
         }
@@ -219,10 +219,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ticket_assignments_team_id_fkey"
-            columns: ["team_id"]
+            foreignKeyName: "ticket_assignments_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: "teams"
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -407,11 +407,11 @@ export type Database = {
           id: string
           integration_metadata: Json | null
           metadata: Json | null
+          organization_id: string | null
           priority: Database["public"]["Enums"]["ticket_priority"]
           resolved_at: string | null
           source: Database["public"]["Enums"]["ticket_source"]
           status: Database["public"]["Enums"]["ticket_status"]
-          team_id: string | null
           title: string
           updated_at: string | null
         }
@@ -427,11 +427,11 @@ export type Database = {
           id?: string
           integration_metadata?: Json | null
           metadata?: Json | null
+          organization_id?: string | null
           priority?: Database["public"]["Enums"]["ticket_priority"]
           resolved_at?: string | null
           source?: Database["public"]["Enums"]["ticket_source"]
           status?: Database["public"]["Enums"]["ticket_status"]
-          team_id?: string | null
           title: string
           updated_at?: string | null
         }
@@ -447,11 +447,11 @@ export type Database = {
           id?: string
           integration_metadata?: Json | null
           metadata?: Json | null
+          organization_id?: string | null
           priority?: Database["public"]["Enums"]["ticket_priority"]
           resolved_at?: string | null
           source?: Database["public"]["Enums"]["ticket_source"]
           status?: Database["public"]["Enums"]["ticket_status"]
-          team_id?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -464,10 +464,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tickets_team_id_fkey"
-            columns: ["team_id"]
+            foreignKeyName: "tickets_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
-            referencedRelation: "teams"
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]

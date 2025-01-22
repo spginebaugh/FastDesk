@@ -180,9 +180,9 @@ export function TicketDetailPage() {
         </div>
 
         {/* Middle Section - Messages */}
-        <div className="flex-1 flex flex-col min-w-0 bg-gray-50">
+        <div className="flex-1 flex flex-col min-w-0 max-w-[calc(100%-36rem)] overflow-hidden bg-gray-50">
           <div className="flex-1 overflow-auto p-6">
-            <div className="max-w-3xl mx-auto space-y-6">
+            <div className="space-y-6 w-full">
               <TicketMessage message={initialMessage} isInitialMessage customer={ticket.customer} />
               {messages.slice(1).map((message) => (
                 <TicketMessage key={message.id} message={message} customer={ticket.customer} />

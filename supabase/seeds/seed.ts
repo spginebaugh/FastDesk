@@ -71,7 +71,8 @@ async function seedDatabase() {
       }
 
       Object.entries(replacements).forEach(([placeholder, value]) => {
-        sqlSeed = sqlSeed.replace(new RegExp(placeholder, 'g'), value)
+        // Use word boundaries to prevent partial matches
+        sqlSeed = sqlSeed.replace(new RegExp(`\\b${placeholder}\\b`, 'g'), value)
       })
     })
 

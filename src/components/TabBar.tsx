@@ -26,8 +26,10 @@ export function TabBar() {
 
   const handleCloseTab = (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
+    const tab = tabs.find(t => t.id === id)
     const nextPath = removeTab(id)
-    if (nextPath) {
+    // Only navigate if we're currently on the tab being closed
+    if (nextPath && location.pathname === tab?.path) {
       navigate(nextPath)
     }
   }

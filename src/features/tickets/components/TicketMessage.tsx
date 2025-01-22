@@ -29,10 +29,10 @@ export function TicketMessage({ message, isInitialMessage, customer }: TicketMes
           <AvatarImage src={sender.avatar_url || undefined} />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 overflow-hidden">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-medium text-gray-900">
+              <h2 className="text-sm font-medium text-gray-900 truncate">
                 {sender.full_name || 'Unknown User'}
                 {!isInitialMessage && message.is_internal && (
                   <span className="ml-2 text-xs text-yellow-600 font-normal">
@@ -45,7 +45,7 @@ export function TicketMessage({ message, isInitialMessage, customer }: TicketMes
               </p>
             </div>
           </div>
-          <div className="mt-2 text-sm text-gray-700 whitespace-pre-wrap">
+          <div className="mt-2 text-sm text-gray-700 whitespace-pre-wrap break-all overflow-hidden max-w-full">
             {message.content}
           </div>
         </div>
