@@ -39,7 +39,7 @@ export function TicketReplyBox({ ticketId }: TicketReplyBoxProps) {
         description: 'Your reply has been sent successfully.'
       })
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: 'Error',
         description: 'Failed to send reply. Please try again.',

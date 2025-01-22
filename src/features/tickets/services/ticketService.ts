@@ -1,5 +1,5 @@
 import { supabase } from '../../../config/supabase/client'
-import { TicketWithCustomer, TicketStatus, TicketMessage, TicketMessageJoinResult, UserProfile, MessageSender, TicketPriority } from '../types'
+import { TicketWithCustomer, TicketStatus, TicketMessage, TicketPriority } from '../types'
 import { subDays } from 'date-fns'
 import crypto from 'crypto'
 

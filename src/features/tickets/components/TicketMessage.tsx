@@ -1,11 +1,11 @@
 import { format } from 'date-fns'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import type { TicketMessage as TicketMessageType, Customer, MessageSender } from '../types'
+import type { TicketMessage as TicketMessageType, UserProfile, MessageSender } from '../types'
 
 interface TicketMessageProps {
   message: TicketMessageType
   isInitialMessage?: boolean
-  customer: Customer
+  customer: UserProfile
 }
 
 export function TicketMessage({ message, isInitialMessage, customer }: TicketMessageProps) {

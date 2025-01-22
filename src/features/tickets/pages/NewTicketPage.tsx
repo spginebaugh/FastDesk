@@ -30,7 +30,7 @@ export function NewTicketPage() {
       })
       navigate(`/tickets/${ticket.id}`)
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: 'Error',
         description: 'Failed to create ticket. Please try again.',

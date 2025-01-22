@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { useQuery } from '@tanstack/react-query'
 import { ticketService } from '../services/ticketService'
 import { useAuthStore } from '@/store/authStore'
-import { TicketWithCustomer, TICKET_STATUS_MAP, TICKET_PRIORITY_MAP } from '../types'
+import { TICKET_STATUS_MAP, TICKET_PRIORITY_MAP } from '../types'
 import { format } from 'date-fns'
 import { useNavigate, Link } from 'react-router-dom'
 
