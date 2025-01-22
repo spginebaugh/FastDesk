@@ -35,7 +35,7 @@ async function seedDatabase() {
         email_confirm: true,
         user_metadata: {
           full_name: user.full_name,
-          role: user.role
+          user_type: user.user_type
         },
         id: user.id
       })
@@ -67,7 +67,7 @@ async function seedDatabase() {
         [`USER_ID_${placeholderIndex}`]: user.id,
         [`USER_EMAIL_${placeholderIndex}`]: user.email,
         [`USER_FULL_NAME_${placeholderIndex}`]: user.full_name,
-        [`USER_ROLE_${placeholderIndex}`]: user.role
+        [`USER_TYPE_${placeholderIndex}`]: user.user_type
       }
 
       Object.entries(replacements).forEach(([placeholder, value]) => {

@@ -9,341 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      api_integrations: {
-        Row: {
-          api_key: string
-          created_at: string | null
-          id: string
-          name: string
-          permissions: Json | null
-          rate_limit: number | null
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          api_key: string
-          created_at?: string | null
-          id?: string
-          name: string
-          permissions?: Json | null
-          rate_limit?: number | null
-          status?: string
-          updated_at?: string | null
-        }
-        Update: {
-          api_key?: string
-          created_at?: string | null
-          id?: string
-          name?: string
-          permissions?: Json | null
-          rate_limit?: number | null
-          status?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      customer_accounts: {
-        Row: {
-          created_at: string | null
-          customer_id: string | null
-          id: string
-          last_login_at: string | null
-          login_count: number | null
-          metadata: Json | null
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          customer_id?: string | null
-          id: string
-          last_login_at?: string | null
-          login_count?: number | null
-          metadata?: Json | null
-          status?: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          customer_id?: string | null
-          id?: string
-          last_login_at?: string | null
-          login_count?: number | null
-          metadata?: Json | null
-          status?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customer_accounts_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      customer_channel_preferences: {
-        Row: {
-          channel_id: string
-          created_at: string | null
-          customer_id: string
-          notification_enabled: boolean | null
-          priority_threshold:
-            | Database["public"]["Enums"]["ticket_priority"]
-            | null
-          quiet_hours_end: string | null
-          quiet_hours_start: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          channel_id: string
-          created_at?: string | null
-          customer_id: string
-          notification_enabled?: boolean | null
-          priority_threshold?:
-            | Database["public"]["Enums"]["ticket_priority"]
-            | null
-          quiet_hours_end?: string | null
-          quiet_hours_start?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          channel_id?: string
-          created_at?: string | null
-          customer_id?: string
-          notification_enabled?: boolean | null
-          priority_threshold?:
-            | Database["public"]["Enums"]["ticket_priority"]
-            | null
-          quiet_hours_end?: string | null
-          quiet_hours_start?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customer_channel_preferences_channel_id_fkey"
-            columns: ["channel_id"]
-            isOneToOne: false
-            referencedRelation: "customer_channels"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_channel_preferences_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      customer_channels: {
-        Row: {
-          channel_type: Database["public"]["Enums"]["channel_type"]
-          created_at: string | null
-          customer_id: string | null
-          id: string
-          identifier: string
-          is_primary: boolean | null
-          metadata: Json | null
-          updated_at: string | null
-          verification_code: string | null
-          verification_expires_at: string | null
-          verified: boolean | null
-        }
-        Insert: {
-          channel_type: Database["public"]["Enums"]["channel_type"]
-          created_at?: string | null
-          customer_id?: string | null
-          id?: string
-          identifier: string
-          is_primary?: boolean | null
-          metadata?: Json | null
-          updated_at?: string | null
-          verification_code?: string | null
-          verification_expires_at?: string | null
-          verified?: boolean | null
-        }
-        Update: {
-          channel_type?: Database["public"]["Enums"]["channel_type"]
-          created_at?: string | null
-          customer_id?: string | null
-          id?: string
-          identifier?: string
-          is_primary?: boolean | null
-          metadata?: Json | null
-          updated_at?: string | null
-          verification_code?: string | null
-          verification_expires_at?: string | null
-          verified?: boolean | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customer_channels_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      customer_organization_members: {
-        Row: {
-          created_at: string | null
-          customer_id: string
-          organization_id: string
-          role: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          customer_id: string
-          organization_id: string
-          role?: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          customer_id?: string
-          organization_id?: string
-          role?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customer_organization_members_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_organization_members_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "customer_organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      customer_organizations: {
-        Row: {
-          created_at: string | null
-          domain: string | null
-          id: string
-          name: string
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          domain?: string | null
-          id?: string
-          name: string
-          status?: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          domain?: string | null
-          id?: string
-          name?: string
-          status?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      customer_permissions: {
-        Row: {
-          created_at: string | null
-          customer_id: string | null
-          id: string
-          permission: string
-          resource_id: string | null
-          resource_type: string
-        }
-        Insert: {
-          created_at?: string | null
-          customer_id?: string | null
-          id?: string
-          permission: string
-          resource_id?: string | null
-          resource_type: string
-        }
-        Update: {
-          created_at?: string | null
-          customer_id?: string | null
-          id?: string
-          permission?: string
-          resource_id?: string | null
-          resource_type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customer_permissions_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      customers: {
-        Row: {
-          auth_provider: string | null
-          company: string | null
-          created_at: string | null
-          email: string
-          external_id: string | null
-          external_metadata: Json | null
-          full_name: string | null
-          id: string
-          metadata: Json | null
-          organization_id: string | null
-          preferences: Json | null
-          type: string
-          updated_at: string | null
-        }
-        Insert: {
-          auth_provider?: string | null
-          company?: string | null
-          created_at?: string | null
-          email: string
-          external_id?: string | null
-          external_metadata?: Json | null
-          full_name?: string | null
-          id?: string
-          metadata?: Json | null
-          organization_id?: string | null
-          preferences?: Json | null
-          type?: string
-          updated_at?: string | null
-        }
-        Update: {
-          auth_provider?: string | null
-          company?: string | null
-          created_at?: string | null
-          email?: string
-          external_id?: string | null
-          external_metadata?: Json | null
-          full_name?: string | null
-          id?: string
-          metadata?: Json | null
-          organization_id?: string | null
-          preferences?: Json | null
-          type?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customers_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "customer_organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       kb_articles: {
         Row: {
           author_id: string | null
@@ -380,43 +45,10 @@ export type Database = {
             foreignKeyName: "kb_articles_author_id_fkey"
             columns: ["author_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
-      }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string | null
-          full_name: string | null
-          id: string
-          is_active: boolean | null
-          role: string
-          status: Database["public"]["Enums"]["user_status"]
-          updated_at: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id: string
-          is_active?: boolean | null
-          role?: string
-          status?: Database["public"]["Enums"]["user_status"]
-          updated_at?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: string
-          is_active?: boolean | null
-          role?: string
-          status?: Database["public"]["Enums"]["user_status"]
-          updated_at?: string | null
-        }
-        Relationships: []
       }
       tags: {
         Row: {
@@ -446,22 +78,22 @@ export type Database = {
         Row: {
           created_at: string | null
           profile_id: string | null
-          role_in_team: string
           team_id: string | null
+          team_role: string
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           profile_id?: string | null
-          role_in_team?: string
           team_id?: string | null
+          team_role?: string
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           profile_id?: string | null
-          role_in_team?: string
           team_id?: string | null
+          team_role?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -469,7 +101,7 @@ export type Database = {
             foreignKeyName: "team_members_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -538,7 +170,7 @@ export type Database = {
             foreignKeyName: "templates_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -583,7 +215,7 @@ export type Database = {
             foreignKeyName: "ticket_assignments_agent_id_fkey"
             columns: ["agent_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -690,7 +322,6 @@ export type Database = {
       }
       ticket_messages: {
         Row: {
-          channel_id: string | null
           content: string
           created_at: string | null
           id: string
@@ -701,7 +332,6 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          channel_id?: string | null
           content: string
           created_at?: string | null
           id?: string
@@ -712,7 +342,6 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          channel_id?: string | null
           content?: string
           created_at?: string | null
           id?: string
@@ -723,13 +352,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "ticket_messages_channel_id_fkey"
-            columns: ["channel_id"]
-            isOneToOne: false
-            referencedRelation: "customer_channels"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "ticket_messages_ticket_id_fkey"
             columns: ["ticket_id"]
@@ -783,7 +405,6 @@ export type Database = {
           external_reference_id: string | null
           first_response_at: string | null
           id: string
-          integration_id: string | null
           integration_metadata: Json | null
           metadata: Json | null
           priority: Database["public"]["Enums"]["ticket_priority"]
@@ -804,7 +425,6 @@ export type Database = {
           external_reference_id?: string | null
           first_response_at?: string | null
           id?: string
-          integration_id?: string | null
           integration_metadata?: Json | null
           metadata?: Json | null
           priority?: Database["public"]["Enums"]["ticket_priority"]
@@ -825,7 +445,6 @@ export type Database = {
           external_reference_id?: string | null
           first_response_at?: string | null
           id?: string
-          integration_id?: string | null
           integration_metadata?: Json | null
           metadata?: Json | null
           priority?: Database["public"]["Enums"]["ticket_priority"]
@@ -841,14 +460,7 @@ export type Database = {
             foreignKeyName: "tickets_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tickets_integration_id_fkey"
-            columns: ["integration_id"]
-            isOneToOne: false
-            referencedRelation: "api_integrations"
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -859,6 +471,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_profiles: {
+        Row: {
+          auth_provider: string | null
+          avatar_url: string | null
+          company: string | null
+          created_at: string | null
+          email: string
+          external_id: string | null
+          external_metadata: Json | null
+          full_name: string | null
+          id: string
+          is_active: boolean | null
+          last_login_at: string | null
+          login_count: number | null
+          metadata: Json | null
+          preferences: Json | null
+          status: Database["public"]["Enums"]["user_status"]
+          updated_at: string | null
+          user_type: string
+        }
+        Insert: {
+          auth_provider?: string | null
+          avatar_url?: string | null
+          company?: string | null
+          created_at?: string | null
+          email: string
+          external_id?: string | null
+          external_metadata?: Json | null
+          full_name?: string | null
+          id: string
+          is_active?: boolean | null
+          last_login_at?: string | null
+          login_count?: number | null
+          metadata?: Json | null
+          preferences?: Json | null
+          status?: Database["public"]["Enums"]["user_status"]
+          updated_at?: string | null
+          user_type?: string
+        }
+        Update: {
+          auth_provider?: string | null
+          avatar_url?: string | null
+          company?: string | null
+          created_at?: string | null
+          email?: string
+          external_id?: string | null
+          external_metadata?: Json | null
+          full_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_login_at?: string | null
+          login_count?: number | null
+          metadata?: Json | null
+          preferences?: Json | null
+          status?: Database["public"]["Enums"]["user_status"]
+          updated_at?: string | null
+          user_type?: string
+        }
+        Relationships: []
       }
     }
     Views: {

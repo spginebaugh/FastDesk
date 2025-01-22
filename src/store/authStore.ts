@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     // Update the profile directly since the trigger might not have access to the metadata
     if (signUpData.user?.id) {
       const { error: updateError } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .update({ full_name: fullName })
         .eq('id', signUpData.user.id)
 

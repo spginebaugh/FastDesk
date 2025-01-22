@@ -3,8 +3,7 @@ import { Database } from '../../../types/database'
 export type Ticket = Database['public']['Tables']['tickets']['Row']
 export type TicketStatus = Database['public']['Enums']['ticket_status']
 export type TicketPriority = Database['public']['Enums']['ticket_priority']
-export type Customer = Database['public']['Tables']['customers']['Row']
-export type Profile = Database['public']['Tables']['profiles']['Row']
+export type UserProfile = Database['public']['Tables']['user_profiles']['Row']
 export type SenderType = 'customer' | 'agent' | 'system'
 
 export interface MessageSender {
@@ -13,14 +12,13 @@ export interface MessageSender {
 }
 
 export interface TicketWithCustomer extends Omit<Ticket, 'customer'> {
-  customer: Customer & Partial<Profile>
+  customer: UserProfile
 }
 
 export type BaseTicketMessage = Database['public']['Tables']['ticket_messages']['Row']
 
 export interface TicketMessageJoinResult extends BaseTicketMessage {
-  agent: Profile | null
-  customer: Customer | null
+  sender: UserProfile | null
 }
 
 export interface TicketMessage extends BaseTicketMessage {

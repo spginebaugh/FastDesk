@@ -43,15 +43,17 @@ export function Router() {
             </ProtectedRoute>
           }
         >
-          {/* Dashboard and Tickets */}
-          <Route index element={<Navigate to="/tickets" replace />} />
-          <Route path="dashboard" element={<Navigate to="/tickets" replace />} />
+          {/* Dashboard and Views */}
+          <Route index element={<Navigate to="/views" replace />} />
+          <Route path="dashboard" element={<Navigate to="/views" replace />} />
+          
+          {/* Views Routes */}
+          <Route path="views" element={<TicketListPage />} />
+          <Route path="views/unassigned" element={<TicketListPage view="unassigned" />} />
+          <Route path="views/all" element={<TicketListPage view="all" />} />
+          <Route path="views/recently-updated" element={<TicketListPage view="recent" />} />
           
           {/* Ticket Routes */}
-          <Route path="tickets" element={<TicketListPage />} />
-          <Route path="tickets/unassigned" element={<TicketListPage view="unassigned" />} />
-          <Route path="tickets/all" element={<TicketListPage view="all" />} />
-          <Route path="tickets/recently-updated" element={<TicketListPage view="recent" />} />
           <Route path="tickets/new" element={<NewTicketPage />} />
           <Route path="tickets/:ticketId" element={<TicketDetailPage />} />
 

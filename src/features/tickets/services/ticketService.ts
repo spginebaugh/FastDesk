@@ -1,6 +1,7 @@
 import { supabase } from '../../../config/supabase/client'
-import { TicketWithCustomer, TicketStatus, TicketMessage, TicketMessageJoinResult, Profile, Customer, MessageSender } from '../types'
+import { TicketWithCustomer, TicketStatus, TicketMessage, TicketMessageJoinResult, UserProfile, MessageSender, TicketPriority } from '../types'
 import { subDays } from 'date-fns'
+import crypto from 'crypto'
 
 interface GetTicketsParams {
   userId?: string
@@ -20,7 +21,7 @@ export const ticketService = {
       .from('tickets')
       .select(`
         *,
-        customer:customers(*),
+        customer:user_profiles!tickets_customer_id_fkey(*),
         assignments:ticket_assignments(
           agent_id,
           is_primary
@@ -29,21 +30,13 @@ export const ticketService = {
       .order('updated_at', { ascending: false })
     
     if (unassigned) {
-      const { data: ticketsWithoutAssignments } = await supabase
-        .from('tickets')
-        .select('id')
-        .not('id', 'in', (
-          supabase
-            .from('ticket_assignments')
-            .select('ticket_id')
-        ))
+      const { data: assignedTicketIds } = await supabase
+        .from('ticket_assignments')
+        .select('ticket_id')
       
-      const unassignedTicketIds = ticketsWithoutAssignments?.map(t => t.id).filter((id): id is string => id !== null) || []
-      if (unassignedTicketIds.length > 0) {
-        query = query.in('id', unassignedTicketIds)
-      } else {
-        // If no unassigned tickets, return empty array
-        return []
+      const ticketIds = assignedTicketIds?.map(t => t.ticket_id) || []
+      if (ticketIds.length > 0) {
+        query = query.not('id', 'in', `(${ticketIds.map(id => `"${id}"`).join(',')})`)
       }
     } else if (userId) {
       const { data: assignedTickets } = await supabase
@@ -83,7 +76,7 @@ export const ticketService = {
       .from('tickets')
       .select(`
         *,
-        customer:customers(*)
+        customer:user_profiles!tickets_customer_id_fkey(*)
       `)
       .eq('id', ticketId)
       .single()
@@ -102,54 +95,31 @@ export const ticketService = {
 
     if (messagesError) throw messagesError
 
-    // Then get all unique sender IDs grouped by type
-    const agentIds = messages
-      .filter(m => m.sender_type === 'agent')
-      .map(m => m.sender_id)
-      .filter((id): id is string => id !== null)
-    
-    const customerIds = messages
-      .filter(m => m.sender_type === 'customer')
+    // Then get all unique sender IDs
+    const senderIds = messages
       .map(m => m.sender_id)
       .filter((id): id is string => id !== null)
 
-    // Fetch profiles and customers in parallel if needed
-    const [profilesResponse, customersResponse] = await Promise.all([
-      agentIds.length > 0
-        ? supabase
-            .from('profiles')
-            .select('id, full_name, avatar_url')
-            .in('id', agentIds)
-        : Promise.resolve({ data: [], error: null }),
-      customerIds.length > 0
-        ? supabase
-            .from('customers')
-            .select('id, full_name, email')
-            .in('id', customerIds)
-        : Promise.resolve({ data: [], error: null })
-    ])
+    // Fetch all senders in one query
+    const { data: senders, error: sendersError } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .in('id', senderIds)
 
-    if (profilesResponse.error) throw profilesResponse.error
-    if (customersResponse.error) throw customersResponse.error
+    if (sendersError) throw sendersError
 
-    // Create lookup maps
-    const profilesMap = new Map(profilesResponse.data.map(p => [p.id, p]))
-    const customersMap = new Map(customersResponse.data.map(c => [c.id, c]))
+    // Create lookup map
+    const sendersMap = new Map(senders.map(p => [p.id, p]))
 
     // Map messages with their senders
     return messages.map(message => ({
       ...message,
-      sender: message.sender_type === 'agent' && message.sender_id
+      sender: message.sender_id
         ? {
-            full_name: profilesMap.get(message.sender_id)?.full_name ?? 'Unknown Agent',
-            avatar_url: profilesMap.get(message.sender_id)?.avatar_url ?? null
+            full_name: sendersMap.get(message.sender_id)?.full_name ?? 'Unknown User',
+            avatar_url: sendersMap.get(message.sender_id)?.avatar_url ?? null
           }
-        : message.sender_type === 'customer' && message.sender_id
-          ? {
-              full_name: customersMap.get(message.sender_id)?.full_name ?? customersMap.get(message.sender_id)?.email ?? 'Unknown Customer',
-              avatar_url: null
-            }
-          : undefined
+        : undefined
     }))
   },
 
@@ -157,30 +127,15 @@ export const ticketService = {
     const { data: userProfile } = await supabase.auth.getUser()
     if (!userProfile.user) throw new Error('User not authenticated')
 
-    // First get or create a customer for the user
-    const { data: existingCustomer } = await supabase
-      .from('customers')
+    // Get or create user profile
+    const { data: existingProfile } = await supabase
+      .from('user_profiles')
       .select()
       .eq('email', userProfile.user.email!)
       .single()
 
-    let customerId: string
-    if (existingCustomer) {
-      customerId = existingCustomer.id
-    } else {
-      const { data: newCustomer, error: customerError } = await supabase
-        .from('customers')
-        .insert([
-          {
-            email: userProfile.user.email!,
-            full_name: userProfile.user.user_metadata?.full_name || userProfile.user.email!.split('@')[0]
-          }
-        ])
-        .select()
-        .single()
-
-      if (customerError) throw customerError
-      customerId = newCustomer.id
+    if (!existingProfile) {
+      throw new Error('User profile not found')
     }
 
     // Create the ticket
@@ -191,15 +146,15 @@ export const ticketService = {
           title,
           status: 'new',
           priority: 'medium',
-          customer_id: customerId,
+          customer_id: existingProfile.id,
           created_by_type: 'customer',
-          created_by_id: customerId,
+          created_by_id: existingProfile.id,
           source: 'customer_portal'
         }
       ])
       .select(`
         *,
-        customer:customers(*)
+        customer:user_profiles!tickets_customer_id_fkey(*)
       `)
       .single()
 
@@ -230,7 +185,7 @@ export const ticketService = {
 
     // Then get the sender profile
     const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('full_name, avatar_url')
       .eq('id', userProfile.user.id)
       .single()
@@ -247,7 +202,11 @@ export const ticketService = {
     } as TicketMessage
   },
 
-  async updateTicket(ticketId: string, updates: Partial<{ title: string; status: TicketStatus }>) {
+  async updateTicket(ticketId: string, updates: Partial<{ 
+    title: string; 
+    status: TicketStatus;
+    priority: TicketPriority;
+  }>) {
     const { data, error } = await supabase
       .from('tickets')
       .update(updates)
@@ -260,30 +219,34 @@ export const ticketService = {
   },
 
   async createSampleTicket(userId: string) {
-    // Get or create the sample customer
-    const { data: existingCustomer } = await supabase
-      .from('customers')
+    // Get or create the sample user profile
+    const { data: existingProfile } = await supabase
+      .from('user_profiles')
       .select()
       .eq('email', 'sample@customer.com')
       .single()
 
-    let sampleCustomer
-    if (existingCustomer) {
-      sampleCustomer = existingCustomer
+    let sampleUser
+    if (existingProfile) {
+      sampleUser = existingProfile
     } else {
-      const { data: newCustomer, error: customerError } = await supabase
-        .from('customers')
+      const sampleUserId = crypto.randomUUID()
+      const { data: newProfile, error: profileError } = await supabase
+        .from('user_profiles')
         .insert([
           {
+            id: sampleUserId,
             email: 'sample@customer.com',
-            full_name: 'The Customer'
+            full_name: 'Sample Customer',
+            user_type: 'customer',
+            status: 'offline'
           }
         ])
         .select()
         .single()
 
-      if (customerError) throw customerError
-      sampleCustomer = newCustomer
+      if (profileError) throw profileError
+      sampleUser = newProfile
     }
 
     // Create the sample ticket
@@ -294,9 +257,9 @@ export const ticketService = {
           title: 'SAMPLE TICKET: Meet the ticket',
           status: 'new',
           priority: 'medium',
-          customer_id: sampleCustomer.id,
+          customer_id: sampleUser.id,
           created_by_type: 'customer',
-          created_by_id: sampleCustomer.id,
+          created_by_id: sampleUser.id,
           source: 'system',
           team_id: null
         }
@@ -314,7 +277,7 @@ export const ticketService = {
           ticket_id: ticket.id,
           content: 'This is a ticket message!!! Welcome to the platform',
           sender_type: 'customer',
-          sender_id: sampleCustomer.id,
+          sender_id: sampleUser.id,
           is_internal: false
         }
       ])

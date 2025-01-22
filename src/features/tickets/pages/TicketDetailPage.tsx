@@ -5,8 +5,15 @@ import { useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { ticketService } from '../services/ticketService'
-import { TICKET_STATUS_MAP, TICKET_PRIORITY_MAP } from '../types'
+import { TICKET_STATUS_MAP, TICKET_PRIORITY_MAP, TicketStatus, TicketPriority } from '../types'
 import { TicketReplyBox } from '../components/TicketReplyBox'
 import { TicketMessage } from '../components/TicketMessage'
 
@@ -56,6 +63,26 @@ export function TicketDetailPage() {
     }
   }
 
+  const handleStatusChange = async (status: TicketStatus) => {
+    if (!ticketId) return
+    try {
+      await ticketService.updateTicket(ticketId, { status })
+      await queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
+    } catch (error) {
+      console.error('Failed to update ticket status:', error)
+    }
+  }
+
+  const handlePriorityChange = async (priority: TicketPriority) => {
+    if (!ticketId) return
+    try {
+      await ticketService.updateTicket(ticketId, { priority })
+      await queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
+    } catch (error) {
+      console.error('Failed to update ticket priority:', error)
+    }
+  }
+
   if (isLoadingTicket || isLoadingMessages) {
     return <div className="flex items-center justify-center h-full">Loading...</div>
   }
@@ -68,7 +95,7 @@ export function TicketDetailPage() {
   const initialMessage = messages[0]
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
+    <div className="h-full flex flex-col">
       <div className="border-b bg-white px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex-1 max-w-2xl">
@@ -90,37 +117,121 @@ export function TicketDetailPage() {
               </h1>
             )}
           </div>
-          <div className="flex items-center gap-4">
-            <Badge 
-              variant="outline" 
-              className={`${TICKET_STATUS_MAP[ticket.status].color} bg-opacity-10`}
+        </div>
+      </div>
+
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Section - Ticket Controls */}
+        <div className="w-64 border-r bg-gray-50 p-4 space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Status</label>
+            <Select
+              value={ticket.status}
+              onValueChange={(value: TicketStatus) => handleStatusChange(value)}
             >
-              {TICKET_STATUS_MAP[ticket.status].label}
-            </Badge>
-            <Badge 
-              variant="outline" 
-              className={TICKET_PRIORITY_MAP[ticket.priority].color}
+              <SelectTrigger className="w-full bg-white text-black">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(TICKET_STATUS_MAP).map(([value, { label }]) => (
+                  <SelectItem key={value} value={value}>
+                    <div className="flex items-center">
+                      <div className={`w-2 h-2 rounded-full mr-2 ${TICKET_STATUS_MAP[value as TicketStatus].color}`} />
+                      {label}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Priority</label>
+            <Select
+              value={ticket.priority}
+              onValueChange={(value: TicketPriority) => handlePriorityChange(value)}
             >
-              {TICKET_PRIORITY_MAP[ticket.priority].label}
-            </Badge>
+              <SelectTrigger className="w-full bg-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(TICKET_PRIORITY_MAP).map(([value, { label }]) => (
+                  <SelectItem key={value} value={value}>
+                    <div className="flex items-center">
+                      <span className={TICKET_PRIORITY_MAP[value as TicketPriority].color}>{label}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Assignee</label>
+            <Select defaultValue="unassigned">
+              <SelectTrigger className="w-full bg-white text-black">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+                {/* TODO: Add agent list */}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Middle Section - Messages */}
+        <div className="flex-1 flex flex-col min-w-0 bg-gray-50">
+          <div className="flex-1 overflow-auto p-6">
+            <div className="max-w-3xl mx-auto space-y-6">
+              <TicketMessage message={initialMessage} isInitialMessage customer={ticket.customer} />
+              {messages.slice(1).map((message) => (
+                <TicketMessage key={message.id} message={message} customer={ticket.customer} />
+              ))}
+            </div>
+          </div>
+          <TicketReplyBox ticketId={ticketId!} />
+        </div>
+
+        {/* Right Section - Customer Profile */}
+        <div className="w-80 border-l bg-gray-50 p-6">
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={ticket.customer.avatar_url || undefined} />
+                <AvatarFallback>
+                  {ticket.customer.full_name?.split(' ').map(n => n[0]).join('') || '??'}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">
+                  {ticket.customer.full_name || 'Unknown User'}
+                </h3>
+                <p className="text-sm text-gray-500">{ticket.customer.email}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium text-gray-700">Company</h4>
+                <p className="text-sm text-gray-900">{ticket.customer.company || '-'}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-gray-700">Status</h4>
+                <p className="text-sm text-gray-900">{ticket.customer.status || '-'}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-gray-700">Created</h4>
+                <p className="text-sm text-gray-900">
+                  {ticket.customer.created_at 
+                    ? format(new Date(ticket.customer.created_at), 'MMM d, yyyy')
+                    : '-'}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-3xl mx-auto space-y-6">
-          {/* Initial ticket message */}
-          <TicketMessage message={initialMessage} isInitialMessage customer={ticket.customer} />
-
-          {/* Subsequent messages */}
-          {messages.slice(1).map((message) => (
-            <TicketMessage key={message.id} message={message} customer={ticket.customer} />
-          ))}
-        </div>
-      </div>
-
-      {/* Reply box */}
-      <TicketReplyBox ticketId={ticketId!} />
     </div>
   )
 } 
