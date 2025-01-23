@@ -1,5 +1,5 @@
 import { supabase } from '../../../config/supabase/client'
-import { TicketWithCustomer, TicketStatus, TicketMessage, TicketPriority } from '../types'
+import { TicketWithUser, TicketStatus, TicketMessage, TicketPriority } from '../types'
 import { subDays } from 'date-fns'
 import crypto from 'crypto'
 
@@ -10,24 +10,39 @@ interface GetTicketsParams {
   recentlyUpdated?: boolean
 }
 
+interface Agent {
+  id: string
+  full_name: string | null
+  email: string
+  avatar_url: string | null
+}
+
 export const ticketService = {
   async getTickets({ 
     userId, 
     status = ['new', 'open', 'pending'],
     unassigned = false,
     recentlyUpdated = false
-  }: GetTicketsParams = {}): Promise<TicketWithCustomer[]> {
+  }: GetTicketsParams = {}): Promise<TicketWithUser[]> {
+    const { data: userProfile } = await supabase.auth.getUser()
+    if (!userProfile.user) throw new Error('Not authenticated')
+
+    // First get the organizations the user is a member of
+    const { data: userOrgs } = await supabase
+      .from('organization_members')
+      .select('organization_id')
+      .eq('profile_id', userProfile.user.id)
+
+    const userOrgIds = userOrgs?.map(org => org.organization_id) || []
+
     let query = supabase
       .from('tickets')
       .select(`
         *,
-        customer:user_profiles!tickets_customer_id_fkey(*),
-        assignments:ticket_assignments(
-          agent_id,
-          is_primary
-        )
+        user:user_profiles!tickets_user_id_fkey(*)
       `)
       .order('updated_at', { ascending: false })
+      .in('organization_id', userOrgIds)
     
     if (unassigned) {
       const { data: assignedTicketIds } = await supabase
@@ -68,21 +83,33 @@ export const ticketService = {
       throw new Error(error.message)
     }
 
-    return data as TicketWithCustomer[]
+    return data as TicketWithUser[]
   },
 
   async getTicket(ticketId: string) {
+    const { data: userProfile } = await supabase.auth.getUser()
+    if (!userProfile.user) throw new Error('Not authenticated')
+
+    // First get the organizations the user is a member of
+    const { data: userOrgs } = await supabase
+      .from('organization_members')
+      .select('organization_id')
+      .eq('profile_id', userProfile.user.id)
+
+    const userOrgIds = userOrgs?.map(org => org.organization_id) || []
+
     const { data, error } = await supabase
       .from('tickets')
       .select(`
         *,
-        customer:user_profiles!tickets_customer_id_fkey(*)
+        user:user_profiles!tickets_user_id_fkey(*)
       `)
       .eq('id', ticketId)
+      .in('organization_id', userOrgIds)
       .single()
 
     if (error) throw error
-    return data as TicketWithCustomer
+    return data as TicketWithUser
   },
 
   async getTicketMessages(ticketId: string): Promise<TicketMessage[]> {
@@ -135,32 +162,37 @@ export const ticketService = {
     const { data: userProfile } = await supabase.auth.getUser()
     if (!userProfile.user) throw new Error('User not authenticated')
 
-    // Get or create user profile
-    const { data: existingProfile } = await supabase
+    // Get user profile with organization info
+    const { data: profile } = await supabase
       .from('user_profiles')
-      .select()
+      .select('id, email, user_type, organization_members!inner(organization_id)')
       .eq('email', userProfile.user.email!)
       .single()
 
-    if (!existingProfile) {
-      throw new Error('User profile not found')
+    if (!profile?.id || !profile.organization_members?.[0]?.organization_id) {
+      throw new Error('User profile or organization not found')
     }
+
+    const organizationId = profile.organization_members[0].organization_id
+
+    const ticketData = {
+      title,
+      status: 'new' as const,
+      priority,
+      user_id: profile.id,
+      organization_id: organizationId,
+      created_by_type: profile.user_type,
+      created_by_id: profile.id,
+      source: profile.user_type === 'agent' ? 'agent_portal' as const : 'customer_portal' as const
+    } as const
 
     // Create the ticket
     const { data: ticket, error } = await supabase
       .from('tickets')
-      .insert({
-        title,
-        status: 'new',
-        priority,
-        customer_id: existingProfile.id,
-        created_by_type: 'customer',
-        created_by_id: existingProfile.id,
-        source: 'customer_portal'
-      })
+      .insert(ticketData)
       .select(`
         *,
-        customer:user_profiles!tickets_customer_id_fkey(*)
+        user:user_profiles!tickets_user_id_fkey(*)
       `)
       .single()
 
@@ -172,13 +204,14 @@ export const ticketService = {
         .insert({
           ticket_id: ticket.id,
           agent_id: assignee,
+          organization_id: organizationId,
           is_primary: true
         })
 
       if (assignmentError) throw assignmentError
     }
 
-    return ticket as TicketWithCustomer
+    return ticket as TicketWithUser
   },
 
   async createTicketMessage({ ticketId, content, isInternal }: { ticketId: string, content: string, isInternal: boolean }) {
@@ -276,7 +309,7 @@ export const ticketService = {
           title: 'SAMPLE TICKET: Meet the ticket',
           status: 'new',
           priority: 'medium',
-          customer_id: sampleUser.id,
+          user_id: sampleUser.id,
           created_by_type: 'customer',
           created_by_id: sampleUser.id,
           source: 'system',
@@ -317,5 +350,66 @@ export const ticketService = {
     if (assignmentError) throw assignmentError
 
     return ticket
+  },
+
+  async getTicketAssignment(ticketId: string) {
+    const { data, error } = await supabase
+      .from('ticket_assignments')
+      .select(`
+        agent:user_profiles!ticket_assignments_agent_id_fkey(
+          id,
+          full_name,
+          email,
+          avatar_url
+        )
+      `)
+      .eq('ticket_id', ticketId)
+      .eq('is_primary', true)
+      .single()
+
+    if (error && error.code !== 'PGRST116') throw error // PGRST116 is "no rows returned"
+    return data?.agent as Agent | null
+  },
+
+  async getOrganizationAgents(organizationId: string): Promise<Agent[]> {
+    const { data, error } = await supabase
+      .from('organization_members')
+      .select(`
+        profile:user_profiles!inner(
+          id,
+          full_name,
+          email,
+          avatar_url
+        )
+      `)
+      .eq('organization_id', organizationId)
+      .eq('profile.user_type', 'agent')
+
+    if (error) throw error
+    return data.map(d => d.profile) as Agent[]
+  },
+
+  async updateTicketAssignment(ticketId: string, agentId: string | null) {
+    // First remove any existing primary assignments
+    const { error: deleteError } = await supabase
+      .from('ticket_assignments')
+      .delete()
+      .eq('ticket_id', ticketId)
+      .eq('is_primary', true)
+
+    if (deleteError) throw deleteError
+
+    // If we have a new agent to assign, create the assignment
+    if (agentId) {
+      const { error: insertError } = await supabase
+        .from('ticket_assignments')
+        .insert({
+          ticket_id: ticketId,
+          agent_id: agentId,
+          is_primary: true
+        })
+
+      if (insertError) throw insertError
+    }
   }
 } 

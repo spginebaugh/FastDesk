@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/use-toast'
 import { ticketService } from '../services/ticketService'
+import { organizationService } from '@/features/organizations/services/organizationService'
+import { Agent } from '../types'
 import { useAuth } from '@/hooks/useAuth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { format } from 'date-fns'
@@ -25,6 +27,36 @@ export function NewTicketPage() {
   const navigate = useNavigate()
   const { toast } = useToast()
   const { user } = useAuth()
+
+  // Get user's organizations
+  const { data: organizations = [], isLoading: isLoadingOrgs } = useQuery({
+    queryKey: ['organizations'],
+    queryFn: () => organizationService.getOrganizations()
+  })
+
+  // Get agents for all user's organizations
+  const { data: agentsByOrg = [], isLoading: isLoadingAgents } = useQuery({
+    queryKey: ['organization-agents', organizations.map(org => org.id)],
+    queryFn: async () => {
+      const agentPromises = organizations.map(org => 
+        organizationService.getOrganizationMembers(org.id, 'agent')
+      )
+      const agentsResults = await Promise.all(agentPromises)
+      // Flatten and deduplicate agents by ID
+      const agentMap = new Map<string, Agent>()
+      agentsResults.flat().forEach(member => {
+        const agent: Agent = {
+          id: member.profile.id,
+          full_name: member.profile.full_name,
+          email: member.profile.email,
+          avatar_url: member.profile.avatar_url
+        }
+        agentMap.set(agent.id, agent)
+      })
+      return Array.from(agentMap.values())
+    },
+    enabled: organizations.length > 0
+  })
 
   const { mutate: createTicket, isPending } = useMutation({
     mutationFn: async () => {
@@ -112,11 +144,49 @@ export function NewTicketPage() {
                 onValueChange={handleAssigneeChange}
               >
                 <SelectTrigger className="w-full bg-white text-black">
-                  <SelectValue />
+                  <SelectValue>
+                    {isLoadingAgents ? (
+                      'Loading...'
+                    ) : initialSettings.assignee === 'unassigned' ? (
+                      'Unassigned'
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const agent = agentsByOrg.find(a => a.id === initialSettings.assignee)
+                          if (!agent) return 'Unassigned'
+                          return (
+                            <>
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={agent.avatar_url || undefined} />
+                                <AvatarFallback>
+                                  {agent.full_name?.[0]?.toUpperCase() || agent.email[0].toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span>{agent.full_name || agent.email}</span>
+                            </>
+                          )
+                        })()}
+                      </div>
+                    )}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {/* TODO: Add agent list */}
+                  <SelectItem value="unassigned">
+                    <span className="text-gray-600">Unassigned</span>
+                  </SelectItem>
+                  {agentsByOrg.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.id}>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={agent.avatar_url || undefined} />
+                          <AvatarFallback>
+                            {agent.full_name?.[0]?.toUpperCase() || agent.email[0].toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{agent.full_name || agent.email}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

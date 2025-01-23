@@ -42,13 +42,41 @@ export function TicketDetailPage() {
     enabled: !!ticketId
   })
 
+  const { data: currentAssignment, isLoading: isLoadingAssignment } = useQuery({
+    queryKey: ['ticket-assignment', ticketId],
+    queryFn: () => ticketService.getTicketAssignment(ticketId!),
+    enabled: !!ticketId
+  })
+
+  const { data: availableAgents = [], isLoading: isLoadingAgents } = useQuery({
+    queryKey: ['organization-agents', ticket?.organization_id],
+    queryFn: () => ticketService.getOrganizationAgents(ticket!.organization_id!),
+    enabled: !!ticket?.organization_id
+  })
+
   const { mutate: updateTicket, isPending: isUpdating } = useMutation({
     mutationFn: async () => {
       if (!ticketId || Object.keys(pendingChanges).length === 0) return
-      await ticketService.updateTicket(ticketId, pendingChanges)
+
+      const updates: any = { ...pendingChanges }
+      delete updates.assignee // Handle assignment separately
+
+      // Update ticket details if there are any changes
+      if (Object.keys(updates).length > 0) {
+        await ticketService.updateTicket(ticketId, updates)
+      }
+
+      // Update assignment if it changed
+      if (pendingChanges.assignee !== undefined) {
+        await ticketService.updateTicketAssignment(
+          ticketId,
+          pendingChanges.assignee === 'unassigned' ? null : pendingChanges.assignee
+        )
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
+      queryClient.invalidateQueries({ queryKey: ['ticket-assignment', ticketId] })
       setPendingChanges({})
       toast({
         title: 'Ticket updated',
@@ -106,7 +134,7 @@ export function TicketDetailPage() {
 
   const hasChanges = Object.keys(pendingChanges).length > 0
 
-  if (isLoadingTicket || isLoadingMessages) {
+  if (isLoadingTicket || isLoadingMessages || isLoadingAssignment || isLoadingAgents) {
     return <div className="flex items-center justify-center h-full">Loading...</div>
   }
 
@@ -139,6 +167,9 @@ export function TicketDetailPage() {
                 {ticket.title}
               </h1>
             )}
+            <div className="mt-1 text-sm text-gray-500">
+              Opened by {ticket.user.full_name || ticket.user.email} · {format(new Date(ticket.created_at!), 'MMM d, yyyy')}
+            </div>
           </div>
         </div>
       </div>
@@ -193,15 +224,45 @@ export function TicketDetailPage() {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Assignee</label>
               <Select
-                value={pendingChanges.assignee || "unassigned"}
+                value={pendingChanges.assignee || (currentAssignment ? currentAssignment.id : 'unassigned')}
                 onValueChange={handleAssigneeChange}
               >
                 <SelectTrigger className="w-full bg-white text-black">
-                  <SelectValue />
+                  <SelectValue>
+                    {isLoadingAssignment ? (
+                      'Loading...'
+                    ) : currentAssignment ? (
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={currentAssignment.avatar_url || undefined} />
+                          <AvatarFallback>
+                            {currentAssignment.full_name?.[0]?.toUpperCase() || currentAssignment.email[0].toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{currentAssignment.full_name || currentAssignment.email}</span>
+                      </div>
+                    ) : (
+                      'Unassigned'
+                    )}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {/* TODO: Add agent list */}
+                  <SelectItem value="unassigned">
+                    <span className="text-gray-600">Unassigned</span>
+                  </SelectItem>
+                  {availableAgents.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.id}>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={agent.avatar_url || undefined} />
+                          <AvatarFallback>
+                            {agent.full_name?.[0]?.toUpperCase() || agent.email[0].toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{agent.full_name || agent.email}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -219,55 +280,20 @@ export function TicketDetailPage() {
           </div>
         </div>
 
-        {/* Middle Section - Messages */}
-        <div className="flex-1 flex flex-col min-w-0 max-w-[calc(100%-36rem)] overflow-hidden bg-gray-50">
-          <div className="flex-1 overflow-auto p-6">
-            <div className="space-y-6 w-full">
-              <TicketMessage message={initialMessage} isInitialMessage customer={ticket.customer} />
-              {messages.slice(1).map((message) => (
-                <TicketMessage key={message.id} message={message} customer={ticket.customer} />
-              ))}
-            </div>
+        {/* Right Section - Messages */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.map((message) => (
+              <TicketMessage 
+                key={message.id} 
+                message={message} 
+                user={ticket.user}
+                isInitialMessage={message.id === messages[0].id}
+              />
+            ))}
           </div>
-          <TicketReplyBox ticketId={ticketId!} />
-        </div>
-
-        {/* Right Section - Customer Profile */}
-        <div className="w-80 border-l bg-gray-50 p-6">
-          <div className="space-y-6">
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={ticket.customer.avatar_url || undefined} />
-                <AvatarFallback>
-                  {ticket.customer.full_name?.split(' ').map(n => n[0]).join('') || '??'}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">
-                  {ticket.customer.full_name || 'Unknown User'}
-                </h3>
-                <p className="text-sm text-gray-500">{ticket.customer.email}</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <h4 className="text-sm font-medium text-gray-700">Company</h4>
-                <p className="text-sm text-gray-900">{ticket.customer.company || '-'}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-700">Status</h4>
-                <p className="text-sm text-gray-900">{ticket.customer.status || '-'}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-700">Created</h4>
-                <p className="text-sm text-gray-900">
-                  {ticket.customer.created_at 
-                    ? format(new Date(ticket.customer.created_at), 'MMM d, yyyy')
-                    : '-'}
-                </p>
-              </div>
-            </div>
+          <div className="border-t p-4">
+            <TicketReplyBox ticketId={ticketId!} />
           </div>
         </div>
       </div>

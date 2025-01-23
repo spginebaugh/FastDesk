@@ -91,20 +91,31 @@ create table templates (
 create or replace function validate_ticket_created_by()
 returns trigger as $$
 begin
-    -- Validate created_by_type and created_by_id combination
-    if new.created_by_type = 'customer' then
-        if not exists (select 1 from user_profiles where id = new.created_by_id and user_type = 'customer') then
-            raise exception 'Invalid customer_id for created_by_id';
-        end if;
-    elsif new.created_by_type = 'agent' then
-        if not exists (select 1 from user_profiles where id = new.created_by_id and user_type = 'agent') then
-            raise exception 'Invalid agent_id for created_by_id';
+    -- Only validate that the created_by_id matches the user_type in user_profiles
+    if new.created_by_type in ('customer', 'agent') then
+        if not exists (
+            select 1 
+            from user_profiles 
+            where id = new.created_by_id 
+            and user_type = new.created_by_type
+        ) then
+            raise exception 'created_by_id does not match the specified created_by_type';
         end if;
     elsif new.created_by_type in ('system', 'api') then
         if new.created_by_id is not null then
             raise exception 'created_by_id must be null for % created tickets', new.created_by_type;
         end if;
     end if;
+
+    -- Ensure the user_id exists in user_profiles
+    if not exists (
+        select 1 
+        from user_profiles 
+        where id = new.user_id
+    ) then
+        raise exception 'Invalid user_id';
+    end if;
+
     return new;
 end;
 $$ language plpgsql;
@@ -113,7 +124,7 @@ $$ language plpgsql;
 create table tickets (
     id uuid primary key default uuid_generate_v4(),
     title text not null check (length(trim(title)) > 0),
-    customer_id uuid not null references user_profiles(id) on delete cascade,
+    user_id uuid not null references user_profiles(id) on delete cascade,
     organization_id uuid references organizations(id) on delete set null,
     status ticket_status not null default 'new',
     priority ticket_priority not null default 'medium',
@@ -213,7 +224,7 @@ create table ticket_feedback (
 );
 
 -- Create indexes for better query performance
-create index idx_tickets_customer_id on tickets(customer_id);
+create index idx_tickets_user_id on tickets(user_id);
 create index idx_tickets_status on tickets(status);
 create index idx_tickets_priority on tickets(priority);
 create index idx_tickets_source on tickets(source);

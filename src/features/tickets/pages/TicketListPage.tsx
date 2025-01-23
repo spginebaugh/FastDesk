@@ -204,7 +204,7 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
                       className="text-black"
                       onClick={() => navigate(`/tickets/${ticket.id}`)}
                     >
-                      {ticket.customer?.full_name}
+                      {ticket.user.full_name}
                     </TableCell>
                     <TableCell onClick={() => navigate(`/tickets/${ticket.id}`)}>
                       <Badge 

@@ -53,23 +53,23 @@ export type Database = {
       organization_members: {
         Row: {
           created_at: string | null
-          organization_id: string | null
-          organization_role: string
-          profile_id: string | null
+          organization_id: string
+          organization_role: Database["public"]["Enums"]["organization_role"]
+          profile_id: string
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          organization_id?: string | null
-          organization_role?: string
-          profile_id?: string | null
+          organization_id: string
+          organization_role?: Database["public"]["Enums"]["organization_role"]
+          profile_id: string
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          organization_id?: string | null
-          organization_role?: string
-          profile_id?: string | null
+          organization_id?: string
+          organization_role?: Database["public"]["Enums"]["organization_role"]
+          profile_id?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -400,7 +400,6 @@ export type Database = {
           created_by_id: string | null
           created_by_type: string
           custom_fields: Json | null
-          customer_id: string
           due_date: string | null
           external_reference_id: string | null
           first_response_at: string | null
@@ -414,13 +413,13 @@ export type Database = {
           status: Database["public"]["Enums"]["ticket_status"]
           title: string
           updated_at: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string | null
           created_by_id?: string | null
           created_by_type: string
           custom_fields?: Json | null
-          customer_id: string
           due_date?: string | null
           external_reference_id?: string | null
           first_response_at?: string | null
@@ -434,13 +433,13 @@ export type Database = {
           status?: Database["public"]["Enums"]["ticket_status"]
           title: string
           updated_at?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string | null
           created_by_id?: string | null
           created_by_type?: string
           custom_fields?: Json | null
-          customer_id?: string
           due_date?: string | null
           external_reference_id?: string | null
           first_response_at?: string | null
@@ -454,20 +453,21 @@ export type Database = {
           status?: Database["public"]["Enums"]["ticket_status"]
           title?: string
           updated_at?: string | null
+          user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "tickets_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "tickets_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -595,6 +595,7 @@ export type Database = {
     }
     Enums: {
       channel_type: "email" | "whatsapp" | "sms" | "web" | "telegram"
+      organization_role: "admin" | "member" | "customer"
       ticket_priority: "low" | "medium" | "high" | "urgent"
       ticket_source:
         | "customer_portal"

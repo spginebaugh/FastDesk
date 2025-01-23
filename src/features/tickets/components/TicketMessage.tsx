@@ -5,13 +5,13 @@ import type { TicketMessage as TicketMessageType, UserProfile, MessageSender } f
 interface TicketMessageProps {
   message: TicketMessageType
   isInitialMessage?: boolean
-  customer: UserProfile
+  user: UserProfile
 }
 
-export function TicketMessage({ message, isInitialMessage, customer }: TicketMessageProps) {
+export function TicketMessage({ message, isInitialMessage, user }: TicketMessageProps) {
   const sender: MessageSender = message.sender_type === 'customer' 
     ? { 
-        full_name: customer.full_name || customer.email,
+        full_name: user.full_name || user.email,
         avatar_url: null 
       }
     : message.sender || { full_name: 'Unknown User', avatar_url: null }

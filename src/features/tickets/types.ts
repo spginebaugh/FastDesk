@@ -6,13 +6,20 @@ export type TicketPriority = Database['public']['Enums']['ticket_priority']
 export type UserProfile = Database['public']['Tables']['user_profiles']['Row']
 export type SenderType = 'customer' | 'agent' | 'system'
 
+export interface Agent {
+  id: string
+  full_name: string | null
+  email: string
+  avatar_url: string | null
+}
+
 export interface MessageSender {
   full_name: string | null
   avatar_url: string | null
 }
 
-export interface TicketWithCustomer extends Omit<Ticket, 'customer'> {
-  customer: UserProfile
+export interface TicketWithUser extends Omit<Ticket, 'user'> {
+  user: UserProfile
 }
 
 export type BaseTicketMessage = Database['public']['Tables']['ticket_messages']['Row']
