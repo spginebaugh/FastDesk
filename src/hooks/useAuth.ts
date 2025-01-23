@@ -1,5 +1,3 @@
-import { create } from 'zustand'
-import { User } from '@supabase/supabase-js'
 import { useAuthStore } from '@/store/authStore'
 
 export function useAuth() {

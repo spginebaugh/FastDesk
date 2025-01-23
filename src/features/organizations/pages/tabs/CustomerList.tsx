@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { organizationService } from '../../services/organizationService'
-import { OrganizationMember } from '../../types'
 import {
   Table,
   TableBody,

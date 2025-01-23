@@ -142,9 +142,6 @@ export function TicketDetailPage() {
     return <div className="flex items-center justify-center h-full">Ticket not found</div>
   }
 
-  // Get initial message
-  const initialMessage = messages[0]
-
   return (
     <div className="h-full flex flex-col">
       <div className="border-b bg-white px-6 py-4">

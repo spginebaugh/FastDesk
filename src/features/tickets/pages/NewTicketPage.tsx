@@ -29,7 +29,7 @@ export function NewTicketPage() {
   const { user } = useAuth()
 
   // Get user's organizations
-  const { data: organizations = [], isLoading: isLoadingOrgs } = useQuery({
+  const { data: organizations = [] } = useQuery({
     queryKey: ['organizations'],
     queryFn: () => organizationService.getOrganizations()
   })
