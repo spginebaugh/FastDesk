@@ -3,7 +3,6 @@ import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
 import { organizationService } from '../services/organizationService'
 import { Search } from 'lucide-react'
@@ -40,7 +39,7 @@ export function AddMemberModal({ isOpen, onClose, organizationId, memberType }: 
   const queryClient = useQueryClient()
 
   // Get available users of the specified type
-  const { data: availableUsers = [], isLoading } = useQuery<UserProfile[]>({
+  const { data: availableUsers = [] } = useQuery<UserProfile[]>({
     queryKey: ['available-users', memberType],
     queryFn: () => organizationService.getAvailableUsers(memberType)
   })

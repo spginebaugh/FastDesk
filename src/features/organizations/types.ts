@@ -1,5 +1,3 @@
-import { Database } from '../../../types/database'
-
 export interface Organization {
   id: string
   name: string

@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { format } from 'date-fns'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { TICKET_PRIORITY_MAP, TicketPriority, TICKET_STATUS_MAP, TicketStatus } from '../types'
+import { TICKET_PRIORITY_MAP, TicketPriority } from '../types'
 
 export function NewTicketPage() {
   const [title, setTitle] = useState('')
