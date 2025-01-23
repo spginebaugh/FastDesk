@@ -7,7 +7,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/use-toast'
 import { ticketService } from '../services/ticketService'
 import { organizationService } from '@/features/organizations/services/organizationService'
-import { Agent } from '../types'
 import { useAuth } from '@/hooks/useAuth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { format } from 'date-fns'
@@ -18,11 +17,13 @@ export function NewTicketPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [initialSettings, setInitialSettings] = useState<{
-    priority?: TicketPriority;
+    ticket_priority?: TicketPriority;
     assignee?: string;
+    organizationId?: string;
   }>({
-    priority: 'low',
-    assignee: 'unassigned'
+    ticket_priority: 'low',
+    assignee: 'unassigned',
+    organizationId: 'unassigned'
   })
   const navigate = useNavigate()
   const { toast } = useToast()
@@ -34,36 +35,25 @@ export function NewTicketPage() {
     queryFn: () => organizationService.getOrganizations()
   })
 
-  // Get agents for all user's organizations
-  const { data: agentsByOrg = [], isLoading: isLoadingAgents } = useQuery({
-    queryKey: ['organization-agents', organizations.map(org => org.id)],
+  // Get agents for selected organization
+  const { data: agents = [], isLoading: isLoadingAgents } = useQuery({
+    queryKey: ['organization-agents', initialSettings.organizationId],
     queryFn: async () => {
-      const agentPromises = organizations.map(org => 
-        organizationService.getOrganizationMembers(org.id, 'agent')
-      )
-      const agentsResults = await Promise.all(agentPromises)
-      // Flatten and deduplicate agents by ID
-      const agentMap = new Map<string, Agent>()
-      agentsResults.flat().forEach(member => {
-        const agent: Agent = {
-          id: member.profile.id,
-          full_name: member.profile.full_name,
-          email: member.profile.email,
-          avatar_url: member.profile.avatar_url
-        }
-        agentMap.set(agent.id, agent)
-      })
-      return Array.from(agentMap.values())
+      if (!initialSettings.organizationId || initialSettings.organizationId === 'unassigned') {
+        return []
+      }
+      return ticketService.getOrganizationAgents(initialSettings.organizationId)
     },
-    enabled: organizations.length > 0
+    enabled: !!initialSettings.organizationId && initialSettings.organizationId !== 'unassigned'
   })
 
   const { mutate: createTicket, isPending } = useMutation({
     mutationFn: async () => {
       const ticket = await ticketService.createTicket({ 
         title,
-        priority: initialSettings.priority,
-        assignee: initialSettings.assignee
+        priority: initialSettings.ticket_priority,
+        assignee: initialSettings.assignee,
+        organizationId: initialSettings.organizationId === 'unassigned' ? null : initialSettings.organizationId
       })
       await ticketService.createTicketMessage({
         ticketId: ticket.id,
@@ -94,8 +84,16 @@ export function NewTicketPage() {
     createTicket()
   }
 
-  const handlePriorityChange = (priority: TicketPriority) => {
-    setInitialSettings(prev => ({ ...prev, priority }))
+  const handleTicketPriorityChange = (ticket_priority: TicketPriority) => {
+    setInitialSettings(prev => ({ ...prev, ticket_priority }))
+  }
+
+  const handleOrganizationChange = (organizationId: string) => {
+    setInitialSettings(prev => ({ 
+      ...prev, 
+      organizationId,
+      assignee: 'unassigned' // Reset assignee when organization changes
+    }))
   }
 
   const handleAssigneeChange = (assignee: string) => {
@@ -117,20 +115,27 @@ export function NewTicketPage() {
         <div className="w-64 border-r bg-gray-50 p-4 flex flex-col">
           <div className="flex-1 space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Priority</label>
+              <label className="text-sm font-medium text-gray-700">Organization</label>
               <Select
-                value={initialSettings.priority}
-                onValueChange={handlePriorityChange}
+                value={initialSettings.organizationId}
+                onValueChange={handleOrganizationChange}
               >
-                <SelectTrigger className="w-full bg-white">
-                  <SelectValue />
+                <SelectTrigger className="w-full bg-white text-black">
+                  <SelectValue>
+                    {initialSettings.organizationId === 'unassigned' ? (
+                      'Unassigned'
+                    ) : (
+                      organizations.find(org => org.id === initialSettings.organizationId)?.name || 'Loading...'
+                    )}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(TICKET_PRIORITY_MAP).map(([value, { label }]) => (
-                    <SelectItem key={value} value={value}>
-                      <div className="flex items-center">
-                        <span className={TICKET_PRIORITY_MAP[value as TicketPriority].color}>{label}</span>
-                      </div>
+                  <SelectItem value="unassigned">
+                    <span className="text-gray-600">Unassigned</span>
+                  </SelectItem>
+                  {organizations.map((org) => (
+                    <SelectItem key={org.id} value={org.id}>
+                      {org.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -152,7 +157,7 @@ export function NewTicketPage() {
                     ) : (
                       <div className="flex items-center gap-2">
                         {(() => {
-                          const agent = agentsByOrg.find(a => a.id === initialSettings.assignee)
+                          const agent = agents.find(a => a.id === initialSettings.assignee)
                           if (!agent) return 'Unassigned'
                           return (
                             <>
@@ -174,7 +179,7 @@ export function NewTicketPage() {
                   <SelectItem value="unassigned">
                     <span className="text-gray-600">Unassigned</span>
                   </SelectItem>
-                  {agentsByOrg.map((agent) => (
+                  {agents.map((agent) => (
                     <SelectItem key={agent.id} value={agent.id}>
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
@@ -184,6 +189,27 @@ export function NewTicketPage() {
                           </AvatarFallback>
                         </Avatar>
                         <span>{agent.full_name || agent.email}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Priority</label>
+              <Select
+                value={initialSettings.ticket_priority}
+                onValueChange={handleTicketPriorityChange}
+              >
+                <SelectTrigger className="w-full bg-white text-black">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(TICKET_PRIORITY_MAP).map(([value, { label }]) => (
+                    <SelectItem key={value} value={value}>
+                      <div className="flex items-center">
+                        <span className={TICKET_PRIORITY_MAP[value as TicketPriority].color}>{label}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -269,7 +295,7 @@ export function NewTicketPage() {
               </div>
               <div>
                 <h4 className="text-sm font-medium text-gray-700">Status</h4>
-                <p className="text-sm text-gray-900">{user?.user_metadata?.status || '-'}</p>
+                <p className="text-sm text-gray-900">{user?.user_metadata?.user_status || '-'}</p>
               </div>
               <div>
                 <h4 className="text-sm font-medium text-gray-700">Created</h4>

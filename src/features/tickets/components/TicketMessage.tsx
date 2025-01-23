@@ -5,25 +5,25 @@ import type { TicketMessage as TicketMessageType, UserProfile, MessageSender } f
 interface TicketMessageProps {
   message: TicketMessageType
   isInitialMessage?: boolean
-  user: UserProfile
+  user: UserProfile | MessageSender | undefined
 }
 
 export function TicketMessage({ message, isInitialMessage, user }: TicketMessageProps) {
-  const sender: MessageSender = message.sender_type === 'customer' 
-    ? { 
-        full_name: user.full_name || user.email,
-        avatar_url: null 
-      }
-    : message.sender || { full_name: 'Unknown User', avatar_url: null }
+  if (!user) {
+    user = { full_name: 'Unknown User', avatar_url: null }
+  }
+
+  const sender = {
+    full_name: user.full_name || ('email' in user ? user.email : 'Unknown User'),
+    avatar_url: user.avatar_url
+  }
 
   const initials = sender.full_name?.split(' ').map((n: string) => n[0]).join('') || '??'
 
   return (
-    <div 
-      className={`bg-white rounded-lg shadow-sm p-6 ${
-        !isInitialMessage && message.is_internal ? 'border-l-4 border-yellow-400' : ''
-      }`}
-    >
+    <div className={`bg-white rounded-lg shadow-sm p-6 ${
+      !isInitialMessage && message.is_internal ? 'border-l-4 border-yellow-400' : ''
+    }`}>
       <div className="flex items-start gap-4">
         <Avatar className="h-10 w-10">
           <AvatarImage src={sender.avatar_url || undefined} />
@@ -33,7 +33,7 @@ export function TicketMessage({ message, isInitialMessage, user }: TicketMessage
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-medium text-gray-900 truncate">
-                {sender.full_name || 'Unknown User'}
+                {sender.full_name}
                 {!isInitialMessage && message.is_internal && (
                   <span className="ml-2 text-xs text-yellow-600 font-normal">
                     Internal Note

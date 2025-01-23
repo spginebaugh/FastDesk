@@ -15,8 +15,8 @@ export type Database = {
           content: string
           created_at: string | null
           id: string
+          kb_status: string
           published_at: string | null
-          status: string
           title: string
           updated_at: string | null
         }
@@ -25,8 +25,8 @@ export type Database = {
           content: string
           created_at?: string | null
           id?: string
+          kb_status?: string
           published_at?: string | null
-          status?: string
           title: string
           updated_at?: string | null
         }
@@ -35,8 +35,8 @@ export type Database = {
           content?: string
           created_at?: string | null
           id?: string
+          kb_status?: string
           published_at?: string | null
-          status?: string
           title?: string
           updated_at?: string | null
         }
@@ -407,10 +407,10 @@ export type Database = {
           integration_metadata: Json | null
           metadata: Json | null
           organization_id: string | null
-          priority: Database["public"]["Enums"]["ticket_priority"]
           resolved_at: string | null
-          source: Database["public"]["Enums"]["ticket_source"]
-          status: Database["public"]["Enums"]["ticket_status"]
+          ticket_priority: Database["public"]["Enums"]["ticket_priority"]
+          ticket_source: Database["public"]["Enums"]["ticket_source"]
+          ticket_status: Database["public"]["Enums"]["ticket_status"]
           title: string
           updated_at: string | null
           user_id: string
@@ -427,10 +427,10 @@ export type Database = {
           integration_metadata?: Json | null
           metadata?: Json | null
           organization_id?: string | null
-          priority?: Database["public"]["Enums"]["ticket_priority"]
           resolved_at?: string | null
-          source?: Database["public"]["Enums"]["ticket_source"]
-          status?: Database["public"]["Enums"]["ticket_status"]
+          ticket_priority?: Database["public"]["Enums"]["ticket_priority"]
+          ticket_source?: Database["public"]["Enums"]["ticket_source"]
+          ticket_status?: Database["public"]["Enums"]["ticket_status"]
           title: string
           updated_at?: string | null
           user_id: string
@@ -447,10 +447,10 @@ export type Database = {
           integration_metadata?: Json | null
           metadata?: Json | null
           organization_id?: string | null
-          priority?: Database["public"]["Enums"]["ticket_priority"]
           resolved_at?: string | null
-          source?: Database["public"]["Enums"]["ticket_source"]
-          status?: Database["public"]["Enums"]["ticket_status"]
+          ticket_priority?: Database["public"]["Enums"]["ticket_priority"]
+          ticket_source?: Database["public"]["Enums"]["ticket_source"]
+          ticket_status?: Database["public"]["Enums"]["ticket_status"]
           title?: string
           updated_at?: string | null
           user_id?: string
@@ -488,8 +488,8 @@ export type Database = {
           login_count: number | null
           metadata: Json | null
           preferences: Json | null
-          status: Database["public"]["Enums"]["user_status"]
           updated_at: string | null
+          user_status: Database["public"]["Enums"]["user_status"]
           user_type: string
         }
         Insert: {
@@ -507,8 +507,8 @@ export type Database = {
           login_count?: number | null
           metadata?: Json | null
           preferences?: Json | null
-          status?: Database["public"]["Enums"]["user_status"]
           updated_at?: string | null
+          user_status?: Database["public"]["Enums"]["user_status"]
           user_type?: string
         }
         Update: {
@@ -526,8 +526,8 @@ export type Database = {
           login_count?: number | null
           metadata?: Json | null
           preferences?: Json | null
-          status?: Database["public"]["Enums"]["user_status"]
           updated_at?: string | null
+          user_status?: Database["public"]["Enums"]["user_status"]
           user_type?: string
         }
         Relationships: []

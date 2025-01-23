@@ -7,15 +7,15 @@ interface OrganizationMemberWithProfile extends OrganizationMember {
     email: string
     full_name: string | null
     avatar_url: string | null
-    status: 'online' | 'offline' | 'away' | 'transfers_only'
+    user_status: 'online' | 'offline' | 'away' | 'transfers_only'
   }
 }
 
 interface OrganizationTicket {
   id: string
   title: string
-  status: 'new' | 'open' | 'pending' | 'resolved' | 'closed'
-  priority: 'low' | 'medium' | 'high' | 'urgent'
+  ticket_status: 'new' | 'open' | 'pending' | 'resolved' | 'closed'
+  ticket_priority: 'low' | 'medium' | 'high' | 'urgent'
   created_at: string | null
   updated_at: string | null
 }
@@ -59,19 +59,24 @@ export const organizationService = {
       .from('organizations')
       .select(`
         *,
-        organization_members!inner(
+        organization_members!left(
           organization_role,
           profile_id
         )
       `)
-      .eq('organization_members.profile_id', userProfile.user.id)
       .order('name')
 
     if (error) {
       throw new Error(error.message)
     }
 
-    return data as Organization[]
+    // Transform the data to include role information
+    return data.map(org => ({
+      ...org,
+      organization_members: org.organization_members?.filter(
+        member => member.profile_id === userProfile.user?.id
+      ) || []
+    })) as Organization[]
   },
 
   async getOrganization(id: string): Promise<Organization> {
@@ -98,7 +103,7 @@ export const organizationService = {
           email,
           full_name,
           avatar_url,
-          status
+          user_status
         )
       `)
       .eq('organization_id', organizationId)
@@ -114,8 +119,8 @@ export const organizationService = {
       .select(`
         id,
         title,
-        status,
-        priority,
+        ticket_status,
+        ticket_priority,
         created_at,
         updated_at
       `)
@@ -134,7 +139,7 @@ export const organizationService = {
         email,
         full_name,
         avatar_url,
-        status
+        user_status
       `)
       .eq('user_type', userType)
       .eq('is_active', true)

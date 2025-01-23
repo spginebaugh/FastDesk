@@ -47,7 +47,7 @@ export function AgentList({ organizationId }: AgentListProps) {
     agent.profile.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const getStatusColor = (status: keyof typeof STATUS_COLORS) => {
+  const getUserStatusColor = (status: keyof typeof STATUS_COLORS) => {
     return `${STATUS_COLORS[status]} bg-opacity-10 text-black`
   }
 
@@ -124,10 +124,10 @@ export function AgentList({ organizationId }: AgentListProps) {
                 <TableCell>
                   <Badge 
                     variant="outline" 
-                    className={`${getStatusColor(agent.profile.status)} capitalize`}
+                    className={`${getUserStatusColor(agent.profile.user_status)} capitalize`}
                   >
-                    <span className={`mr-1.5 h-2 w-2 inline-block rounded-full ${STATUS_COLORS[agent.profile.status]}`} />
-                    {agent.profile.status === 'transfers_only' ? 'Transfers only' : agent.profile.status}
+                    <span className={`mr-1.5 h-2 w-2 inline-block rounded-full ${STATUS_COLORS[agent.profile.user_status]}`} />
+                    {agent.profile.user_status === 'transfers_only' ? 'Transfers only' : agent.profile.user_status}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-black">

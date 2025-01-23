@@ -35,7 +35,7 @@ create table user_profiles (
     avatar_url text,
     company text,
     user_type text not null default 'customer' check (user_type in ('agent', 'customer')),
-    status user_status not null default 'offline',
+    user_status user_status not null default 'offline',
     is_active boolean default true,
     external_id text,
     auth_provider text,
@@ -126,9 +126,9 @@ create table tickets (
     title text not null check (length(trim(title)) > 0),
     user_id uuid not null references user_profiles(id) on delete cascade,
     organization_id uuid references organizations(id) on delete set null,
-    status ticket_status not null default 'new',
-    priority ticket_priority not null default 'medium',
-    source ticket_source not null default 'customer_portal',
+    ticket_status ticket_status not null default 'new',
+    ticket_priority ticket_priority not null default 'medium',
+    ticket_source ticket_source not null default 'customer_portal',
     external_reference_id text,
     created_by_type text not null check (created_by_type in ('customer', 'agent', 'system', 'api')),
     created_by_id uuid,
@@ -139,8 +139,8 @@ create table tickets (
     created_at timestamptz default now(),
     updated_at timestamptz default now(),
     resolved_at timestamptz check (
-        (status != 'resolved' and resolved_at is null) or
-        (status = 'resolved' and resolved_at is not null)
+        (ticket_status != 'resolved' and resolved_at is null) or
+        (ticket_status = 'resolved' and resolved_at is not null)
     ),
     first_response_at timestamptz check (
         first_response_at is null or first_response_at >= created_at
@@ -207,7 +207,7 @@ create table kb_articles (
     title text not null,
     content text not null,
     author_id uuid references user_profiles(id) on delete set null,
-    status text not null default 'draft',
+    kb_status text not null default 'draft',
     published_at timestamptz,
     created_at timestamptz default now(),
     updated_at timestamptz default now()
@@ -225,9 +225,9 @@ create table ticket_feedback (
 
 -- Create indexes for better query performance
 create index idx_tickets_user_id on tickets(user_id);
-create index idx_tickets_status on tickets(status);
-create index idx_tickets_priority on tickets(priority);
-create index idx_tickets_source on tickets(source);
+create index idx_tickets_status on tickets(ticket_status);
+create index idx_tickets_priority on tickets(ticket_priority);
+create index idx_tickets_source on tickets(ticket_source);
 create index idx_tickets_external_reference_id on tickets(external_reference_id);
 
 create index idx_ticket_messages_ticket_id on ticket_messages(ticket_id);
@@ -278,7 +278,7 @@ begin
         email,
         full_name,
         user_type,
-        status,
+        user_status,
         metadata
     )
     values (
@@ -303,8 +303,8 @@ create trigger on_auth_user_created
 create or replace function handle_ticket_status_change()
 returns trigger as $$
 begin
-    if new.status != old.status then
-        if new.status = 'resolved' then
+    if new.ticket_status != old.ticket_status then
+        if new.ticket_status = 'resolved' then
             new.resolved_at = now();
         end if;
     end if;
@@ -315,7 +315,7 @@ $$ language plpgsql;
 create trigger ticket_status_change
     before update on tickets
     for each row
-    when (old.status is distinct from new.status)
+    when (old.ticket_status is distinct from new.ticket_status)
     execute function handle_ticket_status_change();
 
 -- Create function to track first response time
@@ -344,7 +344,7 @@ create trigger track_ticket_first_response
 -- Additional indexes for common query patterns
 create index idx_tickets_created_at on tickets(created_at);
 create index idx_tickets_updated_at on tickets(updated_at);
-create index idx_tickets_organization_status on tickets(organization_id, status);
+create index idx_tickets_organization_status on tickets(organization_id, ticket_status);
 create index idx_ticket_messages_created_at on ticket_messages(created_at);
 
 -- Grant permissions

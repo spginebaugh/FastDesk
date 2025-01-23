@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Search, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,9 +15,14 @@ import { useQuery } from '@tanstack/react-query'
 import { customerService } from '../services/customerService'
 import { Customer } from '../types'
 import { format } from 'date-fns'
+import { useTabStore } from '@/store/tabStore'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 
 export function CustomerListPage() {
   const [searchQuery, setSearchQuery] = useState('')
+  const navigate = useNavigate()
+  const tabStore = useTabStore()
 
   const { data: customers = [], isLoading } = useQuery<Customer[]>({
     queryKey: ['customers'],
@@ -29,6 +35,20 @@ export function CustomerListPage() {
       customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       organizationNames.includes(searchQuery.toLowerCase())
   })
+
+  const handleRowClick = (customer: Customer) => {
+    const path = `/customers/${customer.id}/tickets`
+    
+    // Add tab if it doesn't exist
+    if (!tabStore.hasTab(path)) {
+      tabStore.addTab({
+        title: customer.full_name || customer.email,
+        path,
+      })
+    }
+    
+    navigate(path)
+  }
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-full">Loading...</div>
@@ -97,9 +117,18 @@ export function CustomerListPage() {
                   <TableRow 
                     key={customer.id}
                     className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleRowClick(customer)}
                   >
                     <TableCell className="text-black">
-                      {customer.full_name || 'Unknown'}
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={customer.avatar_url || undefined} />
+                          <AvatarFallback>
+                            {customer.full_name?.[0]?.toUpperCase() || customer.email[0].toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium">{customer.full_name || 'Unknown'}</span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-black">
                       {customer.email}
@@ -107,8 +136,13 @@ export function CustomerListPage() {
                     <TableCell className="text-black">
                       {customer.organizations?.map(org => org.organization.name).join(', ') || '-'}
                     </TableCell>
-                    <TableCell className="text-black">
-                      {customer.status || '-'}
+                    <TableCell>
+                      <Badge 
+                        variant="outline" 
+                        className="capitalize"
+                      >
+                        {customer.user_status}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-black">
                       {customer.created_at 

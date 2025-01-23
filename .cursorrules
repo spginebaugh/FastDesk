@@ -90,6 +90,10 @@ fastdesk/
 │  │  │  ├─ Input.tsx
 │  │  │  ├─ ... // more shadcn ui components
 │  │  │  └─  index.ts
+│  │  ├─ shared/              
+│  │  │  ├─ StatusBadge.tsx
+│  │  │  ├─ PriorityBadge.tsx
+│  │  │  └─ ... // more cross-feature components
 │  │  ├─ Navbar.tsx
 │  │  └─  Footer.tsx
 │  ├─ providers/

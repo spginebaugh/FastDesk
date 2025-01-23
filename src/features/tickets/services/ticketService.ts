@@ -54,22 +54,35 @@ export const ticketService = {
         query = query.not('id', 'in', `(${ticketIds.map(id => `"${id}"`).join(',')})`)
       }
     } else if (userId) {
-      const { data: assignedTickets } = await supabase
-        .from('ticket_assignments')
-        .select('ticket_id')
-        .eq('agent_id', userId)
-      
-      const assignedTicketIds = assignedTickets?.map(t => t.ticket_id).filter((id): id is string => id !== null) || []
-      if (assignedTicketIds.length > 0) {
-        query = query.in('id', assignedTicketIds)
+      // Check if the user is a customer or an agent
+      const { data: userProfile } = await supabase
+        .from('user_profiles')
+        .select('user_type')
+        .eq('id', userId)
+        .single()
+
+      if (userProfile?.user_type === 'customer') {
+        // For customers, show tickets they created
+        query = query.eq('user_id', userId)
       } else {
-        // If no assigned tickets, return empty array
-        return []
+        // For agents, show tickets assigned to them
+        const { data: assignedTickets } = await supabase
+          .from('ticket_assignments')
+          .select('ticket_id')
+          .eq('agent_id', userId)
+        
+        const assignedTicketIds = assignedTickets?.map(t => t.ticket_id).filter((id): id is string => id !== null) || []
+        if (assignedTicketIds.length > 0) {
+          query = query.in('id', assignedTicketIds)
+        } else {
+          // If no assigned tickets, return empty array
+          return []
+        }
       }
     }
 
     if (status.length > 0) {
-      query = query.in('status', status)
+      query = query.in('ticket_status', status)
     }
 
     if (recentlyUpdated) {
@@ -153,37 +166,37 @@ export const ticketService = {
   async createTicket({ 
     title, 
     priority = 'low',
-    assignee = 'unassigned'
+    assignee = 'unassigned',
+    organizationId = null
   }: { 
     title: string;
     priority?: TicketPriority;
     assignee?: string;
+    organizationId?: string | null;
   }) {
     const { data: userProfile } = await supabase.auth.getUser()
     if (!userProfile.user) throw new Error('User not authenticated')
 
-    // Get user profile with organization info
+    // Get user profile
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('id, email, user_type, organization_members!inner(organization_id)')
+      .select('id, email, user_type')
       .eq('email', userProfile.user.email!)
       .single()
 
-    if (!profile?.id || !profile.organization_members?.[0]?.organization_id) {
-      throw new Error('User profile or organization not found')
+    if (!profile?.id) {
+      throw new Error('User profile not found')
     }
-
-    const organizationId = profile.organization_members[0].organization_id
 
     const ticketData = {
       title,
-      status: 'new' as const,
-      priority,
+      ticket_status: 'new' as const,
+      ticket_priority: priority,
       user_id: profile.id,
       organization_id: organizationId,
       created_by_type: profile.user_type,
       created_by_id: profile.id,
-      source: profile.user_type === 'agent' ? 'agent_portal' as const : 'customer_portal' as const
+      ticket_source: profile.user_type === 'agent' ? 'agent_portal' as const : 'customer_portal' as const
     } as const
 
     // Create the ticket
@@ -198,12 +211,15 @@ export const ticketService = {
 
     if (error) throw error
 
-    if (assignee && assignee !== 'unassigned') {
+    // If no assignee specified and no organization, assign to creator
+    const finalAssignee = assignee === 'unassigned' && !organizationId ? profile.id : assignee
+
+    if (finalAssignee && finalAssignee !== 'unassigned') {
       const { error: assignmentError } = await supabase
         .from('ticket_assignments')
         .insert({
           ticket_id: ticket.id,
-          agent_id: assignee,
+          agent_id: finalAssignee,
           organization_id: organizationId,
           is_primary: true
         })
@@ -256,8 +272,8 @@ export const ticketService = {
 
   async updateTicket(ticketId: string, updates: Partial<{ 
     title: string; 
-    status: TicketStatus;
-    priority: TicketPriority;
+    ticket_status: TicketStatus;
+    ticket_priority: TicketPriority;
   }>) {
     const { data, error } = await supabase
       .from('tickets')
@@ -291,7 +307,7 @@ export const ticketService = {
             email: 'sample@customer.com',
             full_name: 'Sample Customer',
             user_type: 'customer',
-            status: 'offline'
+            user_status: 'offline'
           }
         ])
         .select()
@@ -307,13 +323,13 @@ export const ticketService = {
       .insert([
         {
           title: 'SAMPLE TICKET: Meet the ticket',
-          status: 'new',
-          priority: 'medium',
+          ticket_status: 'new',
+          ticket_priority: 'medium',
           user_id: sampleUser.id,
           created_by_type: 'customer',
           created_by_id: sampleUser.id,
-          source: 'system',
-          team_id: null
+          ticket_source: 'system',
+          organization_id: null
         }
       ])
       .select()
@@ -365,9 +381,9 @@ export const ticketService = {
       `)
       .eq('ticket_id', ticketId)
       .eq('is_primary', true)
-      .single()
+      .maybeSingle()
 
-    if (error && error.code !== 'PGRST116') throw error // PGRST116 is "no rows returned"
+    if (error) throw error
     return data?.agent as Agent | null
   },
 

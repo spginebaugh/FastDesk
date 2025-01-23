@@ -9,4 +9,4 @@ export type Customer = Database['public']['Tables']['user_profiles']['Row'] & {
   }>
 }
 
-export type CustomerStatus = 'online' | 'offline' | 'away' 
+export type CustomerStatus = Database['public']['Enums']['user_status'] 

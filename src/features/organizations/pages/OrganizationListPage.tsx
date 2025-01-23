@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Building2, Plus } from 'lucide-react'
+import { Search, Building2, Plus, ShieldCheck, Users, UserMinus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -18,9 +19,29 @@ import { format } from 'date-fns'
 import { useTabStore } from '@/store/tabStore'
 import { CreateOrganizationModal } from '../components/CreateOrganizationModal'
 
+const ROLE_COLORS = {
+  admin: 'text-green-600 border-green-200',
+  member: 'text-blue-600 border-blue-200',
+  nonmember: 'text-red-600 border-red-200'
+} as const
+
+type FilterRole = 'all' | 'admin' | 'member' | 'nonmember'
+
+const FILTER_OPTIONS: { 
+  id: FilterRole
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+}[] = [
+  { id: 'all', label: 'All organizations', icon: Building2 },
+  { id: 'admin', label: 'Admin', icon: ShieldCheck },
+  { id: 'member', label: 'Member', icon: Users },
+  { id: 'nonmember', label: 'Nonmember', icon: UserMinus }
+]
+
 export function OrganizationListPage() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedFilter, setSelectedFilter] = useState<FilterRole>('all')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const tabStore = useTabStore()
 
@@ -29,12 +50,30 @@ export function OrganizationListPage() {
     queryFn: () => organizationService.getOrganizations()
   })
 
-  const filteredOrganizations = organizations.filter((org) => 
-    org.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    org.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredOrganizations = organizations.filter((org) => {
+    // First apply role filter
+    if (selectedFilter !== 'all') {
+      const member = org.organization_members?.[0]
+      if (selectedFilter === 'nonmember') {
+        if (member) return false
+      } else {
+        if (!member || member.organization_role !== selectedFilter) return false
+      }
+    }
+    
+    // Then apply search filter
+    return (
+      org.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      org.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  })
 
   const handleRowClick = (organization: Organization) => {
+    // Only allow navigation if user is a member
+    if (!organization.organization_members || organization.organization_members.length === 0) {
+      return
+    }
+
     const path = `/organizations/${organization.id}/tickets`
     
     // Add tab if it doesn't exist
@@ -46,6 +85,27 @@ export function OrganizationListPage() {
     }
     
     navigate(path)
+  }
+
+  const getRoleDisplay = (organization: Organization) => {
+    const member = organization.organization_members?.[0]
+    if (!member) {
+      return {
+        label: 'Nonmember',
+        color: ROLE_COLORS.nonmember
+      }
+    }
+    // Handle customer role by showing it as a member
+    const role = member.organization_role === 'customer' ? 'member' : member.organization_role
+    return {
+      label: member.organization_role,
+      color: ROLE_COLORS[role]
+    }
+  }
+
+  const getRowClassName = (organization: Organization) => {
+    const isMember = organization.organization_members && organization.organization_members.length > 0
+    return `${isMember ? 'cursor-pointer hover:bg-gray-50' : 'cursor-not-allowed bg-gray-50/50'}`
   }
 
   if (isLoading) {
@@ -61,14 +121,25 @@ export function OrganizationListPage() {
             <div className="py-2">
               <h2 className="px-2 text-lg font-semibold text-gray-900">Organization lists</h2>
               <div className="space-y-1 mt-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-full justify-start bg-gray-200 text-black"
-                >
-                  <Building2 className="mr-2 h-4 w-4" />
-                  All organizations
-                </Button>
+                {FILTER_OPTIONS.map((option) => {
+                  const Icon = option.icon
+                  return (
+                    <Button 
+                      key={option.id}
+                      variant="ghost" 
+                      size="sm" 
+                      className={`w-full justify-start ${
+                        selectedFilter === option.id 
+                          ? 'bg-gray-200 text-black'
+                          : 'text-white hover:bg-gray-100 hover:text-black'
+                      }`}
+                      onClick={() => setSelectedFilter(option.id)}
+                    >
+                      <Icon className="mr-2 h-4 w-4" />
+                      {option.label}
+                    </Button>
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -79,7 +150,9 @@ export function OrganizationListPage() {
       <div className="flex-1 flex flex-col">
         <div className="border-b bg-white px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold text-gray-900">All organizations</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">
+              {FILTER_OPTIONS.find(opt => opt.id === selectedFilter)?.label || 'All organizations'}
+            </h1>
             <Button 
               className="ml-4"
               onClick={() => setIsCreateModalOpen(true)}
@@ -120,33 +193,41 @@ export function OrganizationListPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrganizations.map((org) => (
-                  <TableRow 
-                    key={org.id}
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleRowClick(org)}
-                  >
-                    <TableCell className="text-black font-medium">
-                      {org.name}
-                    </TableCell>
-                    <TableCell className="text-black">
-                      {org.description || '-'}
-                    </TableCell>
-                    <TableCell className="text-black">
-                      {org.organization_members?.[0]?.organization_role || '-'}
-                    </TableCell>
-                    <TableCell className="text-black">
-                      {org.created_at 
-                        ? format(new Date(org.created_at), 'MMM d, yyyy')
-                        : '-'}
-                    </TableCell>
-                    <TableCell className="text-black">
-                      {org.updated_at
-                        ? format(new Date(org.updated_at), 'MMM d, yyyy')
-                        : '-'}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filteredOrganizations.map((org) => {
+                  const role = getRoleDisplay(org)
+                  return (
+                    <TableRow 
+                      key={org.id}
+                      className={getRowClassName(org)}
+                      onClick={() => handleRowClick(org)}
+                    >
+                      <TableCell className="text-black font-medium">
+                        {org.name}
+                      </TableCell>
+                      <TableCell className="text-black">
+                        {org.description || '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant="outline" 
+                          className={`capitalize ${role.color}`}
+                        >
+                          {role.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-black">
+                        {org.created_at 
+                          ? format(new Date(org.created_at), 'MMM d, yyyy')
+                          : '-'}
+                      </TableCell>
+                      <TableCell className="text-black">
+                        {org.updated_at
+                          ? format(new Date(org.updated_at), 'MMM d, yyyy')
+                          : '-'}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
           </div>

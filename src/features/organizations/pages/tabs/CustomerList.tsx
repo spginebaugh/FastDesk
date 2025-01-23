@@ -41,7 +41,7 @@ export function CustomerList({ organizationId }: CustomerListProps) {
     customer.profile.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const getStatusColor = (status: keyof typeof STATUS_COLORS) => {
+  const getUserStatusColor = (status: keyof typeof STATUS_COLORS) => {
     return `${STATUS_COLORS[status]} bg-opacity-10 text-black`
   }
 
@@ -105,10 +105,10 @@ export function CustomerList({ organizationId }: CustomerListProps) {
                 <TableCell>
                   <Badge 
                     variant="outline" 
-                    className={`${getStatusColor(customer.profile.status)} capitalize`}
+                    className={`${getUserStatusColor(customer.profile.user_status)} capitalize`}
                   >
-                    <span className={`mr-1.5 h-2 w-2 inline-block rounded-full ${STATUS_COLORS[customer.profile.status]}`} />
-                    {customer.profile.status === 'transfers_only' ? 'Transfers only' : customer.profile.status}
+                    <span className={`mr-1.5 h-2 w-2 inline-block rounded-full ${STATUS_COLORS[customer.profile.user_status]}`} />
+                    {customer.profile.user_status === 'transfers_only' ? 'Transfers only' : customer.profile.user_status}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-black">

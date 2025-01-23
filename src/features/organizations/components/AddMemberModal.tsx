@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Database } from '../../../../types/database'
 
 interface AddMemberModalProps {
   isOpen: boolean
@@ -24,12 +25,12 @@ interface AddMemberModalProps {
   memberType: 'agent' | 'customer'
 }
 
-interface UserProfile {
-  id: string
-  email: string
-  full_name: string | null
-  avatar_url: string | null
-  status: 'online' | 'offline' | 'away' | 'transfers_only'
+type UserProfile = Database['public']['Tables']['user_profiles']['Row']
+
+type OrganizationMember = Database['public']['Tables']['organization_members']['Row']
+
+function isUserProfile(obj: any): obj is UserProfile {
+  return obj && typeof obj === 'object' && 'id' in obj && 'email' in obj && 'user_status' in obj
 }
 
 export function AddMemberModal({ isOpen, onClose, organizationId, memberType }: AddMemberModalProps) {
@@ -41,18 +42,27 @@ export function AddMemberModal({ isOpen, onClose, organizationId, memberType }: 
   // Get available users of the specified type
   const { data: availableUsers = [] } = useQuery<UserProfile[]>({
     queryKey: ['available-users', memberType],
-    queryFn: () => organizationService.getAvailableUsers(memberType)
+    queryFn: async () => {
+      const response = await organizationService.getAvailableUsers(memberType)
+      if (Array.isArray(response) && response.length > 0 && isUserProfile(response[0])) {
+        return response as UserProfile[]
+      }
+      throw new Error('Failed to fetch users')
+    }
   })
 
   // Get existing organization members to exclude them
-  const { data: existingMembers = [] } = useQuery({
+  const { data: existingMembers = [] } = useQuery<OrganizationMember[]>({
     queryKey: ['organization-members', organizationId, memberType],
-    queryFn: () => organizationService.getOrganizationMembers(organizationId, memberType)
+    queryFn: async () => {
+      const response = await organizationService.getOrganizationMembers(organizationId, memberType)
+      return response as OrganizationMember[]
+    }
   })
 
   const existingMemberIds = new Set(existingMembers.map(member => member.profile_id))
 
-  const filteredUsers = availableUsers.filter(user => 
+  const filteredUsers = availableUsers.filter((user: UserProfile) => 
     !existingMemberIds.has(user.id) &&
     (user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
      user.email.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -135,7 +145,7 @@ export function AddMemberModal({ isOpen, onClose, organizationId, memberType }: 
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredUsers.map((user) => (
+                  {filteredUsers.map((user: UserProfile) => (
                     <TableRow 
                       key={user.id}
                       className="cursor-pointer hover:bg-gray-50"
@@ -162,7 +172,7 @@ export function AddMemberModal({ isOpen, onClose, organizationId, memberType }: 
                         {user.email}
                       </TableCell>
                       <TableCell className="text-black capitalize" onClick={() => toggleUser(user.id)}>
-                        {user.status}
+                        {user.user_status}
                       </TableCell>
                     </TableRow>
                   ))}

@@ -9,6 +9,7 @@ import { NewTicketPage } from '@/features/tickets/pages/NewTicketPage'
 import { ProfilePage } from '@/features/profile/pages/ProfilePage'
 import { CustomerListPage } from '@/features/customers/pages/CustomerListPage'
 import { OrganizationListPage, OrganizationDetailPage } from '@/features/organizations'
+import { CustomerDetailPage } from '@/features/customers/pages/CustomerDetailPage'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -61,6 +62,8 @@ export function Router() {
 
           {/* Customer Routes */}
           <Route path="customers" element={<CustomerListPage />} />
+          <Route path="customers/:customerId" element={<CustomerDetailPage />} />
+          <Route path="customers/:customerId/:tab" element={<CustomerDetailPage />} />
 
           {/* Organization Routes */}
           <Route path="organizations" element={<OrganizationListPage />} />

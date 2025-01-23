@@ -25,8 +25,8 @@ export function TicketDetailPage() {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editedTitle, setEditedTitle] = useState('')
   const [pendingChanges, setPendingChanges] = useState<{
-    status?: TicketStatus;
-    priority?: TicketPriority;
+    ticket_status?: TicketStatus;
+    ticket_priority?: TicketPriority;
     assignee?: string;
   }>({})
 
@@ -120,12 +120,12 @@ export function TicketDetailPage() {
     }
   }
 
-  const handleStatusChange = (status: TicketStatus) => {
-    setPendingChanges(prev => ({ ...prev, status }))
+  const handleTicketStatusChange = (ticket_status: TicketStatus) => {
+    setPendingChanges(prev => ({ ...prev, ticket_status }))
   }
 
-  const handlePriorityChange = (priority: TicketPriority) => {
-    setPendingChanges(prev => ({ ...prev, priority }))
+  const handleTicketPriorityChange = (ticket_priority: TicketPriority) => {
+    setPendingChanges(prev => ({ ...prev, ticket_priority }))
   }
 
   const handleAssigneeChange = (assignee: string) => {
@@ -178,8 +178,8 @@ export function TicketDetailPage() {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Status</label>
               <Select
-                value={pendingChanges.status || ticket.status}
-                onValueChange={handleStatusChange}
+                value={pendingChanges.ticket_status || ticket.ticket_status}
+                onValueChange={handleTicketStatusChange}
               >
                 <SelectTrigger className="w-full bg-white text-black">
                   <SelectValue />
@@ -190,27 +190,6 @@ export function TicketDetailPage() {
                       <div className="flex items-center">
                         <div className={`w-2 h-2 rounded-full mr-2 ${TICKET_STATUS_MAP[value as TicketStatus].color}`} />
                         {label}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Priority</label>
-              <Select
-                value={pendingChanges.priority || ticket.priority}
-                onValueChange={handlePriorityChange}
-              >
-                <SelectTrigger className="w-full bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(TICKET_PRIORITY_MAP).map(([value, { label }]) => (
-                    <SelectItem key={value} value={value}>
-                      <div className="flex items-center">
-                        <span className={TICKET_PRIORITY_MAP[value as TicketPriority].color}>{label}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -263,6 +242,27 @@ export function TicketDetailPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Priority</label>
+              <Select
+                value={pendingChanges.ticket_priority || ticket.ticket_priority}
+                onValueChange={handleTicketPriorityChange}
+              >
+                <SelectTrigger className="w-full bg-white text-black">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(TICKET_PRIORITY_MAP).map(([value, { label }]) => (
+                    <SelectItem key={value} value={value}>
+                      <div className="flex items-center">
+                        <span className={TICKET_PRIORITY_MAP[value as TicketPriority].color}>{label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="pt-4 border-t mt-4">
@@ -277,20 +277,59 @@ export function TicketDetailPage() {
           </div>
         </div>
 
-        {/* Right Section - Messages */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Middle Section - Messages */}
+        <div className="flex-1 flex flex-col min-w-0 max-w-[calc(100%-36rem)] overflow-hidden">
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message) => (
               <TicketMessage 
-                key={message.id} 
-                message={message} 
-                user={ticket.user}
+                key={message.id}
+                message={message}
+                user={message.sender_type === 'customer' ? ticket.user : message.sender}
                 isInitialMessage={message.id === messages[0].id}
               />
             ))}
           </div>
           <div className="border-t p-4">
             <TicketReplyBox ticketId={ticketId!} />
+          </div>
+        </div>
+
+        {/* Right Section - Ticket Creator Profile */}
+        <div className="w-80 border-l bg-gray-50 p-6">
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={ticket.user.avatar_url || undefined} />
+                <AvatarFallback>
+                  {ticket.user.full_name?.split(' ').map((n: string) => n[0]).join('') || ticket.user.email[0].toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">
+                  {ticket.user.full_name || 'Unknown User'}
+                </h3>
+                <p className="text-sm text-gray-500">{ticket.user.email}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium text-gray-700">Company</h4>
+                <p className="text-sm text-gray-900">{ticket.user.company || '-'}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-gray-700">Status</h4>
+                <p className="text-sm text-gray-900">{ticket.user.user_status || '-'}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-gray-700">Created</h4>
+                <p className="text-sm text-gray-900">
+                  {ticket.user.created_at 
+                    ? format(new Date(ticket.user.created_at), 'MMM d, yyyy')
+                    : '-'}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

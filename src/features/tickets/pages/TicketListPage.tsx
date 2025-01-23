@@ -209,17 +209,17 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
                     <TableCell onClick={() => navigate(`/tickets/${ticket.id}`)}>
                       <Badge 
                         variant="outline" 
-                        className={`${TICKET_STATUS_MAP[ticket.status].color} bg-opacity-10 text-black`}
+                        className={`${TICKET_STATUS_MAP[ticket.ticket_status].color} bg-opacity-10 text-black`}
                       >
-                        {TICKET_STATUS_MAP[ticket.status].label}
+                        {TICKET_STATUS_MAP[ticket.ticket_status].label}
                       </Badge>
                     </TableCell>
                     <TableCell onClick={() => navigate(`/tickets/${ticket.id}`)}>
                       <Badge 
                         variant="outline" 
-                        className={TICKET_PRIORITY_MAP[ticket.priority].color}
+                        className={TICKET_PRIORITY_MAP[ticket.ticket_priority].color}
                       >
-                        {TICKET_PRIORITY_MAP[ticket.priority].label}
+                        {TICKET_PRIORITY_MAP[ticket.ticket_priority].label}
                       </Badge>
                     </TableCell>
                     <TableCell 

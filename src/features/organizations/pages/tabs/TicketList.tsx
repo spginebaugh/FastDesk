@@ -22,8 +22,8 @@ interface TicketListProps {
 interface OrganizationTicket {
   id: string
   title: string
-  status: 'new' | 'open' | 'pending' | 'resolved' | 'closed'
-  priority: 'low' | 'medium' | 'high' | 'urgent'
+  ticket_status: 'new' | 'open' | 'pending' | 'resolved' | 'closed'
+  ticket_priority: 'low' | 'medium' | 'high' | 'urgent'
   created_at: string | null
   updated_at: string | null
 }
@@ -90,17 +90,17 @@ export function TicketList({ organizationId }: TicketListProps) {
                 <TableCell>
                   <Badge 
                     variant="outline" 
-                    className={`${TICKET_STATUS_MAP[ticket.status].color} bg-opacity-10 text-black`}
+                    className={`${TICKET_STATUS_MAP[ticket.ticket_status].color} bg-opacity-10 text-black`}
                   >
-                    {TICKET_STATUS_MAP[ticket.status].label}
+                    {TICKET_STATUS_MAP[ticket.ticket_status].label}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <Badge 
                     variant="outline" 
-                    className={TICKET_PRIORITY_MAP[ticket.priority].color}
+                    className={TICKET_PRIORITY_MAP[ticket.ticket_priority].color}
                   >
-                    {TICKET_PRIORITY_MAP[ticket.priority].label}
+                    {TICKET_PRIORITY_MAP[ticket.ticket_priority].label}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-black">

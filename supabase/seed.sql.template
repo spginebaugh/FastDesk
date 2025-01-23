@@ -6,7 +6,7 @@ INSERT INTO organizations (id, name, description) VALUES
     ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'UniverseTech', 'A made up company');
 
 -- Insert/Update profiles for all users (both agents and customers)
-INSERT INTO user_profiles (id, email, full_name, user_type, status, company, metadata, external_metadata) VALUES
+INSERT INTO user_profiles (id, email, full_name, user_type, user_status, company, metadata, external_metadata) VALUES
     ('USER_ID_1', 'USER_EMAIL_1', 'USER_FULL_NAME_1', 'agent', 'offline', null, '{}'::jsonb, '{}'::jsonb),
     ('USER_ID_2', 'USER_EMAIL_2', 'USER_FULL_NAME_2', 'agent', 'offline', null, '{}'::jsonb, '{}'::jsonb),
     ('USER_ID_3', 'USER_EMAIL_3', 'USER_FULL_NAME_3', 'agent', 'offline', null, '{}'::jsonb, '{}'::jsonb),
@@ -37,7 +37,7 @@ ON CONFLICT (id) DO UPDATE
 SET email = EXCLUDED.email,
     full_name = EXCLUDED.full_name,
     user_type = EXCLUDED.user_type,
-    status = EXCLUDED.status,
+    user_status = EXCLUDED.user_status,
     company = EXCLUDED.company,
     metadata = EXCLUDED.metadata,
     external_metadata = EXCLUDED.external_metadata;
@@ -90,7 +90,7 @@ INSERT INTO templates (id, title, content, organization_id, created_by) VALUES
     ('e5e6c49c-f34d-4c5b-8d54-d123f229e555', 'Billing FAQ', 'Here are our most common billing questions and answers...', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_3');
 
 -- Insert tickets
-INSERT INTO tickets (id, title, user_id, organization_id, status, priority, source, created_by_type, created_by_id) VALUES
+INSERT INTO tickets (id, title, user_id, organization_id, ticket_status, ticket_priority, ticket_source, created_by_type, created_by_id) VALUES
     -- Existing GauntletAI tickets
     ('f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'Cannot access dashboard', 'USER_ID_4', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'open', 'high', 'customer_portal', 'customer', 'USER_ID_4'),
     ('b8b9c49c-f34d-4c5b-8d54-d123f229b888', 'Feature suggestion', 'USER_ID_6', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'pending', 'low', 'customer_portal', 'customer', 'USER_ID_6'),
@@ -225,7 +225,7 @@ INSERT INTO ticket_tags (ticket_id, tag_id) VALUES
     ('b8b9c49c-f34d-4c5b-8d54-d123f229b888', 'b2b3c49c-f34d-4c5b-8d54-d123f229b222');
 
 -- Insert knowledge base articles
-INSERT INTO kb_articles (id, title, content, author_id, status, published_at) VALUES
+INSERT INTO kb_articles (id, title, content, author_id, kb_status, published_at) VALUES
     ('c9c0c49c-f34d-4c5b-8d54-d123f229c999', 'Getting Started Guide', 'Welcome to FastDesk! Here''s how to get started...', 'USER_ID_1', 'published', now()),
     ('d0d1c49c-f34d-4c5b-8d54-d123f229d000', 'Billing FAQ', 'Frequently asked questions about billing...', 'USER_ID_3', 'published', now());
 

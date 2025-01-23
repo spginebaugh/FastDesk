@@ -31,59 +31,59 @@ type UserStatus = Database['public']['Enums']['user_status']
 
 export function DashboardLayout() {
   const { user, signOut } = useAuthStore()
-  const [status, setStatus] = useState<UserStatus>('offline')
+  const [userStatus, setUserStatus] = useState<UserStatus>('offline')
   const location = useLocation()
   const { addTab, hasTab } = useTabStore()
   
   useEffect(() => {
-    const fetchStatus = async () => {
+    const fetchUserStatus = async () => {
       if (!user?.id) return
       
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('status')
+        .select('user_status')
         .eq('id', user.id)
         .single()
       
       if (error) {
-        console.error('Error fetching status:', error)
+        console.error('Error fetching user status:', error)
         return
       }
       
-      if (data?.status) {
-        setStatus(data.status as UserStatus)
+      if (data?.user_status) {
+        setUserStatus(data.user_status as UserStatus)
       }
     }
     
-    fetchStatus()
+    fetchUserStatus()
   }, [user?.id])
   
-  const updateStatus = useCallback(async (newStatus: UserStatus) => {
+  const updateUserStatus = useCallback(async (newUserStatus: UserStatus) => {
     if (!user?.id) return
     
     const { error } = await supabase
       .from('user_profiles')
-      .update({ status: newStatus })
+      .update({ user_status: newUserStatus })
       .eq('id', user.id)
     
     if (error) {
-      console.error('Error updating status:', error)
+      console.error('Error updating user status:', error)
       return
     }
     
-    setStatus(newStatus)
+    setUserStatus(newUserStatus)
   }, [user?.id])
 
   const handleSignOut = useCallback(async () => {
     if (!user?.id) return
     
     // Update status to offline before signing out
-    await updateStatus('offline')
+    await updateUserStatus('offline')
     await signOut()
-  }, [signOut, updateStatus, user?.id])
+  }, [signOut, updateUserStatus, user?.id])
 
-  const getStatusColor = (status: UserStatus) => {
-    switch (status) {
+  const getUserStatusColor = (user_status: UserStatus) => {
+    switch (user_status) {
       case 'online':
         return 'bg-green-500'
       case 'away':
@@ -95,8 +95,8 @@ export function DashboardLayout() {
     }
   }
 
-  const getStatusRingColor = (status: UserStatus) => {
-    switch (status) {
+  const getUserStatusRingColor = (user_status: UserStatus) => {
+    switch (user_status) {
       case 'online':
         return 'ring-green-500'
       case 'away':
@@ -108,12 +108,12 @@ export function DashboardLayout() {
     }
   }
 
-  const getStatusLabel = (status: UserStatus) => {
-    switch (status) {
+  const getUserStatusLabel = (user_status: UserStatus) => {
+      switch (user_status) {
       case 'transfers_only':
         return 'Transfers only'
       default:
-        return status.charAt(0).toUpperCase() + status.slice(1)
+        return user_status.charAt(0).toUpperCase() + user_status.slice(1)
     }
   }
 
@@ -301,7 +301,7 @@ export function DashboardLayout() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full p-0">
-                    <Avatar className={`ring-2 ${getStatusRingColor(status)}`}>
+                    <Avatar className={`ring-2 ${getUserStatusRingColor(userStatus)}`}>
                       <AvatarImage src={user?.user_metadata?.avatar_url} />
                       <AvatarFallback className="bg-primary/10">
                         {user?.user_metadata?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'}
@@ -314,13 +314,13 @@ export function DashboardLayout() {
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">{user?.user_metadata?.full_name || user?.email}</p>
                       <p className="text-xs leading-none text-muted-foreground flex items-center">
-                        <span className={`h-2 w-2 rounded-full mr-1 ${getStatusColor(status)}`} />
-                        {getStatusLabel(status)}
+                        <span className={`h-2 w-2 rounded-full mr-1 ${getUserStatusColor(userStatus)}`} />
+                        {getUserStatusLabel(userStatus)}
                       </p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuRadioGroup value={status} onValueChange={(value) => updateStatus(value as UserStatus)}>
+                  <DropdownMenuRadioGroup value={userStatus} onValueChange={(value) => updateUserStatus(value as UserStatus)}>
                     <DropdownMenuRadioItem value="online" className="cursor-pointer">
                       <span className="flex items-center">
                         <span className="h-2 w-2 rounded-full bg-green-500 mr-2" />
