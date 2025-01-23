@@ -23,11 +23,12 @@ export function CustomerListPage() {
     queryFn: () => customerService.getCustomers()
   })
 
-  const filteredCustomers = customers.filter((customer: Customer) => 
-    customer.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.company?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredCustomers = customers.filter((customer: Customer) => {
+    const organizationNames = customer.organizations?.map(org => org.organization.name.toLowerCase()).join(' ') || ''
+    return customer.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      organizationNames.includes(searchQuery.toLowerCase())
+  })
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-full">Loading...</div>
@@ -86,7 +87,7 @@ export function CustomerListPage() {
                 <TableRow>
                   <TableHead className="text-black">Name</TableHead>
                   <TableHead className="text-black">Email</TableHead>
-                  <TableHead className="text-black">Company</TableHead>
+                  <TableHead className="text-black">Organization</TableHead>
                   <TableHead className="text-black">Status</TableHead>
                   <TableHead className="text-black">Created</TableHead>
                 </TableRow>
@@ -104,7 +105,7 @@ export function CustomerListPage() {
                       {customer.email}
                     </TableCell>
                     <TableCell className="text-black">
-                      {customer.company || '-'}
+                      {customer.organizations?.map(org => org.organization.name).join(', ') || '-'}
                     </TableCell>
                     <TableCell className="text-black">
                       {customer.status || '-'}

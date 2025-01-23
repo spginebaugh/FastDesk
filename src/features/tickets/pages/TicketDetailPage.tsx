@@ -1,9 +1,10 @@
 import { useParams } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -15,12 +16,19 @@ import { ticketService } from '../services/ticketService'
 import { TICKET_STATUS_MAP, TICKET_PRIORITY_MAP, TicketStatus, TicketPriority } from '../types'
 import { TicketReplyBox } from '../components/TicketReplyBox'
 import { TicketMessage } from '../components/TicketMessage'
+import { useToast } from '@/components/ui/use-toast'
 
 export function TicketDetailPage() {
   const { ticketId } = useParams()
   const queryClient = useQueryClient()
+  const { toast } = useToast()
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editedTitle, setEditedTitle] = useState('')
+  const [pendingChanges, setPendingChanges] = useState<{
+    status?: TicketStatus;
+    priority?: TicketPriority;
+    assignee?: string;
+  }>({})
 
   const { data: ticket, isLoading: isLoadingTicket } = useQuery({
     queryKey: ['ticket', ticketId],
@@ -32,6 +40,28 @@ export function TicketDetailPage() {
     queryKey: ['ticket-messages', ticketId],
     queryFn: () => ticketService.getTicketMessages(ticketId!),
     enabled: !!ticketId
+  })
+
+  const { mutate: updateTicket, isPending: isUpdating } = useMutation({
+    mutationFn: async () => {
+      if (!ticketId || Object.keys(pendingChanges).length === 0) return
+      await ticketService.updateTicket(ticketId, pendingChanges)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
+      setPendingChanges({})
+      toast({
+        title: 'Ticket updated',
+        description: 'Ticket settings have been updated successfully.'
+      })
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to update ticket settings. Please try again.',
+        variant: 'destructive'
+      })
+    }
   })
 
   const handleTitleClick = () => {
@@ -62,25 +92,19 @@ export function TicketDetailPage() {
     }
   }
 
-  const handleStatusChange = async (status: TicketStatus) => {
-    if (!ticketId) return
-    try {
-      await ticketService.updateTicket(ticketId, { status })
-      await queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
-    } catch (error) {
-      console.error('Failed to update ticket status:', error)
-    }
+  const handleStatusChange = (status: TicketStatus) => {
+    setPendingChanges(prev => ({ ...prev, status }))
   }
 
-  const handlePriorityChange = async (priority: TicketPriority) => {
-    if (!ticketId) return
-    try {
-      await ticketService.updateTicket(ticketId, { priority })
-      await queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
-    } catch (error) {
-      console.error('Failed to update ticket priority:', error)
-    }
+  const handlePriorityChange = (priority: TicketPriority) => {
+    setPendingChanges(prev => ({ ...prev, priority }))
   }
+
+  const handleAssigneeChange = (assignee: string) => {
+    setPendingChanges(prev => ({ ...prev, assignee }))
+  }
+
+  const hasChanges = Object.keys(pendingChanges).length > 0
 
   if (isLoadingTicket || isLoadingMessages) {
     return <div className="flex items-center justify-center h-full">Loading...</div>
@@ -121,61 +145,77 @@ export function TicketDetailPage() {
 
       <div className="flex-1 flex overflow-hidden">
         {/* Left Section - Ticket Controls */}
-        <div className="w-64 border-r bg-gray-50 p-4 space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Status</label>
-            <Select
-              value={ticket.status}
-              onValueChange={(value: TicketStatus) => handleStatusChange(value)}
-            >
-              <SelectTrigger className="w-full bg-white text-black">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(TICKET_STATUS_MAP).map(([value, { label }]) => (
-                  <SelectItem key={value} value={value}>
-                    <div className="flex items-center">
-                      <div className={`w-2 h-2 rounded-full mr-2 ${TICKET_STATUS_MAP[value as TicketStatus].color}`} />
-                      {label}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="w-64 border-r bg-gray-50 p-4 flex flex-col">
+          <div className="flex-1 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Status</label>
+              <Select
+                value={pendingChanges.status || ticket.status}
+                onValueChange={handleStatusChange}
+              >
+                <SelectTrigger className="w-full bg-white text-black">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(TICKET_STATUS_MAP).map(([value, { label }]) => (
+                    <SelectItem key={value} value={value}>
+                      <div className="flex items-center">
+                        <div className={`w-2 h-2 rounded-full mr-2 ${TICKET_STATUS_MAP[value as TicketStatus].color}`} />
+                        {label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Priority</label>
+              <Select
+                value={pendingChanges.priority || ticket.priority}
+                onValueChange={handlePriorityChange}
+              >
+                <SelectTrigger className="w-full bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(TICKET_PRIORITY_MAP).map(([value, { label }]) => (
+                    <SelectItem key={value} value={value}>
+                      <div className="flex items-center">
+                        <span className={TICKET_PRIORITY_MAP[value as TicketPriority].color}>{label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Assignee</label>
+              <Select
+                value={pendingChanges.assignee || "unassigned"}
+                onValueChange={handleAssigneeChange}
+              >
+                <SelectTrigger className="w-full bg-white text-black">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {/* TODO: Add agent list */}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Priority</label>
-            <Select
-              value={ticket.priority}
-              onValueChange={(value: TicketPriority) => handlePriorityChange(value)}
+          <div className="pt-4 border-t mt-4">
+            <Button 
+              className="w-full"
+              disabled={!hasChanges || isUpdating}
+              variant={hasChanges ? "default" : "secondary"}
+              onClick={() => updateTicket()}
             >
-              <SelectTrigger className="w-full bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(TICKET_PRIORITY_MAP).map(([value, { label }]) => (
-                  <SelectItem key={value} value={value}>
-                    <div className="flex items-center">
-                      <span className={TICKET_PRIORITY_MAP[value as TicketPriority].color}>{label}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Assignee</label>
-            <Select defaultValue="unassigned">
-              <SelectTrigger className="w-full bg-white text-black">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="unassigned">Unassigned</SelectItem>
-                {/* TODO: Add agent list */}
-              </SelectContent>
-            </Select>
+              {isUpdating ? 'Updating...' : 'Update Ticket'}
+            </Button>
           </div>
         </div>
 

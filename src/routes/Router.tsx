@@ -8,6 +8,7 @@ import { TicketDetailPage } from '@/features/tickets/pages/TicketDetailPage'
 import { NewTicketPage } from '@/features/tickets/pages/NewTicketPage'
 import { ProfilePage } from '@/features/profile/pages/ProfilePage'
 import { CustomerListPage } from '@/features/customers/pages/CustomerListPage'
+import { OrganizationListPage, OrganizationDetailPage } from '@/features/organizations'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -60,6 +61,11 @@ export function Router() {
 
           {/* Customer Routes */}
           <Route path="customers" element={<CustomerListPage />} />
+
+          {/* Organization Routes */}
+          <Route path="organizations" element={<OrganizationListPage />} />
+          <Route path="organizations/:organizationId" element={<OrganizationDetailPage />} />
+          <Route path="organizations/:organizationId/:tab" element={<OrganizationDetailPage />} />
 
           {/* Profile Route */}
           <Route path="profile" element={<ProfilePage />} />

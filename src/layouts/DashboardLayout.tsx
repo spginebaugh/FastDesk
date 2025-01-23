@@ -234,13 +234,13 @@ export function DashboardLayout() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="text-gray-700 hover:text-gray-900 hover:bg-gray-100" asChild>
-                    <Link to="/organization">
+                    <Link to="/organizations">
                       <Building className="h-5 w-5" />
                     </Link>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right">
-                  <p>Organization</p>
+                  <p>Organizations</p>
                 </TooltipContent>
               </Tooltip>
 

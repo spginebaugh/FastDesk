@@ -123,7 +123,15 @@ export const ticketService = {
     }))
   },
 
-  async createTicket({ title }: { title: string }) {
+  async createTicket({ 
+    title, 
+    priority = 'low',
+    assignee = 'unassigned'
+  }: { 
+    title: string;
+    priority?: TicketPriority;
+    assignee?: string;
+  }) {
     const { data: userProfile } = await supabase.auth.getUser()
     if (!userProfile.user) throw new Error('User not authenticated')
 
@@ -139,19 +147,17 @@ export const ticketService = {
     }
 
     // Create the ticket
-    const { data, error } = await supabase
+    const { data: ticket, error } = await supabase
       .from('tickets')
-      .insert([
-        { 
-          title,
-          status: 'new',
-          priority: 'medium',
-          customer_id: existingProfile.id,
-          created_by_type: 'customer',
-          created_by_id: existingProfile.id,
-          source: 'customer_portal'
-        }
-      ])
+      .insert({
+        title,
+        status: 'new',
+        priority,
+        customer_id: existingProfile.id,
+        created_by_type: 'customer',
+        created_by_id: existingProfile.id,
+        source: 'customer_portal'
+      })
       .select(`
         *,
         customer:user_profiles!tickets_customer_id_fkey(*)
@@ -159,7 +165,20 @@ export const ticketService = {
       .single()
 
     if (error) throw error
-    return data as TicketWithCustomer
+
+    if (assignee && assignee !== 'unassigned') {
+      const { error: assignmentError } = await supabase
+        .from('ticket_assignments')
+        .insert({
+          ticket_id: ticket.id,
+          agent_id: assignee,
+          is_primary: true
+        })
+
+      if (assignmentError) throw assignmentError
+    }
+
+    return ticket as TicketWithCustomer
   },
 
   async createTicketMessage({ ticketId, content, isInternal }: { ticketId: string, content: string, isInternal: boolean }) {

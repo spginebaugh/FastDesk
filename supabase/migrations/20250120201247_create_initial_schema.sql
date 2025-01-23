@@ -25,6 +25,7 @@ create type ticket_status as enum ('new', 'open', 'pending', 'resolved', 'closed
 create type user_status as enum ('offline', 'online', 'away', 'transfers_only');
 create type ticket_source as enum ('customer_portal', 'agent_portal', 'email', 'api', 'system');
 create type channel_type as enum ('email', 'whatsapp', 'sms', 'web', 'telegram');
+create type organization_role as enum ('admin', 'member', 'customer');
 
 -- Profiles table (extends auth.users)
 create table user_profiles (
@@ -60,9 +61,10 @@ create table organizations (
 create table organization_members (
     organization_id uuid references organizations(id) on delete cascade,
     profile_id uuid references user_profiles(id) on delete cascade,
-    organization_role text not null default 'member',
+    organization_role organization_role not null default 'customer',
     created_at timestamptz default now(),
-    updated_at timestamptz default now()
+    updated_at timestamptz default now(),
+    primary key (organization_id, profile_id)
 );
 
 -- Tags table
@@ -339,3 +341,38 @@ grant usage on schema public to postgres, anon, authenticated, service_role;
 grant all privileges on all tables in schema public to postgres, service_role;
 grant select, insert, update on all tables in schema public to authenticated;
 grant usage on all sequences in schema public to postgres, anon, authenticated, service_role;
+
+-- Create function to validate organization member roles
+create or replace function validate_organization_member_role()
+returns trigger as $$
+begin
+    -- Get the user type from user_profiles
+    declare
+        user_type text;
+    begin
+        select up.user_type into user_type
+        from user_profiles up
+        where up.id = new.profile_id;
+
+        if user_type = 'customer' and new.organization_role != 'customer' then
+            raise exception 'Customers can only have the organization_role of "customer"';
+        end if;
+
+        if user_type = 'agent' and new.organization_role not in ('admin', 'member') then
+            raise exception 'Agents can only have organization_role of "admin" or "member"';
+        end if;
+
+        return new;
+    end;
+end;
+$$ language plpgsql;
+
+-- Create trigger for organization member role validation
+create trigger validate_organization_member_role_trigger
+    before insert or update on organization_members
+    for each row
+    execute function validate_organization_member_role();
+
+-- Create index for organization members lookup
+create index idx_organization_members_profile on organization_members(profile_id);
+create index idx_organization_members_role on organization_members(organization_role);

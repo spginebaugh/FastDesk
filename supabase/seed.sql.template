@@ -1,38 +1,38 @@
 -- Seed data for FastDesk platform
 
--- Insert Teams
+-- Insert Organizations
 INSERT INTO organizations (id, name, description) VALUES
-    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'Technical Support', 'Primary technical support organization'),
-    ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'Billing Support', 'Billing and payment support');
+    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'GauntletAI', 'An learning platform for the next generation of developers'),
+    ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'UniverseTech', 'A made up company');
 
 -- Insert/Update profiles for all users (both agents and customers)
 INSERT INTO user_profiles (id, email, full_name, user_type, status, company, metadata, external_metadata) VALUES
-    ('USER_ID_1', 'USER_EMAIL_1', 'USER_FULL_NAME_1', 'USER_TYPE_1', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_2', 'USER_EMAIL_2', 'USER_FULL_NAME_2', 'USER_TYPE_2', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_3', 'USER_EMAIL_3', 'USER_FULL_NAME_3', 'USER_TYPE_3', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_4', 'USER_EMAIL_4', 'USER_FULL_NAME_4', 'USER_TYPE_4', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_5', 'USER_EMAIL_5', 'USER_FULL_NAME_5', 'USER_TYPE_5', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_6', 'USER_EMAIL_6', 'USER_FULL_NAME_6', 'USER_TYPE_6', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_7', 'USER_EMAIL_7', 'USER_FULL_NAME_7', 'USER_TYPE_7', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_8', 'USER_EMAIL_8', 'USER_FULL_NAME_8', 'USER_TYPE_8', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_9', 'USER_EMAIL_9', 'USER_FULL_NAME_9', 'USER_TYPE_9', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_10', 'USER_EMAIL_10', 'USER_FULL_NAME_10', 'USER_TYPE_10', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_11', 'USER_EMAIL_11', 'USER_FULL_NAME_11', 'USER_TYPE_11', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_12', 'USER_EMAIL_12', 'USER_FULL_NAME_12', 'USER_TYPE_12', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_13', 'USER_EMAIL_13', 'USER_FULL_NAME_13', 'USER_TYPE_13', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_14', 'USER_EMAIL_14', 'USER_FULL_NAME_14', 'USER_TYPE_14', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_15', 'USER_EMAIL_15', 'USER_FULL_NAME_15', 'USER_TYPE_15', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_16', 'USER_EMAIL_16', 'USER_FULL_NAME_16', 'USER_TYPE_16', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_17', 'USER_EMAIL_17', 'USER_FULL_NAME_17', 'USER_TYPE_17', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_18', 'USER_EMAIL_18', 'USER_FULL_NAME_18', 'USER_TYPE_18', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_19', 'USER_EMAIL_19', 'USER_FULL_NAME_19', 'USER_TYPE_19', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_20', 'USER_EMAIL_20', 'USER_FULL_NAME_20', 'USER_TYPE_20', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_21', 'USER_EMAIL_21', 'USER_FULL_NAME_21', 'USER_TYPE_21', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_22', 'USER_EMAIL_22', 'USER_FULL_NAME_22', 'USER_TYPE_22', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_23', 'USER_EMAIL_23', 'USER_FULL_NAME_23', 'USER_TYPE_23', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_24', 'USER_EMAIL_24', 'USER_FULL_NAME_24', 'USER_TYPE_24', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_25', 'USER_EMAIL_25', 'USER_FULL_NAME_25', 'USER_TYPE_25', 'offline', null, '{}'::jsonb, '{}'::jsonb),
-    ('USER_ID_26', 'USER_EMAIL_26', 'USER_FULL_NAME_26', 'USER_TYPE_26', 'offline', null, '{}'::jsonb, '{}'::jsonb)
+    ('USER_ID_1', 'USER_EMAIL_1', 'USER_FULL_NAME_1', 'agent', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_2', 'USER_EMAIL_2', 'USER_FULL_NAME_2', 'agent', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_3', 'USER_EMAIL_3', 'USER_FULL_NAME_3', 'agent', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_4', 'USER_EMAIL_4', 'USER_FULL_NAME_4', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_5', 'USER_EMAIL_5', 'USER_FULL_NAME_5', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_6', 'USER_EMAIL_6', 'USER_FULL_NAME_6', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_7', 'USER_EMAIL_7', 'USER_FULL_NAME_7', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_8', 'USER_EMAIL_8', 'USER_FULL_NAME_8', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_9', 'USER_EMAIL_9', 'USER_FULL_NAME_9', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_10', 'USER_EMAIL_10', 'USER_FULL_NAME_10', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_11', 'USER_EMAIL_11', 'USER_FULL_NAME_11', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_12', 'USER_EMAIL_12', 'USER_FULL_NAME_12', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_13', 'USER_EMAIL_13', 'USER_FULL_NAME_13', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_14', 'USER_EMAIL_14', 'USER_FULL_NAME_14', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_15', 'USER_EMAIL_15', 'USER_FULL_NAME_15', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_16', 'USER_EMAIL_16', 'USER_FULL_NAME_16', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_17', 'USER_EMAIL_17', 'USER_FULL_NAME_17', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_18', 'USER_EMAIL_18', 'USER_FULL_NAME_18', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_19', 'USER_EMAIL_19', 'USER_FULL_NAME_19', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_20', 'USER_EMAIL_20', 'USER_FULL_NAME_20', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_21', 'USER_EMAIL_21', 'USER_FULL_NAME_21', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_22', 'USER_EMAIL_22', 'USER_FULL_NAME_22', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_23', 'USER_EMAIL_23', 'USER_FULL_NAME_23', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_24', 'USER_EMAIL_24', 'USER_FULL_NAME_24', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_25', 'USER_EMAIL_25', 'USER_FULL_NAME_25', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb),
+    ('USER_ID_26', 'USER_EMAIL_26', 'USER_FULL_NAME_26', 'customer', 'offline', null, '{}'::jsonb, '{}'::jsonb)
 ON CONFLICT (id) DO UPDATE 
 SET email = EXCLUDED.email,
     full_name = EXCLUDED.full_name,
@@ -44,9 +44,39 @@ SET email = EXCLUDED.email,
 
 -- Insert organization members
 INSERT INTO organization_members (organization_id, profile_id, organization_role) VALUES
-    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_1', 'lead'),
+    -- GauntletAI agents
+    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_1', 'admin'),
     ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_2', 'member'),
-    ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_3', 'member');
+    
+    -- UniverseTech agent
+    ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_3', 'admin'),
+    
+    -- GauntletAI customers (even numbered users)
+    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_4', 'customer'),
+    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_6', 'customer'),
+    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_8', 'customer'),
+    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_10', 'customer'),
+    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_12', 'customer'),
+    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_14', 'customer'),
+    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_16', 'customer'),
+    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_18', 'customer'),
+    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_20', 'customer'),
+    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_22', 'customer'),
+    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_24', 'customer'),
+    ('d7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_26', 'customer'),
+    
+    -- UniverseTech customers (odd numbered users)
+    ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_5', 'customer'),
+    ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_7', 'customer'),
+    ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_9', 'customer'),
+    ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_11', 'customer'),
+    ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_13', 'customer'),
+    ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_15', 'customer'),
+    ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_17', 'customer'),
+    ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_19', 'customer'),
+    ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_21', 'customer'),
+    ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_23', 'customer'),
+    ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_25', 'customer');
 
 -- Insert tags
 INSERT INTO tags (id, name, color, description) VALUES
@@ -61,21 +91,132 @@ INSERT INTO templates (id, title, content, organization_id, created_by) VALUES
 
 -- Insert tickets
 INSERT INTO tickets (id, title, customer_id, organization_id, status, priority, source, created_by_type, created_by_id) VALUES
-    ('f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'Cannot access dashboard', 'd4e5f49c-f34d-4c5b-8d54-d123f229abcd', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'open', 'high', 'customer_portal', 'customer', 'd4e5f49c-f34d-4c5b-8d54-d123f229abcd'),
-    ('a7a8c49c-f34d-4c5b-8d54-d123f229a777', 'Billing cycle question', 'e5f6a49c-f34d-4c5b-8d54-d123f229bcde', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'new', 'medium', 'email', 'customer', 'e5f6a49c-f34d-4c5b-8d54-d123f229bcde'),
-    ('b8b9c49c-f34d-4c5b-8d54-d123f229b888', 'Feature suggestion', 'f6a7b49c-f34d-4c5b-8d54-d123f229cdef', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'pending', 'low', 'api', 'api', null);
+    -- Existing GauntletAI tickets
+    ('f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'Cannot access dashboard', 'USER_ID_4', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'open', 'high', 'customer_portal', 'customer', 'USER_ID_4'),
+    ('b8b9c49c-f34d-4c5b-8d54-d123f229b888', 'Feature suggestion', 'USER_ID_6', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'pending', 'low', 'customer_portal', 'customer', 'USER_ID_6'),
+    
+    -- Existing UniverseTech ticket
+    ('a7a8c49c-f34d-4c5b-8d54-d123f229a777', 'Billing cycle question', 'USER_ID_5', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'new', 'medium', 'email', 'customer', 'USER_ID_5'),
+
+    -- New GauntletAI tickets (using even-numbered customers)
+    ('11111111-1111-4111-1111-111111111111', 'Integration API not working', 'USER_ID_8', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'open', 'high', 'customer_portal', 'customer', 'USER_ID_8'),
+    ('22222222-2222-4222-2222-222222222222', 'Need help with webhook setup', 'USER_ID_10', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'pending', 'medium', 'customer_portal', 'customer', 'USER_ID_10'),
+    ('33333333-3333-4333-3333-333333333333', 'Custom domain configuration', 'USER_ID_12', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'new', 'low', 'email', 'customer', 'USER_ID_12'),
+    ('44444444-4444-4444-4444-444444444444', 'Account upgrade request', 'USER_ID_14', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'open', 'medium', 'customer_portal', 'customer', 'USER_ID_14'),
+    ('55555555-5555-4555-5555-555555555555', 'Data export not working', 'USER_ID_16', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'pending', 'high', 'customer_portal', 'customer', 'USER_ID_16'),
+
+    -- New UniverseTech tickets (using odd-numbered customers)
+    ('66666666-6666-4666-6666-666666666666', 'Password reset issues', 'USER_ID_7', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'new', 'high', 'email', 'customer', 'USER_ID_7'),
+    ('77777777-7777-4777-7777-777777777777', 'Billing address update', 'USER_ID_9', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'open', 'low', 'customer_portal', 'customer', 'USER_ID_9'),
+    ('88888888-8888-4888-8888-888888888888', 'Feature request: Dark mode', 'USER_ID_11', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'pending', 'low', 'customer_portal', 'customer', 'USER_ID_11'),
+    ('99999999-9999-4999-9999-999999999999', 'Mobile app crash', 'USER_ID_13', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'open', 'high', 'customer_portal', 'customer', 'USER_ID_13'),
+    ('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa', 'Account deletion request', 'USER_ID_15', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'new', 'medium', 'email', 'customer', 'USER_ID_15');
 
 -- Insert ticket assignments
 INSERT INTO ticket_assignments (ticket_id, agent_id, organization_id, is_primary) VALUES
+    -- Existing assignments
+    -- GauntletAI assignments
     ('f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'USER_ID_1', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true),
+    ('b8b9c49c-f34d-4c5b-8d54-d123f229b888', 'USER_ID_2', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true),
+    -- UniverseTech assignments
     ('a7a8c49c-f34d-4c5b-8d54-d123f229a777', 'USER_ID_3', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', true),
-    ('b8b9c49c-f34d-4c5b-8d54-d123f229b888', 'USER_ID_2', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true);
+
+    -- New GauntletAI assignments (alternating between agents 1 and 2)
+    ('11111111-1111-4111-1111-111111111111', 'USER_ID_1', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true),
+    ('22222222-2222-4222-2222-222222222222', 'USER_ID_2', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true),
+    ('33333333-3333-4333-3333-333333333333', 'USER_ID_1', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true),
+    ('44444444-4444-4444-4444-444444444444', 'USER_ID_2', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true),
+    ('55555555-5555-4555-5555-555555555555', 'USER_ID_1', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true),
+
+    -- New UniverseTech assignments (all to agent 3)
+    ('66666666-6666-4666-6666-666666666666', 'USER_ID_3', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', true),
+    ('77777777-7777-4777-7777-777777777777', 'USER_ID_3', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', true),
+    ('88888888-8888-4888-8888-888888888888', 'USER_ID_3', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', true),
+    ('99999999-9999-4999-9999-999999999999', 'USER_ID_3', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', true),
+    ('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa', 'USER_ID_3', 'e8b2c49c-f34d-4c5b-8d54-d123f229a86f', true);
 
 -- Insert ticket messages
 INSERT INTO ticket_messages (id, ticket_id, sender_type, sender_id, content, is_internal) VALUES
-    ('aabbcc49-f34d-4c5b-8d54-d123f229f111', 'f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'customer', 'USER_ID_4', 'I keep getting a 403 error when trying to access the dashboard. Can you help?', false),
-    ('aabbcc49-f34d-4c5b-8d54-d123f229f222', 'f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'agent', 'USER_ID_1', 'I''ll look into this right away. Can you confirm when this started happening?', false),
-    ('aabbcc49-f34d-4c5b-8d54-d123f229f333', 'a7a8c49c-f34d-4c5b-8d54-d123f229a777', 'customer', 'USER_ID_5', 'When exactly does the billing cycle start?', false);
+    -- Existing messages for GauntletAI tickets
+    ('f6f7c49c-0001-4c5b-8d54-d123f229f666', 'f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'customer', 'USER_ID_4', 'I keep getting a 403 error when trying to access the dashboard. I''ve cleared my cache and tried different browsers but nothing works.', false),
+    ('f6f7c49c-0002-4c5b-8d54-d123f229f666', 'f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'agent', 'USER_ID_1', 'I''ll look into this right away. Can you confirm when this started happening?', false),
+    ('f6f7c49c-0003-4c5b-8d54-d123f229f666', 'f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'customer', 'USER_ID_4', 'It started happening after the latest update, about 2 hours ago.', false),
+
+    ('b8b9c49c-0001-4c5b-8d54-d123f229b888', 'b8b9c49c-f34d-4c5b-8d54-d123f229b888', 'customer', 'USER_ID_6', 'I have a suggestion for improving the platform. Would be great to have keyboard shortcuts for common actions.', false),
+    ('b8b9c49c-0002-4c5b-8d54-d123f229b888', 'b8b9c49c-f34d-4c5b-8d54-d123f229b888', 'agent', 'USER_ID_2', 'Thank you for the suggestion! Could you share some specific actions you''d like to see shortcuts for?', false),
+    ('b8b9c49c-0003-4c5b-8d54-d123f229b888', 'b8b9c49c-f34d-4c5b-8d54-d123f229b888', 'customer', 'USER_ID_6', 'Sure! Things like Ctrl+N for new ticket, Ctrl+S for save, Ctrl+F for search would be really helpful.', false),
+
+    -- Existing messages for UniverseTech ticket
+    ('a7a8c49c-0001-4c5b-8d54-d123f229a777', 'a7a8c49c-f34d-4c5b-8d54-d123f229a777', 'customer', 'USER_ID_5', 'Could you explain when the billing cycle starts and ends? I was charged on an unexpected date.', false),
+    ('a7a8c49c-0002-4c5b-8d54-d123f229a777', 'a7a8c49c-f34d-4c5b-8d54-d123f229a777', 'agent', 'USER_ID_3', 'The billing cycle starts on the 1st of each month. Let me check your specific account details.', false),
+    ('a7a8c49c-0003-4c5b-8d54-d123f229a777', 'a7a8c49c-f34d-4c5b-8d54-d123f229a777', 'customer', 'USER_ID_5', 'Thanks, I was charged on the 15th last month, which seemed unusual.', false),
+
+    -- New GauntletAI ticket messages
+    ('11111111-1111-4111-1111-111111111001', '11111111-1111-4111-1111-111111111111', 'customer', 'USER_ID_8', 'The integration API is returning 500 errors consistently. Here are the logs...', false),
+    ('11111111-1111-4111-1111-111111111002', '11111111-1111-4111-1111-111111111111', 'agent', 'USER_ID_1', 'I see the issue in the logs. There seems to be a configuration mismatch.', false),
+    ('11111111-1111-4111-1111-111111111003', '11111111-1111-4111-1111-111111111111', 'agent', 'USER_ID_1', 'I''ve corrected the configuration. Please try again and let me know if it works.', false),
+
+    ('22222222-2222-4222-2222-222222222001', '22222222-2222-4222-2222-222222222222', 'customer', 'USER_ID_10', 'Need help setting up webhooks for event notifications', false),
+    ('22222222-2222-4222-2222-222222222002', '22222222-2222-4222-2222-222222222222', 'agent', 'USER_ID_2', 'I''ll guide you through the webhook setup process. First, let''s verify your endpoint.', false),
+    ('22222222-2222-4222-2222-222222222003', '22222222-2222-4222-2222-222222222222', 'agent', 'USER_ID_2', 'Here''s our webhook documentation for reference...', false),
+
+    ('33333333-3333-4333-3333-333333333001', '33333333-3333-4333-3333-333333333333', 'customer', 'USER_ID_12', 'How do I set up a custom domain for my workspace?', false),
+    ('33333333-3333-4333-3333-333333333002', '33333333-3333-4333-3333-333333333333', 'agent', 'USER_ID_1', 'I''ll help you with the custom domain setup. Do you have your DNS records ready?', false),
+    ('33333333-3333-4333-3333-333333333003', '33333333-3333-4333-3333-333333333333', 'agent', 'USER_ID_1', 'Here are the required DNS records you''ll need to add...', false),
+
+    ('44444444-4444-4444-4444-444444444001', '44444444-4444-4444-4444-444444444444', 'customer', 'USER_ID_14', 'I''d like to upgrade to the enterprise plan', false),
+    ('44444444-4444-4444-4444-444444444002', '44444444-4444-4444-4444-444444444444', 'agent', 'USER_ID_2', 'I''ll help you with the upgrade process. Let me pull up your current subscription details.', false),
+    ('44444444-4444-4444-4444-444444444003', '44444444-4444-4444-4444-444444444444', 'agent', 'USER_ID_2', 'Here are the enterprise features you''ll get access to...', false),
+
+    ('55555555-5555-4555-5555-555555555001', '55555555-5555-4555-5555-555555555555', 'customer', 'USER_ID_16', 'The data export feature is stuck at 0%', false),
+    ('55555555-5555-4555-5555-555555555002', '55555555-5555-4555-5555-555555555555', 'agent', 'USER_ID_1', 'Let me check the export logs. What time did you initiate the export?', false),
+    ('55555555-5555-4555-5555-555555555003', '55555555-5555-4555-5555-555555555555', 'agent', 'USER_ID_1', 'I''ve identified the issue. There was a temporary storage constraint.', false),
+
+    -- New UniverseTech ticket messages
+    ('66666666-6666-4666-6666-666666666001', '66666666-6666-4666-6666-666666666666', 'customer', 'USER_ID_7', 'Not receiving password reset emails', false),
+    ('66666666-6666-4666-6666-666666666002', '66666666-6666-4666-6666-666666666666', 'agent', 'USER_ID_3', 'I''ll help you with the password reset. Let me check our email delivery logs.', false),
+    ('66666666-6666-4666-6666-666666666003', '66666666-6666-4666-6666-666666666666', 'agent', 'USER_ID_3', 'I''ve verified your email address and resent the reset link.', false),
+
+    ('77777777-7777-4777-7777-777777777001', '77777777-7777-4777-7777-777777777777', 'customer', 'USER_ID_9', 'Need to update billing address for tax purposes', false),
+    ('77777777-7777-4777-7777-777777777002', '77777777-7777-4777-7777-777777777777', 'agent', 'USER_ID_3', 'I can help you update your billing information. What''s the new address?', false),
+    ('77777777-7777-4777-7777-777777777003', '77777777-7777-4777-7777-777777777777', 'agent', 'USER_ID_3', 'I''ve updated the billing address. You''ll see this reflected in your next invoice.', false),
+
+    ('88888888-8888-4888-8888-888888888001', '88888888-8888-4888-8888-888888888888', 'customer', 'USER_ID_11', 'Would love to see a dark mode option', false),
+    ('88888888-8888-4888-8888-888888888002', '88888888-8888-4888-8888-888888888888', 'agent', 'USER_ID_3', 'Thank you for the suggestion! We''re actually working on this feature.', false),
+    ('88888888-8888-4888-8888-888888888003', '88888888-8888-4888-8888-888888888888', 'agent', 'USER_ID_3', 'I''ve added you to the beta testing list for dark mode.', false),
+
+    ('99999999-9999-4999-9999-999999999001', '99999999-9999-4999-9999-999999999999', 'customer', 'USER_ID_13', 'App keeps crashing on startup after latest update', false),
+    ('99999999-9999-4999-9999-999999999002', '99999999-9999-4999-9999-999999999999', 'agent', 'USER_ID_3', 'I''m sorry to hear about the crashes. Could you share your app version and device info?', false),
+    ('99999999-9999-4999-9999-999999999003', '99999999-9999-4999-9999-999999999999', 'agent', 'USER_ID_3', 'Thanks for the info. This is a known issue we''re fixing in version 2.0.5.', false),
+
+    ('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaa001', 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa', 'customer', 'USER_ID_15', 'I want to delete my account and all associated data', false),
+    ('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaa002', 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa', 'agent', 'USER_ID_3', 'I can help you with the account deletion. Please note this action is irreversible.', false),
+    ('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaa003', 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa', 'agent', 'USER_ID_3', 'I''ve initiated the deletion process. It will complete within 30 days.', false),
+
+    -- Additional agent responses (15 more detailed follow-ups)
+    ('11111111-1111-4111-1111-111111111004', '11111111-1111-4111-1111-111111111111', 'agent', 'USER_ID_1', 'I''ve also added additional logging to prevent this issue in the future.', false),
+    ('11111111-1111-4111-1111-111111111005', '11111111-1111-4111-1111-111111111111', 'agent', 'USER_ID_1', 'Here''s a guide for monitoring your API health metrics...', false),
+    
+    ('22222222-2222-4222-2222-222222222004', '22222222-2222-4222-2222-222222222222', 'agent', 'USER_ID_2', 'I''ve tested your webhook endpoint and it''s responding correctly now.', false),
+    ('22222222-2222-4222-2222-222222222005', '22222222-2222-4222-2222-222222222222', 'agent', 'USER_ID_2', 'Would you like me to help you set up retry policies for failed webhooks?', false),
+    
+    ('33333333-3333-4333-3333-333333333004', '33333333-3333-4333-3333-333333333333', 'agent', 'USER_ID_1', 'Your SSL certificate has been provisioned successfully.', false),
+    ('33333333-3333-4333-3333-333333333005', '33333333-3333-4333-3333-333333333333', 'agent', 'USER_ID_1', 'I''ve verified that your custom domain is now working properly.', false),
+    
+    ('44444444-4444-4444-4444-444444444004', '44444444-4444-4444-4444-444444444444', 'agent', 'USER_ID_2', 'I''ve scheduled a demo of our enterprise security features.', false),
+    ('44444444-4444-4444-4444-444444444005', '44444444-4444-4444-4444-444444444444', 'agent', 'USER_ID_2', 'Here''s a comparison document of your current plan vs enterprise.', false),
+    
+    ('66666666-6666-4666-6666-666666666004', '66666666-6666-4666-6666-666666666666', 'agent', 'USER_ID_3', 'I''ve also added additional security measures to your account.', false),
+    ('66666666-6666-4666-6666-666666666005', '66666666-6666-4666-6666-666666666666', 'agent', 'USER_ID_3', 'Here''s a guide for setting up 2FA for additional security...', false),
+    
+    ('77777777-7777-4777-7777-777777777004', '77777777-7777-4777-7777-777777777777', 'agent', 'USER_ID_3', 'I''ve also updated your tax exemption status as requested.', false),
+    
+    ('88888888-8888-4888-8888-888888888004', '88888888-8888-4888-8888-888888888888', 'agent', 'USER_ID_3', 'The dark mode beta will be available next week. Here''s how to enable it...', false),
+    
+    ('99999999-9999-4999-9999-999999999004', '99999999-9999-4999-9999-999999999999', 'agent', 'USER_ID_3', 'In the meantime, here''s a workaround you can try...', false),
+    
+    ('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaa004', 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa', 'agent', 'USER_ID_3', 'I''ve sent you an export of your data for your records.', false),
+    ('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaa005', 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa', 'agent', 'USER_ID_3', 'Please confirm once you''ve received the data export.', false);
 
 -- Insert ticket tags
 INSERT INTO ticket_tags (ticket_id, tag_id) VALUES
