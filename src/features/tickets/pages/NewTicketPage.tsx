@@ -36,6 +36,11 @@ export function NewTicketPage() {
     queryFn: () => organizationService.getOrganizations()
   })
 
+  // Filter out organizations where user is not a member
+  const userOrganizations = organizations.filter(org => 
+    org.organization_members && org.organization_members.length > 0
+  )
+
   // Get agents for selected organization
   const { data: agents = [], isLoading: isLoadingAgents } = useQuery({
     queryKey: ['organization-agents', initialSettings.organizationId],
@@ -53,7 +58,9 @@ export function NewTicketPage() {
       const ticket = await ticketService.createTicket({ 
         title,
         priority: initialSettings.ticket_priority,
-        assignee: initialSettings.assignee,
+        assignee: initialSettings.organizationId === 'unassigned' && initialSettings.assignee === 'unassigned' 
+          ? user?.id  // Auto-assign to current user if both org and assignee are unassigned
+          : initialSettings.assignee,
         organizationId: initialSettings.organizationId === 'unassigned' ? null : initialSettings.organizationId
       })
       await ticketService.createTicketMessage({
@@ -126,7 +133,7 @@ export function NewTicketPage() {
                     {initialSettings.organizationId === 'unassigned' ? (
                       'Unassigned'
                     ) : (
-                      organizations.find(org => org.id === initialSettings.organizationId)?.name || 'Loading...'
+                      userOrganizations.find(org => org.id === initialSettings.organizationId)?.name || 'Loading...'
                     )}
                   </SelectValue>
                 </SelectTrigger>
@@ -134,7 +141,7 @@ export function NewTicketPage() {
                   <SelectItem value="unassigned">
                     <span className="text-muted-foreground">Unassigned</span>
                   </SelectItem>
-                  {organizations.map((org) => (
+                  {userOrganizations.map((org) => (
                     <SelectItem key={org.id} value={org.id}>
                       {org.name}
                     </SelectItem>

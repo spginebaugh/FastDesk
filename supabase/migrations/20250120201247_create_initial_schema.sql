@@ -353,6 +353,425 @@ grant all privileges on all tables in schema public to postgres, service_role;
 grant select, insert, update on all tables in schema public to authenticated;
 grant usage on all sequences in schema public to postgres, anon, authenticated, service_role;
 
+-- Grant auth schema permissions
+grant usage on schema auth to postgres, anon, authenticated, service_role;
+grant select on auth.users to authenticated;
+
+create policy "Users can only view their own auth.users record"
+    on auth.users for select
+    using (auth.uid() = id);
+
+-- Enable Row Level Security on all tables
+alter table user_profiles enable row level security;
+alter table organizations enable row level security;
+alter table organization_members enable row level security;
+alter table tags enable row level security;
+alter table templates enable row level security;
+alter table tickets enable row level security;
+alter table ticket_messages enable row level security;
+alter table ticket_assignments enable row level security;
+alter table ticket_tags enable row level security;
+alter table ticket_attachments enable row level security;
+alter table kb_articles enable row level security;
+alter table ticket_feedback enable row level security;
+
+-- User Profiles policies
+drop policy if exists "Users can view their own profile or profiles in their admin organizations" on user_profiles;
+drop policy if exists "Users can update their own profile" on user_profiles;
+
+-- Simplified policy to allow viewing basic profile data
+create policy "Users can view all profiles"
+    on user_profiles for select
+    using (true);
+
+create policy "Users can update their own profile"
+    on user_profiles for update
+    using (id = auth.uid());
+
+-- Organization policies
+drop policy if exists "Organization members can view their organizations" on organizations;
+drop policy if exists "Only organization admins can update organization details" on organizations;
+drop policy if exists "Agents can create organizations" on organizations;
+
+create policy "Users can view organizations they are members of"
+    on organizations for select
+    using (
+        exists (
+            select 1 from organization_members
+            where organization_members.organization_id = organizations.id
+            and organization_members.profile_id = auth.uid()
+        )
+        or exists (
+            select 1 from user_profiles
+            where id = auth.uid()
+            and user_type = 'agent'
+        )
+    );
+
+create policy "Only organization admins can update organization details"
+    on organizations for update
+    using (
+        exists (
+            select 1 from organization_members
+            where organization_members.organization_id = organizations.id
+            and organization_members.profile_id = auth.uid()
+            and organization_members.organization_role = 'admin'
+        )
+    );
+
+create policy "Agents can create organizations"
+    on organizations for insert
+    with check (
+        exists (
+            select 1 from user_profiles
+            where id = auth.uid()
+            and user_type = 'agent'
+        )
+    );
+
+-- Create a security definer function to check organization membership
+create or replace function check_organization_membership(user_id uuid, org_id uuid)
+returns boolean
+security definer
+set search_path = public
+stable
+language plpgsql
+as $$
+begin
+  return exists (
+    select 1
+    from organization_members
+    where profile_id = user_id
+    and organization_id = org_id
+  );
+end;
+$$;
+
+-- Create a security definer function to check organization admin status
+create or replace function check_organization_admin(user_id uuid, org_id uuid)
+returns boolean
+security definer
+set search_path = public
+stable
+language plpgsql
+as $$
+begin
+  return exists (
+    select 1
+    from organization_members
+    where profile_id = user_id
+    and organization_id = org_id
+    and organization_role = 'admin'
+  );
+end;
+$$;
+
+-- Organization members policies
+drop policy if exists "Organization members can view other members in their organization" on organization_members;
+drop policy if exists "Organization admins can insert members" on organization_members;
+drop policy if exists "Organization admins can update members" on organization_members;
+drop policy if exists "Organization admins can delete members" on organization_members;
+
+create policy "Organization members can view other members in their organization"
+    on organization_members for select
+    using (check_organization_membership(auth.uid(), organization_id));
+
+create policy "Organization admins can insert members"
+    on organization_members for insert
+    with check (
+        check_organization_admin(auth.uid(), organization_id)
+        or (
+            -- Allow agents to add themselves as admin when creating a new organization
+            exists (
+                select 1 from user_profiles
+                where id = auth.uid()
+                and user_type = 'agent'
+                and auth.uid() = profile_id  -- Only allowing self-insertion
+                and organization_role = 'admin'  -- Must be admin role
+            )
+        )
+    );
+
+create policy "Organization admins can update members"
+    on organization_members for update
+    using (check_organization_admin(auth.uid(), organization_id));
+
+create policy "Organization admins can delete members"
+    on organization_members for delete
+    using (check_organization_admin(auth.uid(), organization_id));
+
+-- Tickets policies
+drop policy if exists "Users can view tickets they created or are assigned to" on tickets;
+drop policy if exists "Users can create tickets" on tickets;
+drop policy if exists "Agents can update tickets they are assigned to" on tickets;
+
+create policy "Organization members can view all organization tickets"
+    on tickets for select
+    using (
+        exists (
+            select 1 from organization_members
+            where organization_members.organization_id = tickets.organization_id
+            and organization_members.profile_id = auth.uid()
+        )
+        or (
+            -- Allow agents to view all tickets (including unassigned ones)
+            exists (
+                select 1 from user_profiles
+                where user_profiles.id = auth.uid()
+                and user_profiles.user_type = 'agent'
+            )
+        )
+    );
+
+create policy "Organization members and agents can create tickets"
+    on tickets for insert
+    with check (
+        (
+            -- Allow organization members to create tickets for their organization
+            organization_id is not null
+            and exists (
+                select 1 from organization_members
+                where organization_members.organization_id = tickets.organization_id
+                and organization_members.profile_id = auth.uid()
+            )
+        )
+        or
+        (
+            -- Allow agents to create tickets without an organization
+            exists (
+                select 1 from user_profiles
+                where user_profiles.id = auth.uid()
+                and user_profiles.user_type = 'agent'
+            )
+        )
+    );
+
+create policy "Organization members can update tickets"
+    on tickets for update
+    using (
+        exists (
+            select 1 from organization_members
+            where organization_members.organization_id = tickets.organization_id
+            and organization_members.profile_id = auth.uid()
+        )
+        or (
+            -- Allow agents to update any ticket
+            exists (
+                select 1 from user_profiles
+                where user_profiles.id = auth.uid()
+                and user_profiles.user_type = 'agent'
+            )
+        )
+    );
+
+-- Ticket messages policies
+drop policy if exists "Users can view messages for tickets they have access to" on ticket_messages;
+drop policy if exists "Users can create messages for their tickets" on ticket_messages;
+
+create policy "Organization members can view all messages"
+    on ticket_messages for select
+    using (
+        exists (
+            select 1 from tickets t
+            join organization_members om on om.organization_id = t.organization_id
+            where t.id = ticket_messages.ticket_id
+            and om.profile_id = auth.uid()
+        )
+    );
+
+create policy "Organization members can create messages"
+    on ticket_messages for insert
+    with check (
+        exists (
+            select 1 from tickets t
+            join organization_members om on om.organization_id = t.organization_id
+            where t.id = ticket_messages.ticket_id
+            and om.profile_id = auth.uid()
+        )
+    );
+
+-- Ticket assignments policies
+create policy "Organization members can view and manage assignments"
+    on ticket_assignments for all
+    using (
+        exists (
+            select 1 from organization_members
+            where organization_members.organization_id = ticket_assignments.organization_id
+            and organization_members.profile_id = auth.uid()
+            and organization_members.organization_role in ('admin', 'member')
+        )
+    );
+
+-- Templates policies
+create policy "Organization members can view templates"
+    on templates for select
+    using (
+        exists (
+            select 1 from organization_members
+            where organization_members.organization_id = templates.organization_id
+            and organization_members.profile_id = auth.uid()
+        )
+    );
+
+create policy "Only agents can manage templates"
+    on templates for all
+    using (
+        exists (
+            select 1 from organization_members om
+            join user_profiles up on up.id = om.profile_id
+            where om.organization_id = templates.organization_id
+            and om.profile_id = auth.uid()
+            and up.user_type = 'agent'
+            and om.organization_role in ('admin', 'member')
+        )
+    );
+
+-- Knowledge base articles policies
+create policy "Published articles are visible to all authenticated users"
+    on kb_articles for select
+    using (kb_status = 'published' or author_id = auth.uid());
+
+create policy "Only agents can manage articles"
+    on kb_articles for all
+    using (
+        exists (
+            select 1 from user_profiles
+            where user_profiles.id = auth.uid()
+            and user_profiles.user_type = 'agent'
+        )
+    );
+
+-- Ticket feedback policies
+create policy "Users can view feedback for their tickets"
+    on ticket_feedback for select
+    using (
+        exists (
+            select 1 from tickets
+            where tickets.id = ticket_feedback.ticket_id
+            and (
+                tickets.user_id = auth.uid()
+                or exists (
+                    select 1 from ticket_assignments
+                    where ticket_assignments.ticket_id = tickets.id
+                    and ticket_assignments.agent_id = auth.uid()
+                )
+                or exists (
+                    select 1 from organization_members
+                    where organization_members.organization_id = tickets.organization_id
+                    and organization_members.profile_id = auth.uid()
+                    and organization_members.organization_role in ('admin', 'member')
+                )
+            )
+        )
+    );
+
+create policy "Users can create feedback for their tickets"
+    on ticket_feedback for insert
+    with check (
+        exists (
+            select 1 from tickets
+            where tickets.id = ticket_feedback.ticket_id
+            and tickets.user_id = auth.uid()
+        )
+    );
+
+-- Tags policies
+create policy "Tags are readable by all authenticated users"
+    on tags for select
+    to authenticated
+    using (true);
+
+create policy "Only agents can manage tags"
+    on tags for all
+    using (
+        exists (
+            select 1 from user_profiles
+            where user_profiles.id = auth.uid()
+            and user_profiles.user_type = 'agent'
+        )
+    );
+
+-- Ticket tags policies
+create policy "Users can view tags for tickets they have access to"
+    on ticket_tags for select
+    using (
+        exists (
+            select 1 from tickets
+            where tickets.id = ticket_tags.ticket_id
+            and (
+                tickets.user_id = auth.uid()
+                or exists (
+                    select 1 from ticket_assignments
+                    where ticket_assignments.ticket_id = tickets.id
+                    and ticket_assignments.agent_id = auth.uid()
+                )
+                or exists (
+                    select 1 from organization_members
+                    where organization_members.organization_id = tickets.organization_id
+                    and organization_members.profile_id = auth.uid()
+                    and organization_members.organization_role in ('admin', 'member')
+                )
+            )
+        )
+    );
+
+create policy "Only agents can manage ticket tags"
+    on ticket_tags for all
+    using (
+        exists (
+            select 1 from user_profiles
+            where user_profiles.id = auth.uid()
+            and user_profiles.user_type = 'agent'
+        )
+    );
+
+-- Ticket attachments policies
+create policy "Users can view attachments for tickets they have access to"
+    on ticket_attachments for select
+    using (
+        exists (
+            select 1 from tickets
+            where tickets.id = ticket_attachments.ticket_id
+            and (
+                tickets.user_id = auth.uid()
+                or exists (
+                    select 1 from ticket_assignments
+                    where ticket_assignments.ticket_id = tickets.id
+                    and ticket_assignments.agent_id = auth.uid()
+                )
+                or exists (
+                    select 1 from organization_members
+                    where organization_members.organization_id = tickets.organization_id
+                    and organization_members.profile_id = auth.uid()
+                    and organization_members.organization_role in ('admin', 'member')
+                )
+            )
+        )
+    );
+
+create policy "Users can create attachments for their tickets"
+    on ticket_attachments for insert
+    with check (
+        exists (
+            select 1 from tickets
+            where tickets.id = ticket_attachments.ticket_id
+            and (
+                tickets.user_id = auth.uid()
+                or exists (
+                    select 1 from ticket_assignments
+                    where ticket_assignments.ticket_id = tickets.id
+                    and ticket_assignments.agent_id = auth.uid()
+                )
+                or exists (
+                    select 1 from organization_members
+                    where organization_members.organization_id = tickets.organization_id
+                    and organization_members.profile_id = auth.uid()
+                    and organization_members.organization_role in ('admin', 'member')
+                )
+            )
+        )
+    );
+
 -- Create function to validate organization member roles
 create or replace function validate_organization_member_role()
 returns trigger as $$
