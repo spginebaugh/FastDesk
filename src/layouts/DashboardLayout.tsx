@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/config/supabase/client'
-import { Database } from '../../types/database'
+import { Database } from '@/types/database'
 import {
   Tooltip,
   TooltipContent,

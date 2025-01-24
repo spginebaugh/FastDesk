@@ -7,12 +7,16 @@ interface AuthState {
   session: any | null
   isLoading: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string, fullName: string) => Promise<void>
+  signUp: (email: string, password: string, fullName: string, profileType: string) => Promise<void>
   signOut: () => Promise<void>
   setUser: (user: User | null) => void
   setSession: (session: any | null) => void
   setIsLoading: (isLoading: boolean) => void
 }
+
+// REMOVE THIS LATER
+//
+const GAUNTLET_AI_ORG_ID = 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d'
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
@@ -25,13 +29,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     })
     if (error) throw error
   },
-  signUp: async (email: string, password: string, fullName: string) => {
+  signUp: async (email: string, password: string, fullName: string, profileType: string) => {
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          full_name: fullName
+          full_name: fullName,
+          user_type: profileType
         }
       }
     })
@@ -41,10 +46,27 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (signUpData.user?.id) {
       const { error: updateError } = await supabase
         .from('user_profiles')
-        .update({ full_name: fullName })
+        .update({ 
+          full_name: fullName,
+          user_type: profileType 
+        })
         .eq('id', signUpData.user.id)
 
       if (updateError) throw updateError
+
+      // Add user to GauntletAI organization with appropriate role
+      // REMOVE THIS LATER
+      //
+      const organizationRole = profileType === 'customer' ? 'customer' : 'admin'
+      const { error: orgMemberError } = await supabase
+        .from('organization_members')
+        .insert({
+          profile_id: signUpData.user.id,
+          organization_id: GAUNTLET_AI_ORG_ID,
+          organization_role: organizationRole
+        })
+
+      if (orgMemberError) throw orgMemberError
     }
   },
   signOut: async () => {

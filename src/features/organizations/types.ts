@@ -1,4 +1,4 @@
-import { Database } from '../../../types/database'
+import { Database } from '@/types/database'
 
 export type Organization = Database['public']['Tables']['organizations']['Row'] & {
   organization_members?: OrganizationMember[]

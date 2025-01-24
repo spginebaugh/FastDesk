@@ -1,4 +1,4 @@
-import { Database } from '../../../types/database'
+import { Database } from '@/types/database'
 
 export type Ticket = Database['public']['Tables']['tickets']['Row']
 export type TicketStatus = Database['public']['Enums']['ticket_status']

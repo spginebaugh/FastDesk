@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Database } from '../../../../types/database'
+import { Database } from '@/types/database'
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 
 interface AddMemberModalProps {

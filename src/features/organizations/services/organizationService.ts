@@ -1,14 +1,11 @@
 import { supabase } from '@/config/supabase/client'
 import { Organization, OrganizationMember } from '../types'
+import { Database } from '@/types/database'
 
-interface OrganizationMemberWithProfile extends OrganizationMember {
-  profile: {
-    id: string
-    email: string
-    full_name: string | null
-    avatar_url: string | null
-    user_status: 'online' | 'offline' | 'away' | 'transfers_only'
-  }
+type UserProfile = Database['public']['Tables']['user_profiles']['Row']
+
+interface OrganizationMemberWithProfile extends Omit<OrganizationMember, 'profile'> {
+  profile: Pick<UserProfile, 'id' | 'email' | 'full_name' | 'avatar_url' | 'user_status'>
 }
 
 interface OrganizationTicket {

@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { useAuthStore } from '@/store/authStore'
 import { ticketService } from '@/features/tickets/services/ticketService'
 import { supabase } from '@/config/supabase/client'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export function SignUpPage() {
   const navigate = useNavigate()
@@ -17,13 +18,14 @@ export function SignUpPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [profileType, setProfileType] = useState('agent')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
-      await signUp(email, password, name)
+      await signUp(email, password, name, profileType)
       
       // Get the user data from supabase
       const { data: { user } } = await supabase.auth.getUser()
@@ -99,6 +101,22 @@ export function SignUpPage() {
                   disabled={isLoading}
                   required
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="profileType">Select Profile Type</Label>
+                <Select
+                  value={profileType}
+                  onValueChange={setProfileType}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select profile type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="agent">Agent</SelectItem>
+                    <SelectItem value="customer">Customer</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <Button className="w-full text-white" type="submit" disabled={isLoading}>
                 {isLoading ? 'Creating account...' : 'Create Account'}

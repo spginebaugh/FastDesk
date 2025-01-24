@@ -15,7 +15,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/config/supabase/client'
 import { useToast } from '@/components/ui/use-toast'
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
-import { Database } from '../../../../types/database'
+import { Database } from '@/types/database'
 
 type UserStatus = Database['public']['Enums']['user_status']
 

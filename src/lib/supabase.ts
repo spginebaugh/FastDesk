@@ -1,6 +1,6 @@
 // src/lib/supabase.ts
 import { createClient } from '@supabase/supabase-js'
-import { Database } from '../../types/database.ts'
+import { Database } from '@/types/database.ts'
 
 if (!import.meta.env.VITE_SUPABASE_URL) throw new Error('Missing env.VITE_SUPABASE_URL')
 if (!import.meta.env.VITE_SUPABASE_ANON_KEY) throw new Error('Missing env.VITE_SUPABASE_ANON_KEY')
