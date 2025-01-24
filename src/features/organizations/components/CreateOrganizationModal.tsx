@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/use-toast'
 import { organizationService } from '../services/organizationService'
 import { useTabStore } from '@/store/tabStore'
+import { cn } from '@/lib/utils'
 
 interface CreateOrganizationModalProps {
   isOpen: boolean
@@ -67,32 +68,40 @@ export function CreateOrganizationModal({ isOpen, onClose }: CreateOrganizationM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="bg-background-raised border-border/50">
         <DialogHeader>
-          <DialogTitle className="text-black">Create Organization</DialogTitle>
+          <DialogTitle className="text-foreground">Create Organization</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-black">Name</Label>
+              <Label htmlFor="name" className="text-foreground">Name</Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter organization name"
                 required
-                className="text-black"
+                className={cn(
+                  "bg-background border-border/50 text-foreground",
+                  "placeholder:text-muted-foreground",
+                  "focus-visible:ring-primary"
+                )}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description" className="text-black">Description</Label>
+              <Label htmlFor="description" className="text-foreground">Description</Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Enter organization description (optional)"
                 rows={3}
-                className="text-black"
+                className={cn(
+                  "bg-background border-border/50 text-foreground",
+                  "placeholder:text-muted-foreground",
+                  "focus-visible:ring-primary"
+                )}
               />
             </div>
           </div>
@@ -102,10 +111,19 @@ export function CreateOrganizationModal({ isOpen, onClose }: CreateOrganizationM
               variant="outline"
               onClick={onClose}
               disabled={isSubmitting}
+              className="text-foreground hover:text-primary hover:bg-primary/10 border-border/50"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || !name.trim()}>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting || !name.trim()}
+              className={cn(
+                "bg-primary hover:bg-primary/90",
+                "transition-colors duration-200",
+                (isSubmitting || !name.trim()) && "opacity-50"
+              )}
+            >
               {isSubmitting ? 'Creating...' : 'Create Organization'}
             </Button>
           </DialogFooter>

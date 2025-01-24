@@ -2,88 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light;
-  color: rgba(0, 0, 0, 0.87);
-  background-color: #ffffff;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Override checkbox sizing */
-[type="checkbox"] {
-  width: 16px !important;
-  height: 16px !important;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    color: rgba(255, 255, 255, 0.87);
-    background-color: #242424;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #1a1a1a;
+    --background: 261 94% 7%;
+    --foreground: 0 0% 100%;
+    
+    --card: 261 48% 16%;
+    --card-foreground: 0 0% 100%;
+    
+    --popover: 261 48% 16%;
+    --popover-foreground: 0 0% 100%;
+    
+    --primary: 320 100% 48%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 293 85% 27%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 261 48% 16%;
+    --muted-foreground: 0 0% 70%;
+    
+    --accent: 183 91% 54%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 347 100% 61%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 261 48% 16%;
+    --input: 261 48% 16%;
+    --ring: 320 100% 48%;
+    
+    --radius: 0.5rem;
   }
 }
 
 @layer base {
-  :root {
-    --radius: 0.5rem;
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-secondary rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary;
+  }
+
+  /* Selection Styling */
+  ::selection {
+    @apply bg-primary/30 text-foreground;
+  }
+}
+
+/* Custom Utilities */
+@layer utilities {
+  .glow-text {
+    @apply animate-glow;
   }
   
-  /* Set default text color for the entire app */
-  html {
-    @apply text-black;
+  .gradient-border {
+    @apply border-transparent bg-gradient-to-r from-primary to-accent-pink bg-clip-border;
   }
 }

@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/table'
 import { Database } from '@/types/database'
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
+import { cn } from '@/lib/utils'
 
 interface AddMemberModalProps {
   isOpen: boolean
@@ -114,62 +115,66 @@ export function AddMemberModal({ isOpen, onClose, organizationId, memberType }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl bg-background-raised border-border/50">
         <DialogHeader>
-          <DialogTitle className="text-black">Add {memberType === 'agent' ? 'Agents' : 'Customers'}</DialogTitle>
-          <DialogDescription className="text-gray-500">
+          <DialogTitle className="text-foreground">Add {memberType === 'agent' ? 'Agents' : 'Customers'}</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
             Select {memberType}s to add to your organization. You can add multiple {memberType}s at once.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={`Search ${memberType}s...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 text-black"
+                className={cn(
+                  "pl-8 bg-background border-border/50 text-foreground",
+                  "placeholder:text-muted-foreground",
+                  "focus-visible:ring-primary"
+                )}
               />
             </div>
-            <div className="mt-2 text-sm text-gray-500">
+            <div className="mt-2 text-sm text-muted-foreground">
               {filteredUsers.length} available {memberType}{filteredUsers.length !== 1 ? 's' : ''}
             </div>
-            <div className="border rounded-md max-h-[400px] overflow-y-auto">
+            <div className="border border-border/50 rounded-md max-h-[400px] overflow-y-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="border-border/50 hover:bg-transparent">
                     <TableHead className="w-[50px]"></TableHead>
-                    <TableHead className="text-black">{memberType === 'agent' ? 'Agent' : 'Customer'}</TableHead>
-                    <TableHead className="text-black">Email</TableHead>
-                    <TableHead className="text-black">Status</TableHead>
+                    <TableHead className="text-foreground">{memberType === 'agent' ? 'Agent' : 'Customer'}</TableHead>
+                    <TableHead className="text-foreground">Email</TableHead>
+                    <TableHead className="text-foreground">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.map((user: UserProfile) => (
                     <TableRow 
                       key={user.id}
-                      className="cursor-pointer hover:bg-gray-50"
+                      className="cursor-pointer border-border/50 hover:bg-primary/5"
                     >
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <Checkbox
                           checked={selectedUsers.has(user.id)}
                           onCheckedChange={() => toggleUser(user.id)}
-                          className="border-gray-300 bg-white data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                          className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                       </TableCell>
-                      <TableCell className="text-black" onClick={() => toggleUser(user.id)}>
+                      <TableCell className="text-foreground" onClick={() => toggleUser(user.id)}>
                         <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
+                          <Avatar className="h-8 w-8 ring-2 ring-primary/20">
                             <AvatarImage src={user.avatar_url || undefined} />
-                            <AvatarFallback>
+                            <AvatarFallback className="bg-background-accent text-foreground">
                               {user.full_name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <span className="font-medium">{user.full_name || 'Unknown'}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-black" onClick={() => toggleUser(user.id)}>
+                      <TableCell className="text-muted-foreground" onClick={() => toggleUser(user.id)}>
                         {user.email}
                       </TableCell>
                       <TableCell onClick={() => toggleUser(user.id)}>
@@ -187,12 +192,18 @@ export function AddMemberModal({ isOpen, onClose, organizationId, memberType }: 
               variant="outline"
               onClick={onClose}
               disabled={addMembersMutation.isPending}
+              className="text-foreground hover:text-primary hover:bg-primary/10 border-border/50"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={selectedUsers.size === 0 || addMembersMutation.isPending}
+              className={cn(
+                "bg-primary hover:bg-primary/90",
+                "transition-colors duration-200",
+                (selectedUsers.size === 0 || addMembersMutation.isPending) && "opacity-50"
+              )}
             >
               {addMembersMutation.isPending 
                 ? 'Adding...' 

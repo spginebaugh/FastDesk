@@ -33,16 +33,16 @@ export interface TicketMessage extends BaseTicketMessage {
 }
 
 export const TICKET_STATUS_MAP = {
-  new: { label: 'New', color: 'bg-blue-500' },
-  open: { label: 'Open', color: 'bg-green-500' },
-  pending: { label: 'Pending', color: 'bg-yellow-500' },
-  resolved: { label: 'Resolved', color: 'bg-purple-500' },
-  closed: { label: 'Closed', color: 'bg-gray-500' },
+  new: { label: 'New', color: 'bg-accent-blue' },
+  open: { label: 'Open', color: 'bg-semantic-success' },
+  pending: { label: 'Pending', color: 'bg-semantic-warning' },
+  resolved: { label: 'Resolved', color: 'bg-primary' },
+  closed: { label: 'Closed', color: 'bg-muted-foreground' },
 } as const
 
 export const TICKET_PRIORITY_MAP = {
-  low: { label: 'Low', color: 'text-gray-500' },
-  medium: { label: 'Medium', color: 'text-blue-500' },
-  high: { label: 'High', color: 'text-orange-500' },
-  urgent: { label: 'Urgent', color: 'text-red-500' },
+  low: { label: 'Low', color: 'text-muted-foreground' },
+  medium: { label: 'Medium', color: 'text-accent-blue' },
+  high: { label: 'High', color: 'text-semantic-warning' },
+  urgent: { label: 'Urgent', color: 'text-semantic-error' },
 } as const 

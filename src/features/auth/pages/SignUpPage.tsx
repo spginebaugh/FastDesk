@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/authStore'
 import { ticketService } from '@/features/tickets/services/ticketService'
 import { supabase } from '@/config/supabase/client'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 
 export function SignUpPage() {
   const navigate = useNavigate()
@@ -57,19 +58,22 @@ export function SignUpPage() {
   }
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md px-4">
-        <Card className="w-full">
+    <div className="min-h-screen w-screen flex items-center justify-center bg-background">
+      <div className="absolute inset-0 bg-background">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+      </div>
+      <div className="w-full max-w-md px-4 relative">
+        <Card className="w-full border-border/50 bg-background-raised shadow-2xl shadow-primary/20">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
-            <CardDescription className="text-center">
+            <CardTitle className="text-2xl font-bold text-center text-foreground">Create an account</CardTitle>
+            <CardDescription className="text-center text-muted-foreground">
               Enter your details to create your account
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name" className="text-foreground">Full Name</Label>
                 <Input
                   id="name"
                   placeholder="John Doe"
@@ -77,10 +81,15 @@ export function SignUpPage() {
                   onChange={(e) => setName(e.target.value)}
                   disabled={isLoading}
                   required
+                  className={cn(
+                    "bg-background border-border/50 text-foreground",
+                    "placeholder:text-muted-foreground",
+                    "focus-visible:ring-primary"
+                  )}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-foreground">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -89,10 +98,15 @@ export function SignUpPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
                   required
+                  className={cn(
+                    "bg-background border-border/50 text-foreground",
+                    "placeholder:text-muted-foreground",
+                    "focus-visible:ring-primary"
+                  )}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-foreground">Password</Label>
                 <Input
                   id="password"
                   type="password"
@@ -100,40 +114,72 @@ export function SignUpPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
                   required
+                  className={cn(
+                    "bg-background border-border/50 text-foreground",
+                    "placeholder:text-muted-foreground",
+                    "focus-visible:ring-primary"
+                  )}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="profileType">Select Profile Type</Label>
+                <Label htmlFor="profileType" className="text-foreground">Select Profile Type</Label>
                 <Select
                   value={profileType}
                   onValueChange={setProfileType}
                   disabled={isLoading}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger 
+                    className={cn(
+                      "bg-background border-border/50 text-foreground",
+                      "focus:ring-primary"
+                    )}
+                  >
                     <SelectValue placeholder="Select profile type" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="agent">Agent</SelectItem>
-                    <SelectItem value="customer">Customer</SelectItem>
+                  <SelectContent className="bg-background-raised border-border/50">
+                    <SelectItem 
+                      value="agent"
+                      className="text-foreground hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
+                    >
+                      Agent
+                    </SelectItem>
+                    <SelectItem 
+                      value="customer"
+                      className="text-foreground hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
+                    >
+                      Customer
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <Button className="w-full text-white" type="submit" disabled={isLoading}>
+              <Button 
+                className={cn(
+                  "w-full bg-primary hover:bg-primary/90",
+                  "transition-colors duration-200",
+                  isLoading && "opacity-50"
+                )} 
+                type="submit" 
+                disabled={isLoading}
+              >
                 {isLoading ? 'Creating account...' : 'Create Account'}
               </Button>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4 border-t pt-4">
-              <div className="text-sm text-gray-500 text-center">
+            <CardFooter className="flex flex-col space-y-4 border-t border-border/50 pt-4">
+              <div className="text-sm text-muted-foreground text-center">
                 Already have an account?{' '}
-                <Link to="/login" className="text-primary hover:underline">
+                <Link to="/login" className="text-primary hover:text-primary/90 hover:underline transition-colors">
                   Sign in
                 </Link>
               </div>
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-muted-foreground text-center">
                 By creating an account, you agree to our{' '}
-                <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
+                <Link to="/terms" className="text-primary hover:text-primary/90 hover:underline transition-colors">
+                  Terms of Service
+                </Link>
                 {' '}and{' '}
-                <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
+                <Link to="/privacy" className="text-primary hover:text-primary/90 hover:underline transition-colors">
+                  Privacy Policy
+                </Link>
               </p>
             </CardFooter>
           </form>

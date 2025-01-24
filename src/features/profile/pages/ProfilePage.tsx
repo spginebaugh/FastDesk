@@ -16,6 +16,7 @@ import { supabase } from '@/config/supabase/client'
 import { useToast } from '@/components/ui/use-toast'
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 import { Database } from '@/types/database'
+import { cn } from '@/lib/utils'
 
 type UserStatus = Database['public']['Enums']['user_status']
 
@@ -117,19 +118,23 @@ export const ProfilePage = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <Card>
+      <Card className="bg-background-alt border-border/50">
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
+          <CardTitle className="text-foreground">Profile</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center space-x-4">
-            <Avatar className="h-20 w-20">
+            <Avatar className="h-20 w-20 ring-2 ring-primary/20">
               <AvatarImage src={user.user_metadata.avatar_url} />
-              <AvatarFallback>{user.user_metadata.full_name?.[0]?.toUpperCase()}</AvatarFallback>
+              <AvatarFallback className="bg-background-accent text-foreground">
+                {user.user_metadata.full_name?.[0]?.toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             <div>
-              <h2 className="text-2xl font-bold">{user.user_metadata.full_name}</h2>
-              <p className="text-gray-500">{user.email}</p>
+              <h2 className="text-2xl font-bold text-foreground glow-text">
+                {user.user_metadata.full_name}
+              </h2>
+              <p className="text-muted-foreground">{user.email}</p>
               <div className="mt-2">
                 <UserStatusBadge status={userStatus} />
               </div>
@@ -137,49 +142,61 @@ export const ProfilePage = () => {
           </div>
 
           <div className="pt-4">
-            <h3 className="text-lg font-semibold mb-4">Security</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Security</h3>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="ghost" className="bg-gray-100 hover:bg-gray-200 text-gray-900">Change Password</Button>
+                <Button 
+                  variant="outline" 
+                  className="text-foreground hover:text-primary hover:bg-primary/10 border-border/50"
+                >
+                  Change Password
+                </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="bg-background-raised border-border/50">
                 <DialogHeader>
-                  <DialogTitle className="text-gray-900">Change Password</DialogTitle>
+                  <DialogTitle className="text-foreground">Change Password</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handlePasswordChange} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currentPassword" className="text-gray-900">Current Password</Label>
+                    <Label htmlFor="currentPassword" className="text-foreground">Current Password</Label>
                     <Input
                       id="currentPassword"
                       name="currentPassword"
                       type="password"
                       required
-                      className="text-gray-900"
+                      className="bg-background border-border/50 text-foreground"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="newPassword" className="text-gray-900">New Password</Label>
+                    <Label htmlFor="newPassword" className="text-foreground">New Password</Label>
                     <Input
                       id="newPassword"
                       name="newPassword"
                       type="password"
                       required
                       minLength={6}
-                      className="text-gray-900"
+                      className="bg-background border-border/50 text-foreground"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-gray-900">Confirm New Password</Label>
+                    <Label htmlFor="confirmPassword" className="text-foreground">Confirm New Password</Label>
                     <Input
                       id="confirmPassword"
                       name="confirmPassword"
                       type="password"
                       required
                       minLength={6}
-                      className="text-gray-900"
+                      className="bg-background border-border/50 text-foreground"
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button 
+                    type="submit" 
+                    className={cn(
+                      "w-full bg-primary hover:bg-primary/90",
+                      isLoading && "opacity-50 cursor-not-allowed"
+                    )} 
+                    disabled={isLoading}
+                  >
                     {isLoading ? "Updating..." : "Update Password"}
                   </Button>
                 </form>

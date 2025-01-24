@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CustomerTickets } from './tabs/CustomerTickets'
 import { CustomerProfile } from './tabs/CustomerProfile'
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
+import { cn } from '@/lib/utils'
 
 export function CustomerDetailPage() {
   const { customerId } = useParams()
@@ -18,11 +19,11 @@ export function CustomerDetailPage() {
   })
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-full">Loading...</div>
+    return <div className="flex items-center justify-center h-full text-foreground">Loading...</div>
   }
 
   if (!customer) {
-    return <div className="flex items-center justify-center h-full">Customer not found</div>
+    return <div className="flex items-center justify-center h-full text-foreground">Customer not found</div>
   }
 
   // Get the active tab from the URL or default to tickets
@@ -33,29 +34,41 @@ export function CustomerDetailPage() {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="px-6 py-4 border-b">
-        <h1 className="text-2xl font-semibold text-gray-900">
+    <div className="h-full flex flex-col bg-background">
+      <div className="px-6 py-4 border-b border-border/50 bg-background-raised">
+        <h1 className="text-2xl font-semibold text-foreground">
           {customer.full_name || 'Unknown Customer'}
         </h1>
         <div className="mt-1 flex items-center gap-2">
-          <span className="text-sm text-gray-500">{customer.email}</span>
+          <span className="text-sm text-muted-foreground">{customer.email}</span>
           <UserStatusBadge status={customer.user_status} />
         </div>
       </div>
 
-      <div className="border-b">
+      <div className="border-b border-border/50">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="w-full justify-start h-12 p-0 bg-transparent border-b">
+          <TabsList className="w-full justify-start h-12 p-0 bg-background-alt border-b border-border/50">
             <TabsTrigger
               value="tickets"
-              className="px-4 h-12 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none text-black bg-gray-50 hover:bg-gray-100 data-[state=active]:bg-gray-100"
+              className={cn(
+                "px-4 h-12 rounded-none",
+                "text-muted-foreground bg-background-alt",
+                "hover:text-primary hover:bg-primary/10",
+                "data-[state=active]:border-b-2 data-[state=active]:border-primary",
+                "data-[state=active]:text-primary data-[state=active]:bg-primary/20"
+              )}
             >
               Tickets
             </TabsTrigger>
             <TabsTrigger
               value="profile"
-              className="px-4 h-12 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none text-black bg-gray-50 hover:bg-gray-100 data-[state=active]:bg-gray-100"
+              className={cn(
+                "px-4 h-12 rounded-none",
+                "text-muted-foreground bg-background-alt",
+                "hover:text-primary hover:bg-primary/10",
+                "data-[state=active]:border-b-2 data-[state=active]:border-primary",
+                "data-[state=active]:text-primary data-[state=active]:bg-primary/20"
+              )}
             >
               Profile
             </TabsTrigger>

@@ -18,6 +18,7 @@ import { format } from 'date-fns'
 import { useTabStore } from '@/store/tabStore'
 import { CreateOrganizationModal } from '../components/CreateOrganizationModal'
 import { OrganizationRoleBadge } from '@/components/shared/OrganizationRoleBadge'
+import { cn } from '@/lib/utils'
 
 type FilterRole = 'all' | 'admin' | 'member' | 'nonmember'
 
@@ -89,23 +90,20 @@ export function OrganizationListPage() {
     return member.organization_role
   }
 
-  const getRowClassName = (organization: Organization) => {
-    const isMember = organization.organization_members && organization.organization_members.length > 0
-    return `${isMember ? 'cursor-pointer hover:bg-gray-50' : 'cursor-not-allowed bg-gray-50/50'}`
-  }
+
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-full">Loading...</div>
+    return <div className="flex items-center justify-center h-full text-foreground">Loading...</div>
   }
 
   return (
     <div className="h-full flex">
       {/* Lists Sidebar */}
-      <aside className="w-64 border-r bg-gray-50">
+      <aside className="w-64 border-r border-border/50 bg-background-alt">
         <nav className="h-full overflow-y-auto">
           <div className="space-y-1 p-4">
             <div className="py-2">
-              <h2 className="px-2 text-lg font-semibold text-gray-900">Organization lists</h2>
+              <h2 className="px-2 text-lg font-semibold text-foreground">Organization lists</h2>
               <div className="space-y-1 mt-2">
                 {FILTER_OPTIONS.map((option) => {
                   const Icon = option.icon
@@ -114,11 +112,12 @@ export function OrganizationListPage() {
                       key={option.id}
                       variant="ghost" 
                       size="sm" 
-                      className={`w-full justify-start ${
+                      className={cn(
+                        "w-full justify-start",
                         selectedFilter === option.id 
-                          ? 'bg-gray-200 text-black'
-                          : 'text-white hover:bg-gray-100 hover:text-black'
-                      }`}
+                          ? "bg-primary/20 text-primary hover:bg-primary/30"
+                          : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                      )}
                       onClick={() => setSelectedFilter(option.id)}
                     >
                       <Icon className="mr-2 h-4 w-4" />
@@ -134,13 +133,13 @@ export function OrganizationListPage() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        <div className="border-b bg-white px-6 py-4">
+        <div className="border-b border-border/50 bg-background-raised px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold text-gray-900">
+            <h1 className="text-2xl font-semibold text-foreground">
               {FILTER_OPTIONS.find(opt => opt.id === selectedFilter)?.label || 'All organizations'}
             </h1>
             <Button 
-              className="ml-4"
+              className="ml-4 bg-primary hover:bg-primary/90 transition-colors duration-200"
               onClick={() => setIsCreateModalOpen(true)}
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -151,57 +150,67 @@ export function OrganizationListPage() {
           <div className="flex items-center justify-between mt-4">
             <div className="flex items-center gap-2 flex-1 max-w-md">
               <div className="relative w-full">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search organizations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 text-black"
+                  className={cn(
+                    "pl-8 bg-background border-border/50 text-foreground",
+                    "placeholder:text-muted-foreground",
+                    "focus-visible:ring-primary"
+                  )}
                 />
               </div>
-              <span className="text-sm text-black">
+              <span className="text-sm text-muted-foreground">
                 {filteredOrganizations.length} organization{filteredOrganizations.length !== 1 ? 's' : ''}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto bg-background">
           <div className="min-w-full">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead className="text-black">Name</TableHead>
-                  <TableHead className="text-black">Description</TableHead>
-                  <TableHead className="text-black">Role</TableHead>
-                  <TableHead className="text-black">Created</TableHead>
-                  <TableHead className="text-black">Last Updated</TableHead>
+                <TableRow className="border-border/50 hover:bg-transparent">
+                  <TableHead className="text-foreground">Name</TableHead>
+                  <TableHead className="text-foreground">Description</TableHead>
+                  <TableHead className="text-foreground">Role</TableHead>
+                  <TableHead className="text-foreground">Created</TableHead>
+                  <TableHead className="text-foreground">Last Updated</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredOrganizations.map((org) => {
                   const role = getRoleDisplay(org)
+                  const isMember = org.organization_members && org.organization_members.length > 0
                   return (
                     <TableRow 
                       key={org.id}
-                      className={getRowClassName(org)}
+                      className={cn(
+                        "border-border/50",
+                        isMember 
+                          ? "cursor-pointer hover:bg-primary/5" 
+                          : "cursor-not-allowed bg-background-alt/50"
+                      )}
                       onClick={() => handleRowClick(org)}
                     >
-                      <TableCell className="text-black font-medium">
+                      <TableCell className="font-medium text-foreground">
                         {org.name}
                       </TableCell>
-                      <TableCell className="text-black">
+                      <TableCell className="text-muted-foreground">
                         {org.description || '-'}
                       </TableCell>
                       <TableCell>
                         <OrganizationRoleBadge role={role} />
                       </TableCell>
-                      <TableCell className="text-black">
+                      <TableCell className="text-muted-foreground">
                         {org.created_at 
                           ? format(new Date(org.created_at), 'MMM d, yyyy')
                           : '-'}
                       </TableCell>
-                      <TableCell className="text-black">
+                      <TableCell className="text-muted-foreground">
                         {org.updated_at
                           ? format(new Date(org.updated_at), 'MMM d, yyyy')
                           : '-'}

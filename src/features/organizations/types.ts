@@ -13,15 +13,15 @@ export type OrganizationRole = 'admin' | 'member' | 'customer' | 'nonmember'
 export type UserStatus = 'online' | 'away' | 'transfers_only' | 'offline'
 
 export const ORGANIZATION_ROLE_MAP = {
-  admin: { label: 'Admin', color: 'text-green-600 border-green-200' },
-  member: { label: 'Member', color: 'text-blue-600 border-blue-200' },
-  customer: { label: 'Customer', color: 'text-blue-600 border-blue-200' },
-  nonmember: { label: 'Nonmember', color: 'text-red-600 border-red-200' }
+  admin: { label: 'Admin', color: 'text-semantic-success border-semantic-success/20' },
+  member: { label: 'Member', color: 'text-primary border-primary/20' },
+  customer: { label: 'Customer', color: 'text-accent border-accent/20' },
+  nonmember: { label: 'Nonmember', color: 'text-destructive border-destructive/20' }
 } as const
 
 export const USER_STATUS_MAP = {
-  online: { label: 'Online', color: 'bg-green-500' },
-  away: { label: 'Away', color: 'bg-yellow-500' },
-  transfers_only: { label: 'Transfers only', color: 'bg-blue-500' },
-  offline: { label: 'Offline', color: 'bg-gray-500' }
+  online: { label: 'Online', color: 'bg-semantic-success' },
+  away: { label: 'Away', color: 'bg-semantic-warning' },
+  transfers_only: { label: 'Transfers only', color: 'bg-accent-blue' },
+  offline: { label: 'Offline', color: 'bg-muted-foreground' }
 } as const 

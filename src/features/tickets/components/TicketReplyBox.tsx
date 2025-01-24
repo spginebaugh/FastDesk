@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ticketService } from '../services/ticketService'
 import { useToast } from '@/components/ui/use-toast'
 import { TicketMessage } from '../types'
+import { cn } from '@/lib/utils'
 
 interface TicketReplyBoxProps {
   ticketId: string
@@ -55,13 +56,17 @@ export function TicketReplyBox({ ticketId }: TicketReplyBoxProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border-t bg-white p-4">
+    <form onSubmit={handleSubmit} className="border-t border-border/50 bg-background-alt p-4">
       <div className="space-y-4">
         <Textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Type your reply..."
-          className="min-h-[100px] text-black"
+          className={cn(
+            "min-h-[100px] bg-background border-border/50 text-foreground",
+            "placeholder:text-muted-foreground",
+            "focus-visible:ring-primary"
+          )}
         />
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -69,16 +74,40 @@ export function TicketReplyBox({ ticketId }: TicketReplyBoxProps) {
               onValueChange={(value: 'public' | 'internal') => setIsInternal(value === 'internal')}
               defaultValue="public"
             >
-              <SelectTrigger className="w-[140px] text-black">
+              <SelectTrigger 
+                className={cn(
+                  "w-[140px] bg-background border-border/50",
+                  "text-foreground hover:bg-primary/10",
+                  "focus:ring-primary"
+                )}
+              >
                 <SelectValue placeholder="Select reply type" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="public">Public reply</SelectItem>
-                <SelectItem value="internal">Internal note</SelectItem>
+              <SelectContent className="bg-background-raised border-border/50">
+                <SelectItem 
+                  value="public"
+                  className="text-foreground hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
+                >
+                  Public reply
+                </SelectItem>
+                <SelectItem 
+                  value="internal"
+                  className="text-foreground hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
+                >
+                  Internal note
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <Button type="submit" disabled={isPending || !content.trim()}>
+          <Button 
+            type="submit" 
+            disabled={isPending || !content.trim()}
+            className={cn(
+              "bg-primary hover:bg-primary/90",
+              "transition-colors duration-200",
+              (isPending || !content.trim()) && "opacity-50"
+            )}
+          >
             {isPending ? 'Sending...' : 'Send Reply'}
           </Button>
         </div>
