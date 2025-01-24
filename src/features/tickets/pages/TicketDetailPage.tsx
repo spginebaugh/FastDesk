@@ -147,7 +147,7 @@ export function TicketDetailPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="border-b bg-white px-6 py-4">
+      <div className="border-b border-border/50 bg-background px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex-1 max-w-2xl">
             {isEditingTitle ? (
@@ -161,13 +161,13 @@ export function TicketDetailPage() {
               />
             ) : (
               <h1 
-                className="text-2xl font-semibold text-gray-900 cursor-pointer hover:text-gray-700"
+                className="text-2xl font-semibold cursor-pointer hover:text-primary/90"
                 onClick={handleTitleClick}
               >
                 {ticket.title}
               </h1>
             )}
-            <div className="mt-1 text-sm text-gray-500">
+            <div className="mt-1 text-sm text-muted-foreground">
               Opened by {ticket.user.full_name || ticket.user.email} · {format(new Date(ticket.created_at!), 'MMM d, yyyy')}
             </div>
           </div>
@@ -176,10 +176,10 @@ export function TicketDetailPage() {
 
       <div className="flex-1 flex overflow-hidden">
         {/* Left Section - Ticket Controls */}
-        <div className="w-64 border-r bg-gray-50 p-4 flex flex-col">
+        <div className="w-64 border-r border-border/50 bg-background p-4 flex flex-col">
           <div className="flex-1 space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Status</label>
+              <label className="text-sm font-medium">Status</label>
               <TicketStatusSelect
                 value={pendingChanges.ticket_status || ticket.ticket_status}
                 onValueChange={handleTicketStatusChange}
@@ -187,12 +187,12 @@ export function TicketDetailPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Assignee</label>
+              <label className="text-sm font-medium">Assignee</label>
               <Select
                 value={pendingChanges.assignee || (currentAssignment ? currentAssignment.id : 'unassigned')}
                 onValueChange={handleAssigneeChange}
               >
-                <SelectTrigger className="w-full bg-white text-black">
+                <SelectTrigger className="w-full bg-background">
                   <SelectValue>
                     {isLoadingAssignment ? (
                       'Loading...'
@@ -213,7 +213,7 @@ export function TicketDetailPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="unassigned">
-                    <span className="text-gray-600">Unassigned</span>
+                    <span className="text-muted-foreground">Unassigned</span>
                   </SelectItem>
                   {availableAgents.map((agent) => (
                     <SelectItem key={agent.id} value={agent.id}>
@@ -233,7 +233,7 @@ export function TicketDetailPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Priority</label>
+              <label className="text-sm font-medium">Priority</label>
               <TicketPrioritySelect
                 value={pendingChanges.ticket_priority || ticket.ticket_priority}
                 onValueChange={handleTicketPriorityChange}
@@ -241,7 +241,7 @@ export function TicketDetailPage() {
             </div>
           </div>
 
-          <div className="pt-4 border-t mt-4">
+          <div className="pt-4 border-t border-border/50 mt-4">
             <Button 
               className="w-full"
               disabled={!hasChanges || isUpdating}
@@ -254,7 +254,7 @@ export function TicketDetailPage() {
         </div>
 
         {/* Middle Section - Messages */}
-        <div className="flex-1 flex flex-col min-w-0 max-w-[calc(100%-36rem)] overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 max-w-[calc(100%-36rem)] overflow-hidden bg-background">
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message) => (
               <TicketMessage 
@@ -265,13 +265,13 @@ export function TicketDetailPage() {
               />
             ))}
           </div>
-          <div className="border-t p-4">
+          <div className="border-t border-border/50 p-4">
             <TicketReplyBox ticketId={ticketId!} />
           </div>
         </div>
 
         {/* Right Section - Ticket Creator Profile */}
-        <div className="w-80 border-l bg-gray-50 p-6">
+        <div className="w-80 border-l border-border/50 bg-background p-6">
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
               <Avatar className="h-12 w-12">
@@ -281,27 +281,27 @@ export function TicketDetailPage() {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium">
                   {ticket.user.full_name || 'Unknown User'}
                 </h3>
-                <p className="text-sm text-gray-500">{ticket.user.email}</p>
+                <p className="text-sm text-muted-foreground">{ticket.user.email}</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <h4 className="text-sm font-medium text-gray-700">Company</h4>
-                <p className="text-sm text-gray-900">{ticket.user.company || '-'}</p>
+                <h4 className="text-sm font-medium">Company</h4>
+                <p className="text-sm">{ticket.user.company || '-'}</p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-700">Status</h4>
+                <h4 className="text-sm font-medium">Status</h4>
                 <div className="mt-1">
                   <UserStatusBadge status={ticket.user.user_status} />
                 </div>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-700">Created</h4>
-                <p className="text-sm text-gray-900">
+                <h4 className="text-sm font-medium">Created</h4>
+                <p className="text-sm">
                   {ticket.user.created_at 
                     ? format(new Date(ticket.user.created_at), 'MMM d, yyyy')
                     : '-'}

@@ -117,21 +117,22 @@ export const ProfilePage = () => {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <Card className="bg-background-alt border-border/50">
+    <div className="p-6 space-y-6">
+      {/* Basic Information */}
+      <Card className="bg-background border-border/50">
         <CardHeader>
-          <CardTitle className="text-foreground">Profile</CardTitle>
+          <CardTitle>Basic Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center space-x-4">
             <Avatar className="h-20 w-20 ring-2 ring-primary/20">
               <AvatarImage src={user.user_metadata.avatar_url} />
-              <AvatarFallback className="bg-background-accent text-foreground">
+              <AvatarFallback className="bg-background-accent">
                 {user.user_metadata.full_name?.[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h2 className="text-2xl font-bold text-foreground glow-text">
+              <h2 className="text-2xl font-bold glow-text">
                 {user.user_metadata.full_name}
               </h2>
               <p className="text-muted-foreground">{user.email}</p>
@@ -141,68 +142,91 @@ export const ProfilePage = () => {
             </div>
           </div>
 
-          <div className="pt-4">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Security</h3>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="text-foreground hover:text-primary hover:bg-primary/10 border-border/50"
-                >
-                  Change Password
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-background-raised border-border/50">
-                <DialogHeader>
-                  <DialogTitle className="text-foreground">Change Password</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handlePasswordChange} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword" className="text-foreground">Current Password</Label>
-                    <Input
-                      id="currentPassword"
-                      name="currentPassword"
-                      type="password"
-                      required
-                      className="bg-background border-border/50 text-foreground"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword" className="text-foreground">New Password</Label>
-                    <Input
-                      id="newPassword"
-                      name="newPassword"
-                      type="password"
-                      required
-                      minLength={6}
-                      className="bg-background border-border/50 text-foreground"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-foreground">Confirm New Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type="password"
-                      required
-                      minLength={6}
-                      className="bg-background border-border/50 text-foreground"
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className={cn(
-                      "w-full bg-primary hover:bg-primary/90",
-                      isLoading && "opacity-50 cursor-not-allowed"
-                    )} 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Updating..." : "Update Password"}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
+              <p className="mt-1">{user.email}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground">Company</h3>
+              <p className="mt-1">{user.user_metadata.company || '-'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground">Created</h3>
+              <p className="mt-1">{user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground">Last Sign In</h3>
+              <p className="mt-1">{user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString() : '-'}</p>
+            </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Security Settings */}
+      <Card className="bg-background border-border/50">
+        <CardHeader>
+          <CardTitle>Security Settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                className="bg-primary hover:bg-primary/90 transition-colors duration-200"
+              >
+                Change Password
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-background border-border/50">
+              <DialogHeader>
+                <DialogTitle>Change Password</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handlePasswordChange} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Current Password</Label>
+                  <Input
+                    id="currentPassword"
+                    name="currentPassword"
+                    type="password"
+                    required
+                    className="bg-background-raised border-border/50"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>New Password</Label>
+                  <Input
+                    id="newPassword"
+                    name="newPassword"
+                    type="password"
+                    required
+                    minLength={6}
+                    className="bg-background-raised border-border/50"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Confirm New Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    required
+                    minLength={6}
+                    className="bg-background-raised border-border/50"
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  className={cn(
+                    "w-full bg-primary hover:bg-primary/90 transition-colors duration-200",
+                    isLoading && "opacity-50 cursor-not-allowed"
+                  )} 
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Updating..." : "Update Password"}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
     </div>

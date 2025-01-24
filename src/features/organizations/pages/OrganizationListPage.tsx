@@ -90,8 +90,6 @@ export function OrganizationListPage() {
     return member.organization_role
   }
 
-
-
   if (isLoading) {
     return <div className="flex items-center justify-center h-full text-foreground">Loading...</div>
   }
@@ -99,11 +97,11 @@ export function OrganizationListPage() {
   return (
     <div className="h-full flex">
       {/* Lists Sidebar */}
-      <aside className="w-64 border-r border-border/50 bg-background-alt">
+      <aside className="w-64 border-r border-border/50 bg-background">
         <nav className="h-full overflow-y-auto">
           <div className="space-y-1 p-4">
             <div className="py-2">
-              <h2 className="px-2 text-lg font-semibold text-foreground">Organization lists</h2>
+              <h2 className="px-2 text-lg font-semibold">Views</h2>
               <div className="space-y-1 mt-2">
                 {FILTER_OPTIONS.map((option) => {
                   const Icon = option.icon
@@ -113,9 +111,10 @@ export function OrganizationListPage() {
                       variant="ghost" 
                       size="sm" 
                       className={cn(
-                        "w-full justify-start",
+                        "w-full justify-start text-foreground hover:text-primary hover:bg-primary/10",
+                        "transition-colors duration-200",
                         selectedFilter === option.id 
-                          ? "bg-primary/20 text-primary hover:bg-primary/30"
+                          ? "bg-primary/10 text-primary hover:bg-primary/20"
                           : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
                       )}
                       onClick={() => setSelectedFilter(option.id)}
@@ -133,9 +132,9 @@ export function OrganizationListPage() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        <div className="border-b border-border/50 bg-background-raised px-6 py-4">
+        <div className="border-b border-border/50 bg-background px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold text-foreground">
+            <h1 className="text-2xl font-semibold glow-text">
               {FILTER_OPTIONS.find(opt => opt.id === selectedFilter)?.label || 'All organizations'}
             </h1>
             <Button 
@@ -150,16 +149,13 @@ export function OrganizationListPage() {
           <div className="flex items-center justify-between mt-4">
             <div className="flex items-center gap-2 flex-1 max-w-md">
               <div className="relative w-full">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
+                  type="search"
                   placeholder="Search organizations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={cn(
-                    "pl-8 bg-background border-border/50 text-foreground",
-                    "placeholder:text-muted-foreground",
-                    "focus-visible:ring-primary"
-                  )}
+                  className="h-9 pl-8 bg-background-raised border-border/50 focus-visible:ring-primary placeholder:text-muted-foreground"
                 />
               </div>
               <span className="text-sm text-muted-foreground">
@@ -169,58 +165,55 @@ export function OrganizationListPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto bg-background">
-          <div className="min-w-full">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border/50 hover:bg-transparent">
-                  <TableHead className="text-foreground">Name</TableHead>
-                  <TableHead className="text-foreground">Description</TableHead>
-                  <TableHead className="text-foreground">Role</TableHead>
-                  <TableHead className="text-foreground">Created</TableHead>
-                  <TableHead className="text-foreground">Last Updated</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrganizations.map((org) => {
-                  const role = getRoleDisplay(org)
-                  const isMember = org.organization_members && org.organization_members.length > 0
-                  return (
-                    <TableRow 
-                      key={org.id}
-                      className={cn(
-                        "border-border/50",
-                        isMember 
-                          ? "cursor-pointer hover:bg-primary/5" 
-                          : "cursor-not-allowed bg-background-alt/50"
-                      )}
-                      onClick={() => handleRowClick(org)}
-                    >
-                      <TableCell className="font-medium text-foreground">
-                        {org.name}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {org.description || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <OrganizationRoleBadge role={role} />
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {org.created_at 
-                          ? format(new Date(org.created_at), 'MMM d, yyyy')
-                          : '-'}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {org.updated_at
-                          ? format(new Date(org.updated_at), 'MMM d, yyyy')
-                          : '-'}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </div>
+        <div className="flex-1 overflow-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead>Last Updated</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredOrganizations.map((org) => {
+                const role = getRoleDisplay(org)
+                const isMember = org.organization_members && org.organization_members.length > 0
+                return (
+                  <TableRow 
+                    key={org.id}
+                    className={cn(
+                      isMember 
+                        ? "cursor-pointer" 
+                        : "cursor-not-allowed bg-background-alt/50"
+                    )}
+                    onClick={() => handleRowClick(org)}
+                  >
+                    <TableCell className="font-medium">
+                      {org.name}
+                    </TableCell>
+                    <TableCell>
+                      {org.description || '-'}
+                    </TableCell>
+                    <TableCell>
+                      <OrganizationRoleBadge role={role} />
+                    </TableCell>
+                    <TableCell>
+                      {org.created_at 
+                        ? format(new Date(org.created_at), 'MMM d, yyyy')
+                        : '-'}
+                    </TableCell>
+                    <TableCell>
+                      {org.updated_at
+                        ? format(new Date(org.updated_at), 'MMM d, yyyy')
+                        : '-'}
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
         </div>
       </div>
 

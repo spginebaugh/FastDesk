@@ -26,39 +26,36 @@ export function TabBar() {
 
   const handleCloseTab = (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
-    const tab = tabs.find(t => t.id === id)
+    const tab = tabs.find((t) => t.id === id)
     const nextPath = removeTab(id)
-    // Only navigate if we're currently on the tab being closed
     if (nextPath && location.pathname === tab?.path) {
       navigate(nextPath)
     }
   }
 
   return (
-    <div className="flex h-14 overflow-x-auto bg-background-alt border-b border-border/50">
+    <div className="flex h-14 overflow-x-auto bg-background border-b border-border/50">
       {tabs.map((tab) => (
         <div
           key={tab.id}
           onClick={() => handleTabClick(tab.id, tab.path)}
           className={cn(
-            'group relative flex items-center min-w-[150px] max-w-[200px] h-14 px-4',
-            'border-r border-border/50',
-            'cursor-pointer transition-all duration-200',
-            'hover:bg-primary/5',
-            'text-muted-foreground',
-            activeTabId === tab.id && [
-              'bg-background',
-              'text-primary font-medium',
-              // Gradient border bottom
-              'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px]',
-              'after:bg-gradient-to-r after:from-primary after:to-accent',
-              // Glow effect
-              'after:shadow-[0_0_8px_rgba(247,0,207,0.5)]',
-              // Animation
-              'after:animate-in after:fade-in-0 after:slide-in-from-left-full',
-              // Hover effect
-              'group-hover:after:opacity-100'
-            ]
+            "group relative flex items-center min-w-[150px] max-w-[200px] h-14 px-4 cursor-pointer transition-all duration-200 hover:bg-primary/5 text-muted-foreground",
+            activeTabId === tab.id
+              ? [
+                  "bg-background",
+                  "text-primary font-medium",
+                  // Gradient border at bottom when active
+                  "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px]",
+                  "after:bg-gradient-to-r after:from-primary after:to-accent",
+                  "after:shadow-[0_0_8px_rgba(247,0,207,0.5)]",
+                  "after:animate-in after:fade-in-0 after:slide-in-from-left-full",
+                  "group-hover:after:opacity-100"
+                ]
+              : [
+                  // Thicker right border for unselected tabs
+                  "border-r-[1px] border-l-[1px] border-t-[2px] border-border/80"
+                ]
           )}
         >
           <span className="truncate flex-1">{tab.title}</span>

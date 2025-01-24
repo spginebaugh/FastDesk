@@ -36,23 +36,23 @@ export function CustomerTickets({ customerId }: CustomerTicketsProps) {
   return (
     <div className="flex-1 overflow-auto">
       <Table>
-        <TableHeader className="sticky top-0 bg-white">
+        <TableHeader>
           <TableRow>
-            <TableHead className="text-black">Title</TableHead>
-            <TableHead className="text-black">Status</TableHead>
-            <TableHead className="text-black">Priority</TableHead>
-            <TableHead className="text-black">Created</TableHead>
-            <TableHead className="text-black">Last Updated</TableHead>
+            <TableHead>Title</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Priority</TableHead>
+            <TableHead>Created</TableHead>
+            <TableHead>Last Updated</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {tickets.map((ticket) => (
             <TableRow 
               key={ticket.id}
-              className="cursor-pointer hover:bg-gray-50"
+              className="cursor-pointer"
               onClick={() => handleRowClick(ticket.id)}
             >
-              <TableCell className="text-black font-medium">
+              <TableCell className="font-medium">
                 {ticket.title}
               </TableCell>
               <TableCell>
@@ -61,17 +61,17 @@ export function CustomerTickets({ customerId }: CustomerTicketsProps) {
               <TableCell>
                 <TicketPriorityBadge ticketPriority={ticket.ticket_priority} />
               </TableCell>
-              <TableCell className="text-black">
+              <TableCell>
                 {ticket.created_at && format(new Date(ticket.created_at), 'MMM d, yyyy')}
               </TableCell>
-              <TableCell className="text-black">
+              <TableCell>
                 {ticket.updated_at && format(new Date(ticket.updated_at), 'MMM d, yyyy')}
               </TableCell>
             </TableRow>
           ))}
           {tickets.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-gray-500 py-4">
+              <TableCell colSpan={5} className="text-center py-4">
                 No tickets found
               </TableCell>
             </TableRow>

@@ -14,7 +14,6 @@ import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
 import { TicketStatusBadge } from '@/components/shared/TicketStatusBadge'
 import { TicketPriorityBadge } from '@/components/shared/TicketPriorityBadge'
-import { cn } from '@/lib/utils'
 
 interface TicketListProps {
   organizationId: string
@@ -47,7 +46,7 @@ export function TicketList({ organizationId }: TicketListProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-border/50 bg-background-raised">
+      <div className="p-4 border-b border-border/50 bg-background">
         <div className="mb-4">
           <div className="relative max-w-md">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -55,11 +54,7 @@ export function TicketList({ organizationId }: TicketListProps) {
               placeholder="Search tickets..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={cn(
-                "pl-8 bg-background border-border/50 text-foreground",
-                "placeholder:text-muted-foreground",
-                "focus-visible:ring-primary"
-              )}
+              className="h-9 pl-8 bg-background-raised border-border/50 focus-visible:ring-primary placeholder:text-muted-foreground"
             />
           </div>
           <div className="mt-2 text-sm text-muted-foreground">
@@ -70,26 +65,26 @@ export function TicketList({ organizationId }: TicketListProps) {
 
       <div className="flex-1 overflow-auto">
         <Table>
-          <TableHeader className="sticky top-0 bg-background-raised">
-            <TableRow className="border-border/50 hover:bg-transparent">
-              <TableHead className="text-foreground">ID</TableHead>
-              <TableHead className="text-foreground">Title</TableHead>
-              <TableHead className="text-foreground">Status</TableHead>
-              <TableHead className="text-foreground">Priority</TableHead>
-              <TableHead className="text-foreground">Created</TableHead>
-              <TableHead className="text-foreground">Updated</TableHead>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Title</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Priority</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead>Updated</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredTickets.map((ticket: OrganizationTicket) => (
               <TableRow 
                 key={ticket.id}
-                className="cursor-pointer border-border/50 hover:bg-primary/5"
+                className="cursor-pointer"
               >
-                <TableCell className="font-medium text-foreground">
+                <TableCell className="font-medium">
                   #{ticket.id.split('-')[0]}
                 </TableCell>
-                <TableCell className="text-foreground">
+                <TableCell>
                   {ticket.title}
                 </TableCell>
                 <TableCell>
@@ -98,10 +93,10 @@ export function TicketList({ organizationId }: TicketListProps) {
                 <TableCell>
                   <TicketPriorityBadge ticketPriority={ticket.ticket_priority} />
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell>
                   {ticket.created_at && format(new Date(ticket.created_at), 'MMM d, yyyy')}
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell>
                   {ticket.updated_at && format(new Date(ticket.updated_at), 'MMM d, yyyy')}
                 </TableCell>
               </TableRow>

@@ -103,25 +103,25 @@ export function NewTicketPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="border-b bg-white px-6 py-4">
+      <div className="border-b border-border/50 bg-background px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex-1 max-w-2xl">
-            <h1 className="text-2xl font-semibold text-gray-900">New Ticket</h1>
+            <h1 className="text-2xl font-semibold glow-text">New Ticket</h1>
           </div>
         </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
         {/* Left Section - Ticket Controls */}
-        <div className="w-64 border-r bg-gray-50 p-4 flex flex-col">
+        <div className="w-64 border-r border-border/50 bg-background p-4 flex flex-col">
           <div className="flex-1 space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Organization</label>
+              <label className="text-sm font-medium">Organization</label>
               <Select
                 value={initialSettings.organizationId}
                 onValueChange={handleOrganizationChange}
               >
-                <SelectTrigger className="w-full bg-white text-black">
+                <SelectTrigger className="w-full bg-background">
                   <SelectValue>
                     {initialSettings.organizationId === 'unassigned' ? (
                       'Unassigned'
@@ -132,7 +132,7 @@ export function NewTicketPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="unassigned">
-                    <span className="text-gray-600">Unassigned</span>
+                    <span className="text-muted-foreground">Unassigned</span>
                   </SelectItem>
                   {organizations.map((org) => (
                     <SelectItem key={org.id} value={org.id}>
@@ -144,12 +144,12 @@ export function NewTicketPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Assignee</label>
+              <label className="text-sm font-medium">Assignee</label>
               <Select
                 value={initialSettings.assignee}
                 onValueChange={handleAssigneeChange}
               >
-                <SelectTrigger className="w-full bg-white text-black">
+                <SelectTrigger className="w-full bg-background">
                   <SelectValue>
                     {isLoadingAgents ? (
                       'Loading...'
@@ -178,7 +178,7 @@ export function NewTicketPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="unassigned">
-                    <span className="text-gray-600">Unassigned</span>
+                    <span className="text-muted-foreground">Unassigned</span>
                   </SelectItem>
                   {agents.map((agent) => (
                     <SelectItem key={agent.id} value={agent.id}>
@@ -198,12 +198,12 @@ export function NewTicketPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Priority</label>
+              <label className="text-sm font-medium">Priority</label>
               <Select
                 value={initialSettings.ticket_priority}
                 onValueChange={handleTicketPriorityChange}
               >
-                <SelectTrigger className="w-full bg-white text-black">
+                <SelectTrigger className="w-full bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -221,11 +221,11 @@ export function NewTicketPage() {
         </div>
 
         {/* Middle Section - New Ticket Form */}
-        <div className="flex-1 flex flex-col min-w-0 max-w-[calc(100%-36rem)] overflow-hidden bg-gray-50">
+        <div className="flex-1 flex flex-col min-w-0 max-w-[calc(100%-36rem)] overflow-hidden bg-background">
           <form onSubmit={handleSubmit} className="flex-1 overflow-auto p-6">
             <div className="space-y-6 w-full">
               <div className="space-y-2">
-                <label htmlFor="title" className="text-sm font-medium text-gray-700">
+                <label htmlFor="title" className="text-sm font-medium">
                   Title
                 </label>
                 <Input
@@ -233,13 +233,13 @@ export function NewTicketPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Enter ticket title"
-                  className="text-black"
+                  className="bg-background"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="message" className="text-sm font-medium text-gray-700">
+                <label htmlFor="message" className="text-sm font-medium">
                   Message
                 </label>
                 <Textarea
@@ -247,7 +247,7 @@ export function NewTicketPage() {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Type your message..."
-                  className="min-h-[200px] text-black"
+                  className="min-h-[200px] bg-background"
                   required
                 />
               </div>
@@ -272,7 +272,7 @@ export function NewTicketPage() {
         </div>
 
         {/* Right Section - Current User Profile */}
-        <div className="w-80 border-l bg-gray-50 p-6">
+        <div className="w-80 border-l border-border/50 bg-background p-6">
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
               <Avatar className="h-12 w-12">
@@ -282,27 +282,27 @@ export function NewTicketPage() {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium">
                   {user?.user_metadata?.full_name || 'Unknown User'}
                 </h3>
-                <p className="text-sm text-gray-500">{user?.email}</p>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <h4 className="text-sm font-medium text-gray-700">Company</h4>
-                <p className="text-sm text-gray-900">{user?.user_metadata?.company || '-'}</p>
+                <h4 className="text-sm font-medium">Company</h4>
+                <p className="text-sm">{user?.user_metadata?.company || '-'}</p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-700">Status</h4>
+                <h4 className="text-sm font-medium">Status</h4>
                 <div className="mt-1">
                   <UserStatusBadge status={user?.user_metadata?.user_status || 'offline'} />
                 </div>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-700">Created</h4>
-                <p className="text-sm text-gray-900">
+                <h4 className="text-sm font-medium">Created</h4>
+                <p className="text-sm">
                   {user?.created_at 
                     ? format(new Date(user.created_at), 'MMM d, yyyy')
                     : '-'}

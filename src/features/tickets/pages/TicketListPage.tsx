@@ -79,7 +79,7 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
   return (
     <div className="h-full flex">
       {/* Views Sidebar */}
-      <aside className="w-64 border-r border-border/50 bg-background-alt">
+      <aside className="w-64 border-r border-border/50 bg-background">
         <nav className="h-full overflow-y-auto">
           <div className="space-y-1 p-4">
             <div className="py-2">
@@ -169,7 +169,7 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        <div className="border-b border-border/50 bg-background-alt px-6 py-4">
+        <div className="border-b border-border/50 bg-background px-6 py-4">
           <h1 className="text-2xl font-semibold text-foreground glow-text">{titles[view]}</h1>
           
           <div className="flex items-center justify-between mt-4">
@@ -195,11 +195,11 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto ">
           <div className="min-w-full">
             <Table>
               <TableHeader>
-                <TableRow className="border-border/50 hover:bg-transparent">
+                <TableRow>
                   <TableHead className="w-12">
                     <Checkbox 
                       className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
@@ -212,18 +212,18 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
                       }}
                     />
                   </TableHead>
-                  <TableHead className="text-foreground">Subject</TableHead>
-                  <TableHead className="text-foreground">Requester</TableHead>
-                  <TableHead className="text-foreground">Status</TableHead>
-                  <TableHead className="text-foreground">Priority</TableHead>
-                  <TableHead className="text-foreground">Updated</TableHead>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Requester</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Priority</TableHead>
+                  <TableHead>Updated</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {tickets.map((ticket) => (
                   <TableRow 
                     key={ticket.id}
-                    className="cursor-pointer border-border/50 hover:bg-primary/5"
+                    className="cursor-pointer"
                   >
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Checkbox 
@@ -239,13 +239,12 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
                       />
                     </TableCell>
                     <TableCell 
-                      className="text-foreground font-medium"
+                      className="font-medium"
                       onClick={() => navigate(`/tickets/${ticket.id}`)}
                     >
                       {ticket.title}
                     </TableCell>
                     <TableCell 
-                      className="text-muted-foreground"
                       onClick={() => navigate(`/tickets/${ticket.id}`)}
                     >
                       {ticket.user.full_name}
@@ -257,11 +256,10 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
                       <TicketPriorityBadge ticketPriority={ticket.ticket_priority} />
                     </TableCell>
                     <TableCell 
-                      className="text-muted-foreground"
                       onClick={() => navigate(`/tickets/${ticket.id}`)}
                     >
                       {ticket.updated_at 
-                        ? format(new Date(ticket.updated_at), 'MMM d, HH:mm')
+                        ? format(new Date(ticket.updated_at), 'MMM d, HH:mm') 
                         : '-'}
                     </TableCell>
                   </TableRow>

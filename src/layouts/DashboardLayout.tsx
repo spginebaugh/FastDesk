@@ -175,7 +175,7 @@ export function DashboardLayout() {
   return (
     <div className="h-screen w-screen overflow-hidden bg-background flex">
       {/* Sidebar */}
-      <aside className="w-16 border-r border-border/50 bg-background-alt">
+      <aside className="w-16 border-r border-border/50 bg-background">
         <nav className="h-full overflow-y-auto">
           <div className="flex flex-col items-center py-4 space-y-4">
             <TooltipProvider>
@@ -312,7 +312,7 @@ export function DashboardLayout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Top Navigation */}
-        <header className="border-b border-border/50 bg-background-alt h-14">
+        <header className="border-b border-border/50 bg-background h-14">
           <div className="flex h-full items-center">
             <div className="flex-1 flex items-center overflow-hidden">
               <TabBar />
@@ -335,7 +335,7 @@ export function DashboardLayout() {
                 <Input
                   type="search"
                   placeholder="Search..."
-                  className="h-9 pl-8 bg-background-raised border-border/50 focus-visible:ring-primary"
+                  className="h-9 pl-8 bg-background-raised border-border/50 focus-visible:ring-primary placeholder:text-muted-foreground"
                 />
               </div>
               <DropdownMenu>

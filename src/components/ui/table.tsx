@@ -20,7 +20,7 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b border-secondary/30 dark:border-secondary-dark/40", className)} {...props} />
+  <thead ref={ref} className={cn("[&_tr]:border-b-secondary-dark/90 border-secondary/90 dark:border-secondary-dark/90", className)} {...props} />
 ))
 TableHeader.displayName = "TableHeader"
 
@@ -30,7 +30,7 @@ const TableBody = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tbody
     ref={ref}
-    className={cn("[&_tr:last-child]:border-0 [&_tr]:border-b-secondary/20 dark:[&_tr]:border-b-secondary-dark/30", className)}
+    className={cn("[&_tr:last-child]:border-b-secondary-dark/90 [&_tr]:border-b-secondary/90 dark:[&_tr]:border-b-secondary-dark/90", className)}
     {...props}
   />
 ))
@@ -58,7 +58,7 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "border-b border-secondary/20 transition-colors hover:bg-background-accent/30 data-[state=selected]:bg-background-accent dark:border-secondary-dark/30 dark:hover:bg-background-accent/20",
+      "border-b border-secondary/90 transition-colors hover:bg-background-accent/90 data-[state=selected]:bg-background-accent dark:border-secondary-dark/90 dark:hover:bg-background-accent/90",
       className
     )}
     {...props}
@@ -88,7 +88,7 @@ const TableCell = React.forwardRef<
   <td
     ref={ref}
     className={cn(
-      "p-4 align-middle text-secondary-light dark:text-secondary [&:has([role=checkbox])]:pr-0",
+      "p-4 align-middle text-foreground [&:has([role=checkbox])]:pr-0",
       className
     )}
     {...props}

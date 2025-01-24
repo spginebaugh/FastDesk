@@ -17,7 +17,6 @@ import { Button } from '@/components/ui/button'
 import { AddMemberModal } from '../../components/AddMemberModal'
 import { OrganizationRoleBadge } from '@/components/shared/OrganizationRoleBadge'
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
-import { cn } from '@/lib/utils'
 
 interface AgentListProps {
   organizationId: string
@@ -42,7 +41,7 @@ export function AgentList({ organizationId }: AgentListProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-border/50 bg-background-raised">
+      <div className="p-4 border-b border-border/50 bg-background">
         <div className="flex justify-between items-start mb-4">
           <div className="relative max-w-md">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -50,11 +49,7 @@ export function AgentList({ organizationId }: AgentListProps) {
               placeholder="Search agents..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={cn(
-                "pl-8 bg-background border-border/50 text-foreground",
-                "placeholder:text-muted-foreground",
-                "focus-visible:ring-primary"
-              )}
+              className="h-9 pl-8 bg-background-raised border-border/50 focus-visible:ring-primary placeholder:text-muted-foreground"
             />
           </div>
           <Button 
@@ -72,33 +67,33 @@ export function AgentList({ organizationId }: AgentListProps) {
 
       <div className="flex-1 overflow-auto">
         <Table>
-          <TableHeader className="sticky top-0 bg-background-raised">
-            <TableRow className="border-border/50 hover:bg-transparent">
-              <TableHead className="text-foreground">Agent</TableHead>
-              <TableHead className="text-foreground">Email</TableHead>
-              <TableHead className="text-foreground">Role</TableHead>
-              <TableHead className="text-foreground">Status</TableHead>
-              <TableHead className="text-foreground">Joined</TableHead>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Agent</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Joined</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAgents.map((agent) => (
               <TableRow 
                 key={agent.profile_id}
-                className="cursor-pointer border-border/50 hover:bg-primary/5"
+                className="cursor-pointer"
               >
-                <TableCell className="text-foreground">
+                <TableCell>
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8 ring-2 ring-primary/20">
                       <AvatarImage src={agent.profile.avatar_url || undefined} />
-                      <AvatarFallback className="bg-background-accent text-foreground">
+                      <AvatarFallback className="bg-background-accent">
                         {agent.profile.full_name?.[0]?.toUpperCase() || agent.profile.email[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <span className="font-medium">{agent.profile.full_name || 'Unknown'}</span>
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell>
                   {agent.profile.email}
                 </TableCell>
                 <TableCell>
@@ -107,7 +102,7 @@ export function AgentList({ organizationId }: AgentListProps) {
                 <TableCell>
                   <UserStatusBadge status={agent.profile.user_status} />
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell>
                   {agent.created_at && format(new Date(agent.created_at), 'MMM d, yyyy')}
                 </TableCell>
               </TableRow>
