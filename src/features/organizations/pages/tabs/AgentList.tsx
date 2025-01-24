@@ -10,25 +10,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { format } from 'date-fns'
-import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import { Search, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AddMemberModal } from '../../components/AddMemberModal'
-
-const STATUS_COLORS = {
-  online: 'bg-green-500',
-  away: 'bg-yellow-500',
-  transfers_only: 'bg-blue-500',
-  offline: 'bg-gray-500'
-} as const
-
-const ROLE_COLORS = {
-  admin: 'text-green-600',
-  member: 'text-blue-600',
-  customer: 'text-gray-600'
-} as const
+import { OrganizationRoleBadge } from '@/components/shared/OrganizationRoleBadge'
+import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 
 interface AgentListProps {
   organizationId: string
@@ -46,14 +34,6 @@ export function AgentList({ organizationId }: AgentListProps) {
     agent.profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     agent.profile.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
-
-  const getUserStatusColor = (status: keyof typeof STATUS_COLORS) => {
-    return `${STATUS_COLORS[status]} bg-opacity-10 text-black`
-  }
-
-  const getRoleColor = (role: keyof typeof ROLE_COLORS) => {
-    return `${ROLE_COLORS[role]} border-${ROLE_COLORS[role].split('-')[1]}-200`
-  }
 
   if (isLoading) {
     return <div className="p-4">Loading agents...</div>
@@ -114,21 +94,10 @@ export function AgentList({ organizationId }: AgentListProps) {
                   {agent.profile.email}
                 </TableCell>
                 <TableCell>
-                  <Badge 
-                    variant="outline" 
-                    className={`capitalize ${getRoleColor(agent.organization_role)}`}
-                  >
-                    {agent.organization_role}
-                  </Badge>
+                  <OrganizationRoleBadge role={agent.organization_role} />
                 </TableCell>
                 <TableCell>
-                  <Badge 
-                    variant="outline" 
-                    className={`${getUserStatusColor(agent.profile.user_status)} capitalize`}
-                  >
-                    <span className={`mr-1.5 h-2 w-2 inline-block rounded-full ${STATUS_COLORS[agent.profile.user_status]}`} />
-                    {agent.profile.user_status === 'transfers_only' ? 'Transfers only' : agent.profile.user_status}
-                  </Badge>
+                  <UserStatusBadge status={agent.profile.user_status} />
                 </TableCell>
                 <TableCell className="text-black">
                   {agent.created_at && format(new Date(agent.created_at), 'MMM d, yyyy')}

@@ -10,10 +10,10 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { format } from 'date-fns'
-import { Badge } from '@/components/ui/badge'
-import { TICKET_STATUS_MAP, TICKET_PRIORITY_MAP } from '@/features/tickets/types'
 import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
+import { TicketStatusBadge } from '@/components/shared/TicketStatusBadge'
+import { TicketPriorityBadge } from '@/components/shared/TicketPriorityBadge'
 
 interface TicketListProps {
   organizationId: string
@@ -88,20 +88,10 @@ export function TicketList({ organizationId }: TicketListProps) {
                   {ticket.title}
                 </TableCell>
                 <TableCell>
-                  <Badge 
-                    variant="outline" 
-                    className={`${TICKET_STATUS_MAP[ticket.ticket_status].color} bg-opacity-10 text-black`}
-                  >
-                    {TICKET_STATUS_MAP[ticket.ticket_status].label}
-                  </Badge>
+                  <TicketStatusBadge ticketStatus={ticket.ticket_status} />
                 </TableCell>
                 <TableCell>
-                  <Badge 
-                    variant="outline" 
-                    className={TICKET_PRIORITY_MAP[ticket.ticket_priority].color}
-                  >
-                    {TICKET_PRIORITY_MAP[ticket.ticket_priority].label}
-                  </Badge>
+                  <TicketPriorityBadge ticketPriority={ticket.ticket_priority} />
                 </TableCell>
                 <TableCell className="text-black">
                   {ticket.created_at && format(new Date(ticket.created_at), 'MMM d, yyyy')}

@@ -5,6 +5,7 @@ import { Customer } from '../types'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CustomerTickets } from './tabs/CustomerTickets'
 import { CustomerProfile } from './tabs/CustomerProfile'
+import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 
 export function CustomerDetailPage() {
   const { customerId } = useParams()
@@ -37,7 +38,10 @@ export function CustomerDetailPage() {
         <h1 className="text-2xl font-semibold text-gray-900">
           {customer.full_name || 'Unknown Customer'}
         </h1>
-        <p className="mt-1 text-sm text-gray-500">{customer.email}</p>
+        <div className="mt-1 flex items-center gap-2">
+          <span className="text-sm text-gray-500">{customer.email}</span>
+          <UserStatusBadge status={customer.user_status} />
+        </div>
       </div>
 
       <div className="border-b">

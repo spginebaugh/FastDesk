@@ -17,7 +17,7 @@ import { Customer } from '../types'
 import { format } from 'date-fns'
 import { useTabStore } from '@/store/tabStore'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
+import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 
 export function CustomerListPage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -137,12 +137,7 @@ export function CustomerListPage() {
                       {customer.organizations?.map(org => org.organization.name).join(', ') || '-'}
                     </TableCell>
                     <TableCell>
-                      <Badge 
-                        variant="outline" 
-                        className="capitalize"
-                      >
-                        {customer.user_status}
-                      </Badge>
+                      <UserStatusBadge status={customer.user_status} />
                     </TableCell>
                     <TableCell className="text-black">
                       {customer.created_at 

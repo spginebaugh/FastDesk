@@ -9,9 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
 import { ticketService } from '@/features/tickets/services/ticketService'
-import { TICKET_STATUS_MAP, TICKET_PRIORITY_MAP } from '@/features/tickets/types'
+import { TicketStatusBadge } from '@/components/shared/TicketStatusBadge'
+import { TicketPriorityBadge } from '@/components/shared/TicketPriorityBadge'
 
 interface CustomerTicketsProps {
   customerId: string
@@ -56,21 +56,10 @@ export function CustomerTickets({ customerId }: CustomerTicketsProps) {
                 {ticket.title}
               </TableCell>
               <TableCell>
-                <Badge 
-                  variant="outline" 
-                  className={`${TICKET_STATUS_MAP[ticket.ticket_status].color} capitalize`}
-                >
-                  <span className={`mr-1.5 h-2 w-2 inline-block rounded-full bg-current`} />
-                  {ticket.ticket_status}
-                </Badge>
+                <TicketStatusBadge ticketStatus={ticket.ticket_status} />
               </TableCell>
               <TableCell>
-                <Badge 
-                  variant="outline" 
-                  className={`${TICKET_PRIORITY_MAP[ticket.ticket_priority].color} capitalize`}
-                >
-                  {ticket.ticket_priority}
-                </Badge>
+                <TicketPriorityBadge ticketPriority={ticket.ticket_priority} />
               </TableCell>
               <TableCell className="text-black">
                 {ticket.created_at && format(new Date(ticket.created_at), 'MMM d, yyyy')}

@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { format } from 'date-fns'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { TICKET_PRIORITY_MAP, TicketPriority } from '../types'
+import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 
 export function NewTicketPage() {
   const [title, setTitle] = useState('')
@@ -295,7 +296,9 @@ export function NewTicketPage() {
               </div>
               <div>
                 <h4 className="text-sm font-medium text-gray-700">Status</h4>
-                <p className="text-sm text-gray-900">{user?.user_metadata?.user_status || '-'}</p>
+                <div className="mt-1">
+                  <UserStatusBadge status={user?.user_metadata?.user_status || 'offline'} />
+                </div>
               </div>
               <div>
                 <h4 className="text-sm font-medium text-gray-700">Created</h4>

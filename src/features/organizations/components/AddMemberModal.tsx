@@ -17,6 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Database } from '../../../../types/database'
+import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 
 interface AddMemberModalProps {
   isOpen: boolean
@@ -171,8 +172,8 @@ export function AddMemberModal({ isOpen, onClose, organizationId, memberType }: 
                       <TableCell className="text-black" onClick={() => toggleUser(user.id)}>
                         {user.email}
                       </TableCell>
-                      <TableCell className="text-black capitalize" onClick={() => toggleUser(user.id)}>
-                        {user.user_status}
+                      <TableCell onClick={() => toggleUser(user.id)}>
+                        <UserStatusBadge status={user.user_status} />
                       </TableCell>
                     </TableRow>
                   ))}

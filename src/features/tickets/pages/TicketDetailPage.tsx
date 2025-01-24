@@ -13,10 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ticketService } from '../services/ticketService'
-import { TICKET_STATUS_MAP, TICKET_PRIORITY_MAP, TicketStatus, TicketPriority } from '../types'
+import { TicketStatus, TicketPriority } from '../types'
 import { TicketReplyBox } from '../components/TicketReplyBox'
 import { TicketMessage } from '../components/TicketMessage'
 import { useToast } from '@/components/ui/use-toast'
+import { TicketStatusSelect } from '@/components/shared/TicketStatusSelect'
+import { TicketPrioritySelect } from '@/components/shared/TicketPrioritySelect'
+import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 
 export function TicketDetailPage() {
   const { ticketId } = useParams()
@@ -177,24 +180,10 @@ export function TicketDetailPage() {
           <div className="flex-1 space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Status</label>
-              <Select
+              <TicketStatusSelect
                 value={pendingChanges.ticket_status || ticket.ticket_status}
                 onValueChange={handleTicketStatusChange}
-              >
-                <SelectTrigger className="w-full bg-white text-black">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(TICKET_STATUS_MAP).map(([value, { label }]) => (
-                    <SelectItem key={value} value={value}>
-                      <div className="flex items-center">
-                        <div className={`w-2 h-2 rounded-full mr-2 ${TICKET_STATUS_MAP[value as TicketStatus].color}`} />
-                        {label}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             </div>
 
             <div className="space-y-2">
@@ -245,23 +234,10 @@ export function TicketDetailPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Priority</label>
-              <Select
+              <TicketPrioritySelect
                 value={pendingChanges.ticket_priority || ticket.ticket_priority}
                 onValueChange={handleTicketPriorityChange}
-              >
-                <SelectTrigger className="w-full bg-white text-black">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(TICKET_PRIORITY_MAP).map(([value, { label }]) => (
-                    <SelectItem key={value} value={value}>
-                      <div className="flex items-center">
-                        <span className={TICKET_PRIORITY_MAP[value as TicketPriority].color}>{label}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             </div>
           </div>
 
@@ -319,7 +295,9 @@ export function TicketDetailPage() {
               </div>
               <div>
                 <h4 className="text-sm font-medium text-gray-700">Status</h4>
-                <p className="text-sm text-gray-900">{ticket.user.user_status || '-'}</p>
+                <div className="mt-1">
+                  <UserStatusBadge status={ticket.user.user_status} />
+                </div>
               </div>
               <div>
                 <h4 className="text-sm font-medium text-gray-700">Created</h4>

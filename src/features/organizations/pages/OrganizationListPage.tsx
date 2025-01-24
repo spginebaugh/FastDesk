@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { Search, Building2, Plus, ShieldCheck, Users, UserMinus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -18,12 +17,7 @@ import { Organization } from '../types'
 import { format } from 'date-fns'
 import { useTabStore } from '@/store/tabStore'
 import { CreateOrganizationModal } from '../components/CreateOrganizationModal'
-
-const ROLE_COLORS = {
-  admin: 'text-green-600 border-green-200',
-  member: 'text-blue-600 border-blue-200',
-  nonmember: 'text-red-600 border-red-200'
-} as const
+import { OrganizationRoleBadge } from '@/components/shared/OrganizationRoleBadge'
 
 type FilterRole = 'all' | 'admin' | 'member' | 'nonmember'
 
@@ -90,17 +84,9 @@ export function OrganizationListPage() {
   const getRoleDisplay = (organization: Organization) => {
     const member = organization.organization_members?.[0]
     if (!member) {
-      return {
-        label: 'Nonmember',
-        color: ROLE_COLORS.nonmember
-      }
+      return 'nonmember' as const
     }
-    // Handle customer role by showing it as a member
-    const role = member.organization_role === 'customer' ? 'member' : member.organization_role
-    return {
-      label: member.organization_role,
-      color: ROLE_COLORS[role]
-    }
+    return member.organization_role
   }
 
   const getRowClassName = (organization: Organization) => {
@@ -208,12 +194,7 @@ export function OrganizationListPage() {
                         {org.description || '-'}
                       </TableCell>
                       <TableCell>
-                        <Badge 
-                          variant="outline" 
-                          className={`capitalize ${role.color}`}
-                        >
-                          {role.label}
-                        </Badge>
+                        <OrganizationRoleBadge role={role} />
                       </TableCell>
                       <TableCell className="text-black">
                         {org.created_at 

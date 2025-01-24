@@ -11,15 +11,43 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/config/supabase/client'
 import { useToast } from '@/components/ui/use-toast'
+import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
+import { Database } from '../../../../types/database'
+
+type UserStatus = Database['public']['Enums']['user_status']
 
 export const ProfilePage = () => {
   const { user } = useAuthStore()
   const { toast } = useToast()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [userStatus, setUserStatus] = useState<UserStatus>('offline')
+  
+  useEffect(() => {
+    const fetchUserStatus = async () => {
+      if (!user?.id) return
+      
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('user_status')
+        .eq('id', user.id)
+        .single()
+      
+      if (error) {
+        console.error('Error fetching user status:', error)
+        return
+      }
+      
+      if (data?.user_status) {
+        setUserStatus(data.user_status as UserStatus)
+      }
+    }
+    
+    fetchUserStatus()
+  }, [user?.id])
   
   if (!user) return null
 
@@ -102,6 +130,9 @@ export const ProfilePage = () => {
             <div>
               <h2 className="text-2xl font-bold">{user.user_metadata.full_name}</h2>
               <p className="text-gray-500">{user.email}</p>
+              <div className="mt-2">
+                <UserStatusBadge status={userStatus} />
+              </div>
             </div>
           </div>
 

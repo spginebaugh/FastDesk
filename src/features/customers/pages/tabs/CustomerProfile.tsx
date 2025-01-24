@@ -2,7 +2,7 @@ import { format } from 'date-fns'
 import { Customer } from '../../types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
+import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 
 interface CustomerProfileProps {
   customer: Customer
@@ -33,12 +33,9 @@ export function CustomerProfile({ customer }: CustomerProfileProps) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h3 className="text-sm font-medium text-gray-500">Status</h3>
-              <Badge 
-                variant="outline" 
-                className="mt-1 capitalize"
-              >
-                {customer.user_status}
-              </Badge>
+              <div className="mt-1">
+                <UserStatusBadge status={customer.user_status} />
+              </div>
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500">Company</h3>

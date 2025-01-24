@@ -10,19 +10,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { format } from 'date-fns'
-import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import { Search, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AddMemberModal } from '../../components/AddMemberModal'
-
-const STATUS_COLORS = {
-  online: 'bg-green-500',
-  away: 'bg-yellow-500',
-  transfers_only: 'bg-blue-500',
-  offline: 'bg-gray-500'
-} as const
+import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 
 interface CustomerListProps {
   organizationId: string
@@ -40,10 +33,6 @@ export function CustomerList({ organizationId }: CustomerListProps) {
     customer.profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     customer.profile.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
-
-  const getUserStatusColor = (status: keyof typeof STATUS_COLORS) => {
-    return `${STATUS_COLORS[status]} bg-opacity-10 text-black`
-  }
 
   if (isLoading) {
     return <div className="p-4">Loading customers...</div>
@@ -103,13 +92,7 @@ export function CustomerList({ organizationId }: CustomerListProps) {
                   {customer.profile.email}
                 </TableCell>
                 <TableCell>
-                  <Badge 
-                    variant="outline" 
-                    className={`${getUserStatusColor(customer.profile.user_status)} capitalize`}
-                  >
-                    <span className={`mr-1.5 h-2 w-2 inline-block rounded-full ${STATUS_COLORS[customer.profile.user_status]}`} />
-                    {customer.profile.user_status === 'transfers_only' ? 'Transfers only' : customer.profile.user_status}
-                  </Badge>
+                  <UserStatusBadge status={customer.profile.user_status} />
                 </TableCell>
                 <TableCell className="text-black">
                   {customer.created_at && format(new Date(customer.created_at), 'MMM d, yyyy')}

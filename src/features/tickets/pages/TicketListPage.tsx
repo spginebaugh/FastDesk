@@ -10,13 +10,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Badge } from '@/components/ui/badge'
 import { useQuery } from '@tanstack/react-query'
 import { ticketService } from '../services/ticketService'
 import { useAuthStore } from '@/store/authStore'
-import { TICKET_STATUS_MAP, TICKET_PRIORITY_MAP } from '../types'
 import { format } from 'date-fns'
 import { useNavigate, Link } from 'react-router-dom'
+import { TicketStatusBadge } from '@/components/shared/TicketStatusBadge'
+import { TicketPriorityBadge } from '@/components/shared/TicketPriorityBadge'
 
 interface TicketListPageProps {
   view?: 'assigned' | 'unassigned' | 'all' | 'recent'
@@ -207,20 +207,10 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
                       {ticket.user.full_name}
                     </TableCell>
                     <TableCell onClick={() => navigate(`/tickets/${ticket.id}`)}>
-                      <Badge 
-                        variant="outline" 
-                        className={`${TICKET_STATUS_MAP[ticket.ticket_status].color} bg-opacity-10 text-black`}
-                      >
-                        {TICKET_STATUS_MAP[ticket.ticket_status].label}
-                      </Badge>
+                      <TicketStatusBadge ticketStatus={ticket.ticket_status} />
                     </TableCell>
                     <TableCell onClick={() => navigate(`/tickets/${ticket.id}`)}>
-                      <Badge 
-                        variant="outline" 
-                        className={TICKET_PRIORITY_MAP[ticket.ticket_priority].color}
-                      >
-                        {TICKET_PRIORITY_MAP[ticket.ticket_priority].label}
-                      </Badge>
+                      <TicketPriorityBadge ticketPriority={ticket.ticket_priority} />
                     </TableCell>
                     <TableCell 
                       className="text-black"
