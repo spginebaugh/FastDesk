@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { Home, NotebookText, Book, Users, Building, BarChart3, Settings, Plus, Search } from 'lucide-react'
+import { Home, NotebookText, Users, Building, BarChart3, Plus, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -223,24 +223,6 @@ export function DashboardLayout() {
                     className="text-foreground hover:text-primary hover:bg-primary/10 transition-colors duration-200" 
                     asChild
                   >
-                    <Link to="/knowledge-base">
-                      <Book className="h-5 w-5" />
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="bg-background-raised border-border/50">
-                  <p>Knowledge Base</p>
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="text-foreground hover:text-primary hover:bg-primary/10 transition-colors duration-200" 
-                    asChild
-                  >
                     <Link to="/customers">
                       <Users className="h-5 w-5" />
                     </Link>
@@ -284,24 +266,6 @@ export function DashboardLayout() {
                 </TooltipTrigger>
                 <TooltipContent side="right" className="bg-background-raised border-border/50">
                   <p>Data</p>
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="text-foreground hover:text-primary hover:bg-primary/10 transition-colors duration-200" 
-                    asChild
-                  >
-                    <Link to="/admin">
-                      <Settings className="h-5 w-5" />
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="bg-background-raised border-border/50">
-                  <p>Admin</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

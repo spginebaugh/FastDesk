@@ -10,6 +10,7 @@ import { ProfilePage } from '@/features/profile/pages/ProfilePage'
 import { CustomerListPage } from '@/features/customers/pages/CustomerListPage'
 import { OrganizationListPage, OrganizationDetailPage } from '@/features/organizations'
 import { CustomerDetailPage } from '@/features/customers/pages/CustomerDetailPage'
+import { DataPage } from '@/features/data/pages/DataPage'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -72,6 +73,9 @@ export function Router() {
 
           {/* Profile Route */}
           <Route path="profile" element={<ProfilePage />} />
+
+          {/* Data Route */}
+          <Route path="data" element={<DataPage />} />
         </Route>
 
         {/* Catch all route */}

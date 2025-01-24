@@ -8,6 +8,7 @@ interface GetTicketsParams {
   status?: TicketStatus[]
   unassigned?: boolean
   recentlyUpdated?: boolean
+  organizationId?: string
 }
 
 interface Agent {
@@ -22,7 +23,8 @@ export const ticketService = {
     userId, 
     status = ['new', 'open', 'pending'],
     unassigned = false,
-    recentlyUpdated = false
+    recentlyUpdated = false,
+    organizationId
   }: GetTicketsParams = {}): Promise<TicketWithUser[]> {
     const { data: userProfile } = await supabase.auth.getUser()
     if (!userProfile.user) throw new Error('Not authenticated')
@@ -33,7 +35,7 @@ export const ticketService = {
       .select('organization_id')
       .eq('profile_id', userProfile.user.id)
 
-    const userOrgIds = userOrgs?.map(org => org.organization_id) || []
+    const userOrgIds = organizationId ? [organizationId] : (userOrgs?.map(org => org.organization_id) || [])
 
     let query = supabase
       .from('tickets')
@@ -427,5 +429,43 @@ export const ticketService = {
 
       if (insertError) throw insertError
     }
+  },
+
+  async getAllTicketAssignments(organizationId?: string) {
+    const { data: userProfile } = await supabase.auth.getUser()
+    if (!userProfile.user) throw new Error('Not authenticated')
+
+    // First get the organizations the user is a member of
+    const { data: userOrgs } = await supabase
+      .from('organization_members')
+      .select('organization_id')
+      .eq('profile_id', userProfile.user.id)
+
+    const userOrgIds = organizationId ? [organizationId] : (userOrgs?.map(org => org.organization_id) || [])
+
+    // Get all tickets for the user's organizations
+    const { data: tickets } = await supabase
+      .from('tickets')
+      .select('id')
+      .in('organization_id', userOrgIds)
+
+    const ticketIds = tickets?.map(t => t.id) || []
+
+    // Get all assignments for these tickets
+    const { data: assignments, error } = await supabase
+      .from('ticket_assignments')
+      .select(`
+        ticket_id,
+        agent:agent_id(
+          id,
+          full_name,
+          email,
+          avatar_url
+        )
+      `)
+      .in('ticket_id', ticketIds)
+
+    if (error) throw error
+    return assignments
   }
 } 

@@ -141,7 +141,11 @@ export function TicketDetailPage() {
     return <div className="flex items-center justify-center h-full">Loading...</div>
   }
 
-  if (!ticket || messages.length === 0) {
+  if (!ticket || !messages || !Array.isArray(messages)) {
+    return <div className="flex items-center justify-center h-full">Loading ticket data...</div>
+  }
+
+  if (messages.length === 0) {
     return <div className="flex items-center justify-center h-full">Ticket not found</div>
   }
 

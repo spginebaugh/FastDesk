@@ -30,13 +30,21 @@ export function AgentList({ organizationId }: AgentListProps) {
     queryFn: () => organizationService.getOrganizationMembers(organizationId, 'agent')
   })
 
-  const filteredAgents = agents.filter((agent) =>
-    agent.profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    agent.profile.email.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredAgents = agents
+    .filter((agent): agent is typeof agent & { profile: NonNullable<typeof agent.profile> } => 
+      agent && agent.profile !== null && agent.profile !== undefined
+    )
+    .filter((agent) =>
+      (agent.profile.full_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      agent.profile.email.toLowerCase().includes(searchQuery.toLowerCase())
+    )
 
   if (isLoading) {
     return <div className="p-4 text-foreground">Loading agents...</div>
+  }
+
+  if (!Array.isArray(agents)) {
+    return <div className="p-4 text-foreground">Error loading agents</div>
   }
 
   return (
