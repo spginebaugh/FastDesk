@@ -78,9 +78,17 @@ fastdesk/
 │  │  │  │  └─ ticketService.ts
 │  │  │  ├─ store/
 │  │  │  │  └─ ticketStore.ts
+│  │  │  ├─ __tests__/ ## __tests__ directory as a subdirectory for each feature
+│  │  │  │  ├─ components/
+│  │  │  │  │  ├─ TicketCard.test.tsx
+│  │  │  │  │  └─ TicketForm.test.tsx
+│  │  │  │  ├─ pages/
+│  │  │  │  │  ├─ TicketListPage.test.tsx
+│  │  │  │  │  └─ TicketDetailPage.test.tsx
+│  │  │  │  └─ ... ## more tests
 │  │  │  ├─ types.ts
 │  │  │  └─ index.ts
-│  │  └─ ... // more features like knowledgeBase, users, etc.
+│  │  └─ ... ## more features like knowledgeBase, users, etc.
 │  ├─ layouts/
 │  │  ├─ DashboardLayout.tsx
 │  │  └─ AuthLayout.tsx
@@ -88,13 +96,13 @@ fastdesk/
 │  │  ├─ ui/
 │  │  │  ├─ Button.tsx
 │  │  │  ├─ Input.tsx
-│  │  │  ├─ ... // more shadcn ui components
+│  │  │  ├─ ... ## more shadcn ui components
 │  │  │  └─  index.ts
 │  │  ├─ shared/              
 │  │  │  ├─ TicketStatusBadge.tsx
 │  │  │  ├─ TicketPriorityBadge.tsx
 │  │  │  ├─ UserStatusBadge.tsx
-│  │  │  └─ ... // more cross-feature components
+│  │  │  └─ ... ## more cross-feature components
 │  │  ├─ Navbar.tsx
 │  │  └─  Footer.tsx
 │  ├─ providers/
@@ -116,7 +124,7 @@ fastdesk/
 │  │  └─ ...
 │  ├─ types/
 │  │  ├─ database.ts
-│  │  └─ ... // more global types
+│  │  └─ ... ## more global types
 │  ├─ App.tsx
 │  ├─ main.tsx
 │  └─ index.css

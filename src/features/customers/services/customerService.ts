@@ -1,4 +1,4 @@
-import { supabase } from '../../../config/supabase/client'
+import { supabase } from '@/config/supabase/client'
 import { Customer } from '../types'
 
 export const customerService = {
