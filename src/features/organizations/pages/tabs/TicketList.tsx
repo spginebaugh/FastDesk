@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { organizationService } from '../../services/organizationService'
 import {
   Table,
@@ -14,6 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
 import { TicketStatusBadge } from '@/components/shared/TicketStatusBadge'
 import { TicketPriorityBadge } from '@/components/shared/TicketPriorityBadge'
+import { useTabStore } from '@/store/tabStore'
 
 interface TicketListProps {
   organizationId: string
@@ -29,6 +31,8 @@ interface OrganizationTicket {
 }
 
 export function TicketList({ organizationId }: TicketListProps) {
+  const navigate = useNavigate()
+  const tabStore = useTabStore()
   const [searchQuery, setSearchQuery] = useState('')
   const { data: tickets = [], isLoading } = useQuery<OrganizationTicket[]>({
     queryKey: ['organization-tickets', organizationId],
@@ -39,6 +43,20 @@ export function TicketList({ organizationId }: TicketListProps) {
     ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     ticket.id.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  const handleRowClick = (ticket: OrganizationTicket) => {
+    const path = `/tickets/${ticket.id}`
+    
+    // Add tab if it doesn't exist
+    if (!tabStore.hasTab(path)) {
+      tabStore.addTab({
+        title: ticket.title,
+        path,
+      })
+    }
+    
+    navigate(path)
+  }
 
   if (isLoading) {
     return <div className="p-4 text-foreground">Loading tickets...</div>
@@ -79,7 +97,8 @@ export function TicketList({ organizationId }: TicketListProps) {
             {filteredTickets.map((ticket: OrganizationTicket) => (
               <TableRow 
                 key={ticket.id}
-                className="cursor-pointer"
+                className="cursor-pointer hover:bg-primary/5"
+                onClick={() => handleRowClick(ticket)}
               >
                 <TableCell className="font-medium">
                   #{ticket.id.split('-')[0]}

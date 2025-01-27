@@ -4,7 +4,7 @@ import { Database } from '@/types/database'
 
 type UserProfile = Database['public']['Tables']['user_profiles']['Row']
 
-interface OrganizationMemberWithProfile extends Omit<OrganizationMember, 'profile'> {
+export interface OrganizationMemberWithProfile extends Omit<OrganizationMember, 'profile'> {
   profile: Pick<UserProfile, 'id' | 'email' | 'full_name' | 'avatar_url' | 'user_status'>
 }
 

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { organizationService } from '../../services/organizationService'
 import {
   Table,
@@ -16,12 +17,15 @@ import { Search, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AddMemberModal } from '../../components/AddMemberModal'
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
+import { useTabStore } from '@/store/tabStore'
 
 interface CustomerListProps {
   organizationId: string
 }
 
 export function CustomerList({ organizationId }: CustomerListProps) {
+  const navigate = useNavigate()
+  const tabStore = useTabStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const { data: customers = [], isLoading } = useQuery({
@@ -33,6 +37,20 @@ export function CustomerList({ organizationId }: CustomerListProps) {
     customer.profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     customer.profile.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  const handleRowClick = (customer: typeof customers[0]) => {
+    const path = `/customers/${customer.profile_id}/tickets`
+    
+    // Add tab if it doesn't exist
+    if (!tabStore.hasTab(path)) {
+      tabStore.addTab({
+        title: customer.profile.full_name || customer.profile.email,
+        path,
+      })
+    }
+    
+    navigate(path)
+  }
 
   if (isLoading) {
     return <div className="p-4 text-foreground">Loading customers...</div>
@@ -78,7 +96,8 @@ export function CustomerList({ organizationId }: CustomerListProps) {
             {filteredCustomers.map((customer) => (
               <TableRow 
                 key={customer.profile_id}
-                className="cursor-pointer"
+                className="cursor-pointer hover:bg-primary/5"
+                onClick={() => handleRowClick(customer)}
               >
                 <TableCell>
                   <div className="flex items-center gap-2">

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { organizationService } from '../../services/organizationService'
 import {
   Table,
@@ -17,12 +18,15 @@ import { Button } from '@/components/ui/button'
 import { AddMemberModal } from '../../components/AddMemberModal'
 import { OrganizationRoleBadge } from '@/components/shared/OrganizationRoleBadge'
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
+import { useTabStore } from '@/store/tabStore'
 
 interface AgentListProps {
   organizationId: string
 }
 
 export function AgentList({ organizationId }: AgentListProps) {
+  const navigate = useNavigate()
+  const tabStore = useTabStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const { data: agents = [], isLoading } = useQuery({
@@ -38,6 +42,20 @@ export function AgentList({ organizationId }: AgentListProps) {
       (agent.profile.full_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
       agent.profile.email.toLowerCase().includes(searchQuery.toLowerCase())
     )
+
+  const handleRowClick = (agent: typeof agents[0]) => {
+    const path = `/organizations/${organizationId}/agents/${agent.profile_id}`
+    
+    // Add tab if it doesn't exist
+    if (!tabStore.hasTab(path)) {
+      tabStore.addTab({
+        title: agent.profile.full_name || agent.profile.email,
+        path,
+      })
+    }
+    
+    navigate(path)
+  }
 
   if (isLoading) {
     return <div className="p-4 text-foreground">Loading agents...</div>
@@ -88,7 +106,8 @@ export function AgentList({ organizationId }: AgentListProps) {
             {filteredAgents.map((agent) => (
               <TableRow 
                 key={agent.profile_id}
-                className="cursor-pointer"
+                className="cursor-pointer hover:bg-primary/5"
+                onClick={() => handleRowClick(agent)}
               >
                 <TableCell>
                   <div className="flex items-center gap-2">

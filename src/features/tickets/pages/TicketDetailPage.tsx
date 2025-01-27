@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { useAuthStore } from '@/store/authStore'
 import {
   Select,
   SelectContent,
@@ -23,6 +24,7 @@ import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 
 export function TicketDetailPage() {
   const { ticketId } = useParams()
+  const { user } = useAuthStore()
   const queryClient = useQueryClient()
   const { toast } = useToast()
   const [isEditingTitle, setIsEditingTitle] = useState(false)
@@ -248,30 +250,42 @@ export function TicketDetailPage() {
           <div className="pt-4 border-t border-border/50 mt-4">
             <Button 
               className="w-full"
-              disabled={!hasChanges || isUpdating}
-              variant={hasChanges ? "default" : "secondary"}
               onClick={() => updateTicket()}
+              disabled={!hasChanges || isUpdating}
             >
-              {isUpdating ? 'Updating...' : 'Update Ticket'}
+              {isUpdating ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </div>
 
         {/* Middle Section - Messages */}
-        <div className="flex-1 flex flex-col min-w-0 max-w-[calc(100%-36rem)] overflow-hidden bg-background">
+        <div className="flex-1 flex flex-col min-w-0 max-w-[calc(100%-36rem)] overflow-hidden">
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((message) => (
+            {messages.map((message, index) => (
               <TicketMessage 
-                key={message.id}
+                key={message.id} 
                 message={message}
+                isInitialMessage={index === 0}
                 user={message.sender_type === 'customer' ? ticket.user : message.sender}
-                isInitialMessage={message.id === messages[0].id}
+                ticketCreatorId={ticket.user_id}
+                currentUserId={user?.id || ''}
               />
             ))}
           </div>
-          <div className="border-t border-border/50 p-4">
-            <TicketReplyBox ticketId={ticketId!} />
-          </div>
+          <TicketReplyBox 
+            ticketId={ticketId!} 
+            ticketTitle={ticket.title}
+            ticketContent={messages[0]?.content || ''}
+            originalSenderFullName={ticket.user.full_name || ticket.user.email}
+            currentAgentFullName={user?.user_metadata?.full_name}
+            previousMessages={messages.map(msg => ({
+              content: msg.content,
+              role: msg.sender_type === 'customer' ? 'user' : 'agent',
+              senderFullName: msg.sender_type === 'customer' 
+                ? (ticket.user.full_name || ticket.user.email)
+                : (msg.sender?.full_name || 'Support Agent')
+            }))}
+          />
         </div>
 
         {/* Right Section - Ticket Creator Profile */}
@@ -300,7 +314,7 @@ export function TicketDetailPage() {
               <div>
                 <h4 className="text-sm font-medium">Status</h4>
                 <div className="mt-1">
-                  <UserStatusBadge status={ticket.user.user_status} />
+                  <UserStatusBadge status={ticket.user.user_status || 'offline'} />
                 </div>
               </div>
               <div>

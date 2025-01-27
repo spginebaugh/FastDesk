@@ -13,9 +13,20 @@ import { ticketService } from '../services/ticketService'
 import { useToast } from '@/components/ui/use-toast'
 import { TicketMessage } from '../types'
 import { cn } from '@/lib/utils'
+import { openAIService } from '@/services/openai-service'
+import { Loader2 } from 'lucide-react'
 
 interface TicketReplyBoxProps {
   ticketId: string
+  ticketTitle: string
+  ticketContent: string
+  originalSenderFullName: string
+  currentAgentFullName?: string
+  previousMessages: Array<{
+    content: string
+    role: 'user' | 'agent'
+    senderFullName: string
+  }>
 }
 
 interface CreateMessageParams {
@@ -24,9 +35,17 @@ interface CreateMessageParams {
   isInternal: boolean
 }
 
-export function TicketReplyBox({ ticketId }: TicketReplyBoxProps) {
+export function TicketReplyBox({ 
+  ticketId, 
+  ticketTitle,
+  ticketContent, 
+  originalSenderFullName,
+  currentAgentFullName,
+  previousMessages 
+}: TicketReplyBoxProps) {
   const [content, setContent] = useState('')
   const [isInternal, setIsInternal] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
@@ -53,6 +72,32 @@ export function TicketReplyBox({ ticketId }: TicketReplyBoxProps) {
     e.preventDefault()
     if (!content.trim()) return
     sendReply({ ticketId, content, isInternal })
+  }
+
+  const handleGenerateResponse = async () => {
+    try {
+      setIsGenerating(true)
+      const generatedResponse = await openAIService.generateTicketResponse({
+        ticketTitle,
+        originalSenderFullName,
+        currentAgentFullName,
+        ticketContent,
+        previousMessages
+      })
+      setContent(generatedResponse)
+      toast({
+        title: 'Response Generated',
+        description: 'AI response has been generated. Feel free to edit before sending.'
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to generate AI response. Please try again.',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   return (
@@ -98,6 +143,27 @@ export function TicketReplyBox({ ticketId }: TicketReplyBoxProps) {
                 </SelectItem>
               </SelectContent>
             </Select>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGenerateResponse}
+              disabled={isGenerating}
+              className={cn(
+                "border-border/50 text-foreground",
+                "hover:bg-primary/10 hover:text-primary",
+                "focus:ring-primary",
+                isGenerating && "opacity-50"
+              )}
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                'Generate Response'
+              )}
+            </Button>
           </div>
           <Button 
             type="submit" 

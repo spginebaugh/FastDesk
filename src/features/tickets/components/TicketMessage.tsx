@@ -7,9 +7,11 @@ interface TicketMessageProps {
   message: TicketMessageType
   isInitialMessage?: boolean
   user: UserProfile | MessageSender | undefined
+  ticketCreatorId: string
+  currentUserId: string
 }
 
-export function TicketMessage({ message, isInitialMessage, user }: TicketMessageProps) {
+export function TicketMessage({ message, isInitialMessage, user, ticketCreatorId, currentUserId }: TicketMessageProps) {
   if (!user) {
     user = { full_name: 'Unknown User', avatar_url: null }
   }
@@ -21,19 +23,36 @@ export function TicketMessage({ message, isInitialMessage, user }: TicketMessage
 
   const initials = sender.full_name?.split(' ').map((n: string) => n[0]).join('') || '??'
 
+  // Check if this message is from the ticket creator or current user
+  const isTicketCreator = message.sender_id === ticketCreatorId
+  const isCurrentUser = message.sender_id === currentUserId
+
   return (
     <div className={cn(
-      "bg-background-alt rounded-lg p-6 border border-border/50",
+      "rounded-lg p-6 border border-border/50",
       "transition-all duration-200 hover:border-primary/20",
+      isTicketCreator
+        ? "bg-background-raised/50" 
+        : "bg-primary/5",
       !isInitialMessage && message.is_internal && [
         "border-l-4 border-l-semantic-warning",
         "hover:shadow-[0_0_10px_rgba(249,200,14,0.1)]"
+      ],
+      isCurrentUser && [
+        "border-r-4 border-r-primary",
+        "hover:shadow-[0_0_10px_rgba(124,58,237,0.1)]"
       ]
     )}>
       <div className="flex items-start gap-4">
-        <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+        <Avatar className={cn(
+          "h-10 w-10 ring-2",
+          isTicketCreator ? "ring-border/50" : "ring-primary/20"
+        )}>
           <AvatarImage src={sender.avatar_url || undefined} />
-          <AvatarFallback className="bg-background-accent text-foreground">
+          <AvatarFallback className={cn(
+            "text-foreground",
+            isTicketCreator ? "bg-background-accent" : "bg-primary/10"
+          )}>
             {initials}
           </AvatarFallback>
         </Avatar>
