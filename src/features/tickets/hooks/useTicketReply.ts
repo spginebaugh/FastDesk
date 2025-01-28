@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '@/components/ui/use-toast'
 import { ticketService } from '../services/ticketService'
@@ -16,6 +16,8 @@ interface UseTicketReplyOptions {
     role: 'user' | 'worker'
     senderFullName: string
   }>
+  initialContent?: string
+  onSetContent?: (content: string) => void
 }
 
 interface CreateMessageParams {
@@ -30,22 +32,38 @@ export function useTicketReply({
   ticketContent,
   originalSenderFullName,
   currentWorkerFullName,
-  previousMessages
+  previousMessages,
+  initialContent,
+  onSetContent
 }: UseTicketReplyOptions) {
-  const [content, setContent] = useState('')
+  const [content, setContent] = useState(initialContent || '')
   const [isInternal, setIsInternal] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isPending, setIsPending] = useState(false)
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
-  const { mutate: sendReply, isPending } = useMutation<TicketMessage, Error, CreateMessageParams>({
+  // Update content when initialContent changes
+  useEffect(() => {
+    if (initialContent !== undefined) {
+      setContent(initialContent)
+    }
+  }, [initialContent])
+
+  // Notify parent of content changes
+  useEffect(() => {
+    onSetContent?.(content)
+  }, [content, onSetContent])
+
+  const { mutate: sendReply, isPending: mutationPending } = useMutation<TicketMessage, Error, CreateMessageParams>({
     mutationFn: (params) => ticketService.createTicketMessage(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ticket-messages', ticketId] })
       setContent('')
       toast({
         title: 'Reply sent',
-        description: 'Your reply has been sent successfully.'
+        description: 'Your reply has been sent successfully.',
+        duration: 1000 // 1 second in milliseconds
       })
     },
     onError: () => {
@@ -101,10 +119,11 @@ export function useTicketReply({
     content,
     isInternal,
     isGenerating,
-    isPending,
+    isPending: mutationPending,
     handleSubmit,
     handleContentChange,
     handleReplyTypeChange,
-    handleGenerateResponse
+    handleGenerateResponse,
+    setContent
   }
 } 

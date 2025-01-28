@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -22,6 +23,9 @@ interface TicketReplyBoxProps {
     role: 'user' | 'worker'
     senderFullName: string
   }>
+  rightElement?: ReactNode
+  initialContent?: string
+  onSetContent?: (content: string) => void
 }
 
 export function TicketReplyBox({ 
@@ -30,7 +34,10 @@ export function TicketReplyBox({
   ticketContent, 
   originalSenderFullName,
   currentWorkerFullName,
-  previousMessages 
+  previousMessages,
+  rightElement,
+  initialContent,
+  onSetContent
 }: TicketReplyBoxProps) {
   const {
     content,
@@ -39,14 +46,17 @@ export function TicketReplyBox({
     handleSubmit,
     handleContentChange,
     handleReplyTypeChange,
-    handleGenerateResponse
+    handleGenerateResponse,
+    setContent
   } = useTicketReply({
     ticketId,
     ticketTitle,
     ticketContent,
     originalSenderFullName,
     currentWorkerFullName,
-    previousMessages
+    previousMessages,
+    initialContent,
+    onSetContent
   })
 
   return (
@@ -92,27 +102,7 @@ export function TicketReplyBox({
                 </SelectItem>
               </SelectContent>
             </Select>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleGenerateResponse}
-              disabled={isGenerating}
-              className={cn(
-                "border-border/50 text-foreground",
-                "hover:bg-primary/10 hover:text-primary",
-                "focus:ring-primary",
-                isGenerating && "opacity-50"
-              )}
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                'Generate Response'
-              )}
-            </Button>
+            {rightElement}
           </div>
           <Button 
             type="submit" 
