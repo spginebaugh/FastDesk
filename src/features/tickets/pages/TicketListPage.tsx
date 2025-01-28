@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Filter, Ticket } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,63 +9,35 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
-import { useQuery } from '@tanstack/react-query'
-import { ticketService } from '../services/ticketService'
 import { useAuthStore } from '@/store/authStore'
 import { format } from 'date-fns'
 import { useNavigate, Link } from 'react-router-dom'
 import { TicketStatusBadge } from '@/components/shared/TicketStatusBadge'
 import { TicketPriorityBadge } from '@/components/shared/TicketPriorityBadge'
 import { cn } from '@/lib/utils'
+import { useTicketList } from '../hooks/useTicketList'
 
 interface TicketListPageProps {
   view?: 'assigned' | 'unassigned' | 'all' | 'recent'
 }
 
+const titles = {
+  assigned: 'Your unresolved tickets',
+  unassigned: 'Unassigned tickets',
+  all: 'All unsolved tickets',
+  recent: 'Recently updated tickets'
+}
+
 export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
-  const [selectedTickets, setSelectedTickets] = useState<string[]>([])
   const { user } = useAuthStore()
   const navigate = useNavigate()
-
-  const { data: tickets = [], isLoading } = useQuery({
-    queryKey: ['tickets', user?.id, view],
-    queryFn: () => {
-      switch (view) {
-        case 'assigned':
-          return ticketService.getTickets({ 
-            userId: user?.id,
-            status: ['new', 'open', 'pending']
-          })
-        case 'unassigned':
-          return ticketService.getTickets({ 
-            status: ['new', 'open', 'pending'],
-            unassigned: true
-          })
-        case 'all':
-          return ticketService.getTickets({ 
-            status: ['new', 'open', 'pending']
-          })
-        case 'recent':
-          return ticketService.getTickets({ 
-            status: ['new', 'open', 'pending'],
-            recentlyUpdated: true
-          })
-        default:
-          return ticketService.getTickets({ 
-            userId: user?.id,
-            status: ['new', 'open', 'pending']
-          })
-      }
-    },
-    enabled: !!user
-  })
-
-  const titles = {
-    assigned: 'Your unresolved tickets',
-    unassigned: 'Unassigned tickets',
-    all: 'All unsolved tickets',
-    recent: 'Recently updated tickets'
-  }
+  const {
+    tickets,
+    isLoading,
+    selectedTickets,
+    handleTicketSelection,
+    handleSelectAll
+  } = useTicketList({ view, userId: user?.id })
 
   if (isLoading) {
     return (
@@ -203,13 +174,7 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
                   <TableHead className="w-12">
                     <Checkbox 
                       className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedTickets(tickets.map(t => t.id))
-                        } else {
-                          setSelectedTickets([])
-                        }
-                      }}
+                      onCheckedChange={handleSelectAll}
                     />
                   </TableHead>
                   <TableHead>Subject</TableHead>
@@ -229,13 +194,7 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
                       <Checkbox 
                         className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         checked={selectedTickets.includes(ticket.id)}
-                        onCheckedChange={(checked: boolean) => {
-                          if (checked) {
-                            setSelectedTickets([...selectedTickets, ticket.id])
-                          } else {
-                            setSelectedTickets(selectedTickets.filter(id => id !== ticket.id))
-                          }
-                        }}
+                        onCheckedChange={(checked: boolean) => handleTicketSelection(ticket.id, checked)}
                       />
                     </TableCell>
                     <TableCell 

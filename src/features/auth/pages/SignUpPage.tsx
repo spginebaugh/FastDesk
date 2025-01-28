@@ -19,7 +19,7 @@ export function SignUpPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
-  const [profileType, setProfileType] = useState('agent')
+  const [profileType, setProfileType] = useState('worker')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -138,10 +138,10 @@ export function SignUpPage() {
                   </SelectTrigger>
                   <SelectContent className="bg-background-raised border-border/50">
                     <SelectItem 
-                      value="agent"
+                      value="worker"
                       className="text-foreground hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary"
                     >
-                      Agent
+                      Worker
                     </SelectItem>
                     <SelectItem 
                       value="customer"

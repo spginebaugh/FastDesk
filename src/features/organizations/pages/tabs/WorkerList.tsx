@@ -20,36 +20,36 @@ import { OrganizationRoleBadge } from '@/components/shared/OrganizationRoleBadge
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 import { useTabStore } from '@/store/tabStore'
 
-interface AgentListProps {
+interface WorkerListProps {
   organizationId: string
 }
 
-export function AgentList({ organizationId }: AgentListProps) {
+export function WorkerList({ organizationId }: WorkerListProps) {
   const navigate = useNavigate()
   const tabStore = useTabStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  const { data: agents = [], isLoading } = useQuery({
-    queryKey: ['organization-agents', organizationId],
-    queryFn: () => organizationService.getOrganizationMembers(organizationId, 'agent')
+  const { data: workers = [], isLoading } = useQuery({
+    queryKey: ['organization-workers', organizationId],
+    queryFn: () => organizationService.getOrganizationMembers(organizationId, 'worker')
   })
 
-  const filteredAgents = agents
-    .filter((agent): agent is typeof agent & { profile: NonNullable<typeof agent.profile> } => 
-      agent && agent.profile !== null && agent.profile !== undefined
+  const filteredWorkers = workers
+    .filter((worker): worker is typeof worker & { profile: NonNullable<typeof worker.profile> } => 
+      worker && worker.profile !== null && worker.profile !== undefined
     )
-    .filter((agent) =>
-      (agent.profile.full_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-      agent.profile.email.toLowerCase().includes(searchQuery.toLowerCase())
+    .filter((worker) =>
+      (worker.profile.full_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      worker.profile.email.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
-  const handleRowClick = (agent: typeof agents[0]) => {
-    const path = `/organizations/${organizationId}/agents/${agent.profile_id}`
+  const handleRowClick = (worker: typeof workers[0]) => {
+    const path = `/organizations/${organizationId}/workers/${worker.profile_id}`
     
     // Add tab if it doesn't exist
     if (!tabStore.hasTab(path)) {
       tabStore.addTab({
-        title: agent.profile.full_name || agent.profile.email,
+        title: worker.profile.full_name || worker.profile.email,
         path,
       })
     }
@@ -58,11 +58,11 @@ export function AgentList({ organizationId }: AgentListProps) {
   }
 
   if (isLoading) {
-    return <div className="p-4 text-foreground">Loading agents...</div>
+    return <div className="p-4 text-foreground">Loading workers...</div>
   }
 
-  if (!Array.isArray(agents)) {
-    return <div className="p-4 text-foreground">Error loading agents</div>
+  if (!Array.isArray(workers)) {
+    return <div className="p-4 text-foreground">Error loading workers</div>
   }
 
   return (
@@ -72,7 +72,7 @@ export function AgentList({ organizationId }: AgentListProps) {
           <div className="relative max-w-md">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search agents..."
+              placeholder="Search workers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="h-9 pl-8 bg-background-raised border-border/50 focus-visible:ring-primary placeholder:text-muted-foreground"
@@ -83,11 +83,11 @@ export function AgentList({ organizationId }: AgentListProps) {
             className="bg-primary hover:bg-primary/90 transition-colors duration-200"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Add Agent
+            Add Worker
           </Button>
         </div>
         <div className="text-sm text-muted-foreground">
-          {filteredAgents.length} agent{filteredAgents.length !== 1 ? 's' : ''}
+          {filteredWorkers.length} worker{filteredWorkers.length !== 1 ? 's' : ''}
         </div>
       </div>
 
@@ -95,7 +95,7 @@ export function AgentList({ organizationId }: AgentListProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Agent</TableHead>
+              <TableHead>Worker</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
@@ -103,34 +103,34 @@ export function AgentList({ organizationId }: AgentListProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAgents.map((agent) => (
+            {filteredWorkers.map((worker) => (
               <TableRow 
-                key={agent.profile_id}
+                key={worker.profile_id}
                 className="cursor-pointer hover:bg-primary/5"
-                onClick={() => handleRowClick(agent)}
+                onClick={() => handleRowClick(worker)}
               >
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8 ring-2 ring-primary/20">
-                      <AvatarImage src={agent.profile.avatar_url || undefined} />
+                      <AvatarImage src={worker.profile.avatar_url || undefined} />
                       <AvatarFallback className="bg-background-accent">
-                        {agent.profile.full_name?.[0]?.toUpperCase() || agent.profile.email[0].toUpperCase()}
+                        {worker.profile.full_name?.[0]?.toUpperCase() || worker.profile.email[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="font-medium">{agent.profile.full_name || 'Unknown'}</span>
+                    <span className="font-medium">{worker.profile.full_name || 'Unknown'}</span>
                   </div>
                 </TableCell>
                 <TableCell>
-                  {agent.profile.email}
+                  {worker.profile.email}
                 </TableCell>
                 <TableCell>
-                  <OrganizationRoleBadge role={agent.organization_role} />
+                  <OrganizationRoleBadge role={worker.organization_role} />
                 </TableCell>
                 <TableCell>
-                  <UserStatusBadge status={agent.profile.user_status} />
+                  <UserStatusBadge status={worker.profile.user_status} />
                 </TableCell>
                 <TableCell>
-                  {agent.created_at && format(new Date(agent.created_at), 'MMM d, yyyy')}
+                  {worker.created_at && format(new Date(worker.created_at), 'MMM d, yyyy')}
                 </TableCell>
               </TableRow>
             ))}
@@ -142,7 +142,7 @@ export function AgentList({ organizationId }: AgentListProps) {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         organizationId={organizationId}
-        memberType="agent"
+        memberType="worker"
       />
     </div>
   )

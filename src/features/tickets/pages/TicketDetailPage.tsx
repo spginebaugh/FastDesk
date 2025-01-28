@@ -1,5 +1,4 @@
 import { useParams } from 'react-router-dom'
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -13,20 +12,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ticketService } from '../services/ticketService'
 import { TicketStatus, TicketPriority } from '../types'
 import { TicketReplyBox } from '../components/TicketReplyBox'
 import { TicketMessage } from '../components/TicketMessage'
-import { useToast } from '@/components/ui/use-toast'
 import { TicketStatusSelect } from '@/components/shared/TicketStatusSelect'
 import { TicketPrioritySelect } from '@/components/shared/TicketPrioritySelect'
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
+import { useTicketDetail } from '../hooks/useTicketDetail'
 
 export function TicketDetailPage() {
   const { ticketId } = useParams()
   const { user } = useAuthStore()
-  const queryClient = useQueryClient()
-  const { toast } = useToast()
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editedTitle, setEditedTitle] = useState('')
   const [pendingChanges, setPendingChanges] = useState<{
@@ -35,67 +31,14 @@ export function TicketDetailPage() {
     assignee?: string;
   }>({})
 
-  const { data: ticket, isLoading: isLoadingTicket } = useQuery({
-    queryKey: ['ticket', ticketId],
-    queryFn: () => ticketService.getTicket(ticketId!),
-    enabled: !!ticketId
-  })
-
-  const { data: messages = [], isLoading: isLoadingMessages } = useQuery({
-    queryKey: ['ticket-messages', ticketId],
-    queryFn: () => ticketService.getTicketMessages(ticketId!),
-    enabled: !!ticketId
-  })
-
-  const { data: currentAssignment, isLoading: isLoadingAssignment } = useQuery({
-    queryKey: ['ticket-assignment', ticketId],
-    queryFn: () => ticketService.getTicketAssignment(ticketId!),
-    enabled: !!ticketId
-  })
-
-  const { data: availableAgents = [], isLoading: isLoadingAgents } = useQuery({
-    queryKey: ['organization-agents', ticket?.organization_id],
-    queryFn: () => ticketService.getOrganizationAgents(ticket!.organization_id!),
-    enabled: !!ticket?.organization_id
-  })
-
-  const { mutate: updateTicket, isPending: isUpdating } = useMutation({
-    mutationFn: async () => {
-      if (!ticketId || Object.keys(pendingChanges).length === 0) return
-
-      const updates: any = { ...pendingChanges }
-      delete updates.assignee // Handle assignment separately
-
-      // Update ticket details if there are any changes
-      if (Object.keys(updates).length > 0) {
-        await ticketService.updateTicket(ticketId, updates)
-      }
-
-      // Update assignment if it changed
-      if (pendingChanges.assignee !== undefined) {
-        await ticketService.updateTicketAssignment(
-          ticketId,
-          pendingChanges.assignee === 'unassigned' ? null : pendingChanges.assignee
-        )
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
-      queryClient.invalidateQueries({ queryKey: ['ticket-assignment', ticketId] })
-      setPendingChanges({})
-      toast({
-        title: 'Ticket updated',
-        description: 'Ticket settings have been updated successfully.'
-      })
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to update ticket settings. Please try again.',
-        variant: 'destructive'
-      })
-    }
-  })
+  const {
+    ticket,
+    messages,
+    currentAssignment,
+    availableWorkers,
+    isLoading,
+    mutations: { updateTicket, updateTicketAssignment }
+  } = useTicketDetail({ ticketId: ticketId! })
 
   const handleTitleClick = () => {
     if (!isEditingTitle) {
@@ -108,8 +51,7 @@ export function TicketDetailPage() {
     if (!ticketId || !editedTitle.trim()) return
     
     try {
-      await ticketService.updateTicket(ticketId, { title: editedTitle.trim() })
-      await queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
+      await updateTicket({ title: editedTitle.trim() })
       setIsEditingTitle(false)
     } catch (error) {
       console.error('Failed to update ticket title:', error)
@@ -137,9 +79,33 @@ export function TicketDetailPage() {
     setPendingChanges(prev => ({ ...prev, assignee }))
   }
 
+  const handleSaveChanges = async () => {
+    if (!ticketId || Object.keys(pendingChanges).length === 0) return
+
+    const updates: any = { ...pendingChanges }
+    const assignee = updates.assignee
+    delete updates.assignee
+
+    try {
+      // Update ticket details if there are any changes
+      if (Object.keys(updates).length > 0) {
+        await updateTicket(updates)
+      }
+
+      // Update assignment if it changed
+      if (assignee !== undefined) {
+        await updateTicketAssignment(assignee === 'unassigned' ? null : assignee)
+      }
+
+      setPendingChanges({})
+    } catch (error) {
+      console.error('Failed to update ticket:', error)
+    }
+  }
+
   const hasChanges = Object.keys(pendingChanges).length > 0
 
-  if (isLoadingTicket || isLoadingMessages || isLoadingAssignment || isLoadingAgents) {
+  if (isLoading) {
     return <div className="flex items-center justify-center h-full">Loading...</div>
   }
 
@@ -200,9 +166,7 @@ export function TicketDetailPage() {
               >
                 <SelectTrigger className="w-full bg-background">
                   <SelectValue>
-                    {isLoadingAssignment ? (
-                      'Loading...'
-                    ) : currentAssignment ? (
+                    {currentAssignment ? (
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
                           <AvatarImage src={currentAssignment.avatar_url || undefined} />
@@ -221,16 +185,16 @@ export function TicketDetailPage() {
                   <SelectItem value="unassigned">
                     <span className="text-muted-foreground">Unassigned</span>
                   </SelectItem>
-                  {availableAgents.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
+                  {availableWorkers.map((worker) => (
+                    <SelectItem key={worker.id} value={worker.id}>
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
-                          <AvatarImage src={agent.avatar_url || undefined} />
+                          <AvatarImage src={worker.avatar_url || undefined} />
                           <AvatarFallback>
-                            {agent.full_name?.[0]?.toUpperCase() || agent.email[0].toUpperCase()}
+                            {worker.full_name?.[0]?.toUpperCase() || worker.email?.[0]?.toUpperCase() || '?'}
                           </AvatarFallback>
                         </Avatar>
-                        <span>{agent.full_name || agent.email}</span>
+                        <span>{worker.full_name || worker.email}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -250,10 +214,10 @@ export function TicketDetailPage() {
           <div className="pt-4 border-t border-border/50 mt-4">
             <Button 
               className="w-full"
-              onClick={() => updateTicket()}
-              disabled={!hasChanges || isUpdating}
+              onClick={handleSaveChanges}
+              disabled={!hasChanges}
             >
-              {isUpdating ? 'Saving...' : 'Save Changes'}
+              Save Changes
             </Button>
           </div>
         </div>
@@ -277,13 +241,13 @@ export function TicketDetailPage() {
             ticketTitle={ticket.title}
             ticketContent={messages[0]?.content || ''}
             originalSenderFullName={ticket.user.full_name || ticket.user.email}
-            currentAgentFullName={user?.user_metadata?.full_name}
+            currentWorkerFullName={user?.user_metadata?.full_name}
             previousMessages={messages.map(msg => ({
               content: msg.content,
-              role: msg.sender_type === 'customer' ? 'user' : 'agent',
+              role: msg.sender_type === 'customer' ? 'user' : 'worker',
               senderFullName: msg.sender_type === 'customer' 
                 ? (ticket.user.full_name || ticket.user.email)
-                : (msg.sender?.full_name || 'Support Agent')
+                : (msg.sender?.full_name || 'Support Worker')
             }))}
           />
         </div>

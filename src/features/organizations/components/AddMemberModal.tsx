@@ -24,7 +24,7 @@ interface AddMemberModalProps {
   isOpen: boolean
   onClose: () => void
   organizationId: string
-  memberType: 'agent' | 'customer'
+  memberType: 'worker' | 'customer'
 }
 
 type UserProfile = Database['public']['Tables']['user_profiles']['Row']
@@ -74,7 +74,7 @@ export function AddMemberModal({ isOpen, onClose, organizationId, memberType }: 
     mutationFn: (userIds: string[]) => organizationService.addOrganizationMembers({
       organizationId,
       userIds,
-      role: memberType === 'agent' ? 'member' : 'customer'
+      role: memberType === 'worker' ? 'member' : 'customer'
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ 
@@ -117,7 +117,7 @@ export function AddMemberModal({ isOpen, onClose, organizationId, memberType }: 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl bg-background-raised border-border/50">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Add {memberType === 'agent' ? 'Agents' : 'Customers'}</DialogTitle>
+          <DialogTitle className="text-foreground">Add {memberType === 'worker' ? 'Workers' : 'Customers'}</DialogTitle>
           <DialogDescription className="text-muted-foreground">
             Select {memberType}s to add to your organization. You can add multiple {memberType}s at once.
           </DialogDescription>
@@ -145,7 +145,7 @@ export function AddMemberModal({ isOpen, onClose, organizationId, memberType }: 
                 <TableHeader>
                   <TableRow className="border-border/50 hover:bg-transparent">
                     <TableHead className="w-[50px]"></TableHead>
-                    <TableHead className="text-foreground">{memberType === 'agent' ? 'Agent' : 'Customer'}</TableHead>
+                    <TableHead className="text-foreground">{memberType === 'worker' ? 'Worker' : 'Customer'}</TableHead>
                     <TableHead className="text-foreground">Email</TableHead>
                     <TableHead className="text-foreground">Status</TableHead>
                   </TableRow>

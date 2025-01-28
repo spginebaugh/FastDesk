@@ -11,7 +11,7 @@ interface GetTicketsParams {
   organizationId?: string
 }
 
-interface Agent {
+interface Worker {
   id: string
   full_name: string | null
   email: string
@@ -56,7 +56,7 @@ export const ticketService = {
         query = query.not('id', 'in', `(${ticketIds.map(id => `"${id}"`).join(',')})`)
       }
     } else if (userId) {
-      // Check if the user is a customer or an agent
+      // Check if the user is a customer or an worker
       const { data: userProfile } = await supabase
         .from('user_profiles')
         .select('user_type')
@@ -67,11 +67,11 @@ export const ticketService = {
         // For customers, show tickets they created
         query = query.eq('user_id', userId)
       } else {
-        // For agents, show tickets assigned to them
+        // For workers, show tickets assigned to them
         const { data: assignedTickets } = await supabase
           .from('ticket_assignments')
           .select('ticket_id')
-          .eq('agent_id', userId)
+          .eq('worker_id', userId)
         
         const assignedTicketIds = assignedTickets?.map(t => t.ticket_id).filter((id): id is string => id !== null) || []
         if (assignedTicketIds.length > 0) {
@@ -198,7 +198,7 @@ export const ticketService = {
       organization_id: organizationId,
       created_by_type: profile.user_type,
       created_by_id: profile.id,
-      ticket_source: profile.user_type === 'agent' ? 'agent_portal' as const : 'customer_portal' as const
+      ticket_source: profile.user_type === 'worker' ? 'worker_portal' as const : 'customer_portal' as const
     } as const
 
     // Create the ticket
@@ -221,7 +221,7 @@ export const ticketService = {
         .from('ticket_assignments')
         .insert({
           ticket_id: ticket.id,
-          agent_id: finalAssignee,
+          worker_id: finalAssignee,
           organization_id: organizationId,
           is_primary: true
         })
@@ -245,7 +245,7 @@ export const ticketService = {
           content,
           is_internal: isInternal,
           sender_id: userProfile.user.id,
-          sender_type: 'agent'
+          sender_type: 'worker'
         }
       ])
       .select()
@@ -360,7 +360,7 @@ export const ticketService = {
       .insert([
         {
           ticket_id: ticket.id,
-          agent_id: userId,
+          worker_id: userId,
           is_primary: true
         }
       ])
@@ -374,7 +374,7 @@ export const ticketService = {
     const { data, error } = await supabase
       .from('ticket_assignments')
       .select(`
-        agent:user_profiles!ticket_assignments_agent_id_fkey(
+        worker:user_profiles!ticket_assignments_worker_id_fkey(
           id,
           full_name,
           email,
@@ -386,10 +386,10 @@ export const ticketService = {
       .maybeSingle()
 
     if (error) throw error
-    return data?.agent as Agent | null
+    return data?.worker as Worker | null
   },
 
-  async getOrganizationAgents(organizationId: string): Promise<Agent[]> {
+  async getOrganizationWorkers(organizationId: string): Promise<Worker[]> {
     const { data, error } = await supabase
       .from('organization_members')
       .select(`
@@ -401,13 +401,13 @@ export const ticketService = {
         )
       `)
       .eq('organization_id', organizationId)
-      .eq('profile.user_type', 'agent')
+      .eq('profile.user_type', 'worker')
 
     if (error) throw error
-    return data.map(d => d.profile) as Agent[]
+    return data.map(d => d.profile) as Worker[]
   },
 
-  async updateTicketAssignment(ticketId: string, agentId: string | null) {
+  async updateTicketAssignment(ticketId: string, workerId: string | null) {
     // First remove any existing primary assignments
     const { error: deleteError } = await supabase
       .from('ticket_assignments')
@@ -417,13 +417,13 @@ export const ticketService = {
 
     if (deleteError) throw deleteError
 
-    // If we have a new agent to assign, create the assignment
-    if (agentId) {
+    // If we have a new worker to assign, create the assignment
+    if (workerId) {
       const { error: insertError } = await supabase
         .from('ticket_assignments')
         .insert({
           ticket_id: ticketId,
-          agent_id: agentId,
+          worker_id: workerId,
           is_primary: true
         })
 
@@ -456,7 +456,7 @@ export const ticketService = {
       .from('ticket_assignments')
       .select(`
         ticket_id,
-        agent:agent_id(
+        worker:worker_id(
           id,
           full_name,
           email,

@@ -1,112 +1,33 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation, useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { useToast } from '@/components/ui/use-toast'
-import { ticketService } from '../services/ticketService'
-import { organizationService } from '@/features/organizations/services/organizationService'
-import { useAuth } from '@/hooks/useAuth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { format } from 'date-fns'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { TICKET_PRIORITY_MAP, TicketPriority } from '../types'
+import { TICKET_PRIORITY_MAP } from '../types'
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
+import { useAuth } from '@/hooks/useAuth'
+import { useNewTicket } from '../hooks/useNewTicket'
 
 export function NewTicketPage() {
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [initialSettings, setInitialSettings] = useState<{
-    ticket_priority?: TicketPriority;
-    assignee?: string;
-    organizationId?: string;
-  }>({
-    ticket_priority: 'low',
-    assignee: 'unassigned',
-    organizationId: 'unassigned'
-  })
   const navigate = useNavigate()
-  const { toast } = useToast()
   const { user } = useAuth()
-
-  // Get user's organizations
-  const { data: organizations = [] } = useQuery({
-    queryKey: ['organizations'],
-    queryFn: () => organizationService.getOrganizations()
-  })
-
-  // Filter out organizations where user is not a member
-  const userOrganizations = organizations.filter(org => 
-    org.organization_members && org.organization_members.length > 0
-  )
-
-  // Get agents for selected organization
-  const { data: agents = [], isLoading: isLoadingAgents } = useQuery({
-    queryKey: ['organization-agents', initialSettings.organizationId],
-    queryFn: async () => {
-      if (!initialSettings.organizationId || initialSettings.organizationId === 'unassigned') {
-        return []
-      }
-      return ticketService.getOrganizationAgents(initialSettings.organizationId)
-    },
-    enabled: !!initialSettings.organizationId && initialSettings.organizationId !== 'unassigned'
-  })
-
-  const { mutate: createTicket, isPending } = useMutation({
-    mutationFn: async () => {
-      const ticket = await ticketService.createTicket({ 
-        title,
-        priority: initialSettings.ticket_priority,
-        assignee: initialSettings.organizationId === 'unassigned' && initialSettings.assignee === 'unassigned' 
-          ? user?.id  // Auto-assign to current user if both org and assignee are unassigned
-          : initialSettings.assignee,
-        organizationId: initialSettings.organizationId === 'unassigned' ? null : initialSettings.organizationId
-      })
-      await ticketService.createTicketMessage({
-        ticketId: ticket.id,
-        content,
-        isInternal: false
-      })
-      return ticket
-    },
-    onSuccess: (ticket) => {
-      toast({
-        title: 'Ticket created',
-        description: 'Your ticket has been created successfully.'
-      })
-      navigate(`/tickets/${ticket.id}`)
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to create ticket. Please try again.',
-        variant: 'destructive'
-      })
-    }
-  })
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!title.trim() || !content.trim()) return
-    createTicket()
-  }
-
-  const handleTicketPriorityChange = (ticket_priority: TicketPriority) => {
-    setInitialSettings(prev => ({ ...prev, ticket_priority }))
-  }
-
-  const handleOrganizationChange = (organizationId: string) => {
-    setInitialSettings(prev => ({ 
-      ...prev, 
-      organizationId,
-      assignee: 'unassigned' // Reset assignee when organization changes
-    }))
-  }
-
-  const handleAssigneeChange = (assignee: string) => {
-    setInitialSettings(prev => ({ ...prev, assignee }))
-  }
+  const {
+    title,
+    content,
+    initialSettings,
+    organizations,
+    workers,
+    isLoadingWorkers,
+    isPending,
+    setTitle,
+    setContent,
+    handleSubmit,
+    handleTicketPriorityChange,
+    handleOrganizationChange,
+    handleAssigneeChange
+  } = useNewTicket(user?.id)
 
   return (
     <div className="h-full flex flex-col">
@@ -133,7 +54,7 @@ export function NewTicketPage() {
                     {initialSettings.organizationId === 'unassigned' ? (
                       'Unassigned'
                     ) : (
-                      userOrganizations.find(org => org.id === initialSettings.organizationId)?.name || 'Loading...'
+                      organizations.find(org => org.id === initialSettings.organizationId)?.name || 'Loading...'
                     )}
                   </SelectValue>
                 </SelectTrigger>
@@ -141,7 +62,7 @@ export function NewTicketPage() {
                   <SelectItem value="unassigned">
                     <span className="text-muted-foreground">Unassigned</span>
                   </SelectItem>
-                  {userOrganizations.map((org) => (
+                  {organizations.map((org) => (
                     <SelectItem key={org.id} value={org.id}>
                       {org.name}
                     </SelectItem>
@@ -158,24 +79,24 @@ export function NewTicketPage() {
               >
                 <SelectTrigger className="w-full bg-background">
                   <SelectValue>
-                    {isLoadingAgents ? (
+                    {isLoadingWorkers ? (
                       'Loading...'
                     ) : initialSettings.assignee === 'unassigned' ? (
                       'Unassigned'
                     ) : (
                       <div className="flex items-center gap-2">
                         {(() => {
-                          const agent = agents.find(a => a.id === initialSettings.assignee)
-                          if (!agent) return 'Unassigned'
+                          const worker = workers.find(a => a.id === initialSettings.assignee)
+                          if (!worker) return 'Unassigned'
                           return (
                             <>
                               <Avatar className="h-6 w-6">
-                                <AvatarImage src={agent.avatar_url || undefined} />
+                                <AvatarImage src={worker.avatar_url || undefined} />
                                 <AvatarFallback>
-                                  {agent.full_name?.[0]?.toUpperCase() || agent.email[0].toUpperCase()}
+                                  {worker.full_name?.[0]?.toUpperCase() || worker.email[0].toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
-                              <span>{agent.full_name || agent.email}</span>
+                              <span>{worker.full_name || worker.email}</span>
                             </>
                           )
                         })()}
@@ -187,16 +108,16 @@ export function NewTicketPage() {
                   <SelectItem value="unassigned">
                     <span className="text-muted-foreground">Unassigned</span>
                   </SelectItem>
-                  {agents.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
+                  {workers.map((worker) => (
+                    <SelectItem key={worker.id} value={worker.id}>
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
-                          <AvatarImage src={agent.avatar_url || undefined} />
+                          <AvatarImage src={worker.avatar_url || undefined} />
                           <AvatarFallback>
-                            {agent.full_name?.[0]?.toUpperCase() || agent.email[0].toUpperCase()}
+                            {worker.full_name?.[0]?.toUpperCase() || worker.email[0].toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <span>{agent.full_name || agent.email}</span>
+                        <span>{worker.full_name || worker.email}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -217,7 +138,7 @@ export function NewTicketPage() {
                   {Object.entries(TICKET_PRIORITY_MAP).map(([value, { label }]) => (
                     <SelectItem key={value} value={value}>
                       <div className="flex items-center">
-                        <span className={TICKET_PRIORITY_MAP[value as TicketPriority].color}>{label}</span>
+                        <span className={TICKET_PRIORITY_MAP[value as keyof typeof TICKET_PRIORITY_MAP].color}>{label}</span>
                       </div>
                     </SelectItem>
                   ))}

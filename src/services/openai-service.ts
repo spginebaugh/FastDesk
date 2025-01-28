@@ -7,14 +7,14 @@ const openai = new OpenAI({
 
 interface Message {
   content: string;
-  role: 'user' | 'agent';
+  role: 'user' | 'worker';
   senderFullName: string;
 }
 
 interface GenerateTicketResponseParams {
   ticketTitle: string;
   originalSenderFullName: string;
-  currentAgentFullName?: string;
+  currentWorkerFullName?: string;
   ticketContent: string;
   previousMessages: Message[];
 }
@@ -23,7 +23,7 @@ export const openAIService = {
   async generateTicketResponse({ 
     ticketTitle,
     originalSenderFullName,
-    currentAgentFullName,
+    currentWorkerFullName,
     ticketContent,
     previousMessages 
   }: GenerateTicketResponseParams) {
@@ -33,16 +33,16 @@ export const openAIService = {
         .map(msg => `${msg.senderFullName}\n\n${msg.content}\n\n###\n\n`)
         .join('');
 
-      // Check if the currently logged-in agent has responded before
-      const hasCurrentAgentRespondedBefore = currentAgentFullName && 
+      // Check if the currently logged-in worker has responded before
+      const hasCurrentWorkerRespondedBefore = currentWorkerFullName && 
         previousMessages.some(msg => 
-          msg.role === 'agent' && 
-          msg.senderFullName === currentAgentFullName // Only match the current agent's name exactly
+          msg.role === 'worker' && 
+          msg.senderFullName === currentWorkerFullName // Only match the current worker's name exactly
         );
 
-      const agentContext = hasCurrentAgentRespondedBefore
-        ? `as if you are ${currentAgentFullName}`
-        : 'as if you are a new agent responding for the first time in this thread';
+      const workerContext = hasCurrentWorkerRespondedBefore
+        ? `as if you are ${currentWorkerFullName}`
+        : 'as if you are a new worker responding for the first time in this thread';
 
       const lastUserMessage = previousMessages
         .filter(msg => msg.role === 'user')
@@ -53,11 +53,11 @@ export const openAIService = {
         messages: [
           {
             role: "system",
-            content: `You are a helpful support agent assisting a user named ${originalSenderFullName} on a ticket titled ${ticketTitle}. Write your responses as if you are the agent. Provide clear, concise, and technically accurate guidance. Avoid revealing internal notes. Respond in a professional tone.`
+            content: `You are a helpful support worker assisting a user named ${originalSenderFullName} on a ticket titled ${ticketTitle}. Write your responses as if you are the worker. Provide clear, concise, and technically accurate guidance. Avoid revealing internal notes. Respond in a professional tone.`
           },
           {
             role: "user",
-            content: `Below is the conversation thread so far:\n\n---\n${conversationThread}\n\nPlease draft the next message ${agentContext}. Address ${originalSenderFullName}'s concern about "${lastUserMessage}". Maintain a helpful and professional tone, but do not start the message with a salutation and do not end the message with a closing salutation.`
+            content: `Below is the conversation thread so far:\n\n---\n${conversationThread}\n\nPlease draft the next message ${workerContext}. Address ${originalSenderFullName}'s concern about "${lastUserMessage}". Maintain a helpful and professional tone, but do not start the message with a salutation and do not end the message with a closing salutation.`
           }
         ],
         temperature: 0.7,

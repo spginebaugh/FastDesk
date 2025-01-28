@@ -68,26 +68,34 @@ vi.mock('@/components/ui/select', () => ({
 
 describe('TicketReplyBox', () => {
   const mockTicketId = 'ticket123'
+  const mockProps = {
+    ticketId: mockTicketId,
+    ticketTitle: 'Test Ticket',
+    ticketContent: 'Initial ticket content',
+    originalSenderFullName: 'John Doe',
+    currentWorkerFullName: 'Support Agent',
+    previousMessages: []
+  }
 
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('renders reply form correctly', () => {
-    render(<TicketReplyBox ticketId={mockTicketId} />)
+    render(<TicketReplyBox {...mockProps} />)
     expect(screen.getByPlaceholderText('Type your reply...')).toBeInTheDocument()
     expect(screen.getByText('Send Reply')).toBeInTheDocument()
   })
 
   it('handles empty content submission', () => {
-    render(<TicketReplyBox ticketId={mockTicketId} />)
+    render(<TicketReplyBox {...mockProps} />)
     const submitButton = screen.getByText('Send Reply')
     fireEvent.click(submitButton)
     expect(mockMutate).not.toHaveBeenCalled()
   })
 
   it('handles content submission', async () => {
-    render(<TicketReplyBox ticketId={mockTicketId} />)
+    render(<TicketReplyBox {...mockProps} />)
     const textarea = screen.getByPlaceholderText('Type your reply...')
     const submitButton = screen.getByText('Send Reply')
 
@@ -102,7 +110,7 @@ describe('TicketReplyBox', () => {
   })
 
   it('toggles between public and internal replies', async () => {
-    render(<TicketReplyBox ticketId={mockTicketId} />)
+    render(<TicketReplyBox {...mockProps} />)
     const textarea = screen.getByPlaceholderText('Type your reply...')
     fireEvent.change(textarea, { target: { value: 'Test internal note' } })
 
@@ -142,7 +150,7 @@ describe('TicketReplyBox', () => {
       submittedAt: Date.now()
     }))
 
-    render(<TicketReplyBox ticketId={mockTicketId} />)
+    render(<TicketReplyBox {...mockProps} />)
     const submitButton = screen.getByText('Sending...')
     expect(submitButton).toBeDisabled()
   })

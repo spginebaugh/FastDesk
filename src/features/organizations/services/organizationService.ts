@@ -89,7 +89,7 @@ export const organizationService = {
 
   async getOrganizationMembers(
     organizationId: string,
-    userType: 'agent' | 'customer'
+    userType: 'worker' | 'customer'
   ): Promise<OrganizationMemberWithProfile[]> {
     const { data, error } = await supabase
       .from('organization_members')
@@ -128,7 +128,7 @@ export const organizationService = {
     return data as OrganizationTicket[]
   },
 
-  async getAvailableUsers(userType: 'agent' | 'customer') {
+  async getAvailableUsers(userType: 'worker' | 'customer') {
     const { data, error } = await supabase
       .from('user_profiles')
       .select(`

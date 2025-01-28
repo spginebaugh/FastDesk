@@ -1,5 +1,3 @@
-import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -9,30 +7,21 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from '@/components/ui/textarea'
-import { ticketService } from '../services/ticketService'
-import { useToast } from '@/components/ui/use-toast'
-import { TicketMessage } from '../types'
 import { cn } from '@/lib/utils'
-import { openAIService } from '@/services/openai-service'
 import { Loader2 } from 'lucide-react'
+import { useTicketReply } from '../hooks/useTicketReply'
 
 interface TicketReplyBoxProps {
   ticketId: string
   ticketTitle: string
   ticketContent: string
   originalSenderFullName: string
-  currentAgentFullName?: string
+  currentWorkerFullName?: string
   previousMessages: Array<{
     content: string
-    role: 'user' | 'agent'
+    role: 'user' | 'worker'
     senderFullName: string
   }>
-}
-
-interface CreateMessageParams {
-  ticketId: string
-  content: string
-  isInternal: boolean
 }
 
 export function TicketReplyBox({ 
@@ -40,72 +29,32 @@ export function TicketReplyBox({
   ticketTitle,
   ticketContent, 
   originalSenderFullName,
-  currentAgentFullName,
+  currentWorkerFullName,
   previousMessages 
 }: TicketReplyBoxProps) {
-  const [content, setContent] = useState('')
-  const [isInternal, setIsInternal] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
-
-  const { mutate: sendReply, isPending } = useMutation<TicketMessage, Error, CreateMessageParams>({
-    mutationFn: (params) => ticketService.createTicketMessage(params),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ticket-messages', ticketId] })
-      setContent('')
-      toast({
-        title: 'Reply sent',
-        description: 'Your reply has been sent successfully.'
-      })
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to send reply. Please try again.',
-        variant: 'destructive'
-      })
-    }
+  const {
+    content,
+    isGenerating,
+    isPending,
+    handleSubmit,
+    handleContentChange,
+    handleReplyTypeChange,
+    handleGenerateResponse
+  } = useTicketReply({
+    ticketId,
+    ticketTitle,
+    ticketContent,
+    originalSenderFullName,
+    currentWorkerFullName,
+    previousMessages
   })
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!content.trim()) return
-    sendReply({ ticketId, content, isInternal })
-  }
-
-  const handleGenerateResponse = async () => {
-    try {
-      setIsGenerating(true)
-      const generatedResponse = await openAIService.generateTicketResponse({
-        ticketTitle,
-        originalSenderFullName,
-        currentAgentFullName,
-        ticketContent,
-        previousMessages
-      })
-      setContent(generatedResponse)
-      toast({
-        title: 'Response Generated',
-        description: 'AI response has been generated. Feel free to edit before sending.'
-      })
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to generate AI response. Please try again.',
-        variant: 'destructive'
-      })
-    } finally {
-      setIsGenerating(false)
-    }
-  }
 
   return (
     <form onSubmit={handleSubmit} className="border-t border-border/50 bg-background-alt p-4">
       <div className="space-y-4">
         <Textarea
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={handleContentChange}
           placeholder="Type your reply..."
           className={cn(
             "min-h-[100px] bg-background border-border/50 text-foreground",
@@ -116,7 +65,7 @@ export function TicketReplyBox({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Select
-              onValueChange={(value: 'public' | 'internal') => setIsInternal(value === 'internal')}
+              onValueChange={handleReplyTypeChange}
               defaultValue="public"
             >
               <SelectTrigger 

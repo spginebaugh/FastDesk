@@ -4,9 +4,9 @@ export type Ticket = Database['public']['Tables']['tickets']['Row']
 export type TicketStatus = Database['public']['Enums']['ticket_status']
 export type TicketPriority = Database['public']['Enums']['ticket_priority']
 export type UserProfile = Database['public']['Tables']['user_profiles']['Row']
-export type SenderType = 'customer' | 'agent' | 'system'
+export type SenderType = 'customer' | 'worker' | 'system'
 
-export interface Agent {
+export interface Worker {
   id: string
   full_name: string | null
   email: string

@@ -4,7 +4,7 @@ import { organizationService } from '../services/organizationService'
 import { Organization } from '../types'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TicketList } from './tabs/TicketList'
-import { AgentList } from './tabs/AgentList'
+import { WorkerList } from './tabs/WorkerList'
 import { CustomerList } from './tabs/CustomerList'
 import { cn } from '@/lib/utils'
 import { Building2 } from 'lucide-react'
@@ -66,7 +66,7 @@ export function OrganizationDetailPage() {
               Tickets
             </TabsTrigger>
             <TabsTrigger
-              value="agents"
+              value="workers"
               className={cn(
                 "px-4 h-12 rounded-none",
                 "text-muted-foreground",
@@ -75,7 +75,7 @@ export function OrganizationDetailPage() {
                 "data-[state=active]:text-primary data-[state=active]:bg-primary/10"
               )}
             >
-              Agents
+              Workers
             </TabsTrigger>
             <TabsTrigger
               value="customers"
@@ -95,7 +95,7 @@ export function OrganizationDetailPage() {
 
       <div className="flex-1 overflow-hidden bg-background">
         {activeTab === 'tickets' && <TicketList organizationId={organizationId!} />}
-        {activeTab === 'agents' && <AgentList organizationId={organizationId!} />}
+        {activeTab === 'workers' && <WorkerList organizationId={organizationId!} />}
         {activeTab === 'customers' && <CustomerList organizationId={organizationId!} />}
       </div>
     </div>

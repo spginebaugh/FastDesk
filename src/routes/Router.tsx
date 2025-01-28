@@ -11,7 +11,7 @@ import { CustomerListPage } from '@/features/customers/pages/CustomerListPage'
 import { OrganizationListPage, OrganizationDetailPage } from '@/features/organizations'
 import { CustomerDetailPage } from '@/features/customers/pages/CustomerDetailPage'
 import { DataPage } from '@/features/data/pages/DataPage'
-import { AgentProfilePage } from '@/features/organizations/pages/AgentProfilePage'
+import { WorkerProfilePage } from '@/features/organizations/pages/WorkerProfilePage'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -71,7 +71,7 @@ export function Router() {
           <Route path="organizations" element={<OrganizationListPage />} />
           <Route path="organizations/:organizationId" element={<OrganizationDetailPage />} />
           <Route path="organizations/:organizationId/:tab" element={<OrganizationDetailPage />} />
-          <Route path="organizations/:organizationId/agents/:agentId" element={<AgentProfilePage />} />
+          <Route path="organizations/:organizationId/workers/:workerId" element={<WorkerProfilePage />} />
 
           {/* Profile Route */}
           <Route path="profile" element={<ProfilePage />} />

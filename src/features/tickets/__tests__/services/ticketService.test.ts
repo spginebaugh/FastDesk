@@ -81,7 +81,7 @@ vi.mock('@/config/supabase/client', () => {
   const mockUserProfile = {
     id: 'user123', // Match this with the auth user id
     email: 'test@example.com',
-    user_type: 'agent',
+    user_type: 'worker',
     full_name: 'Test User'
   }
 

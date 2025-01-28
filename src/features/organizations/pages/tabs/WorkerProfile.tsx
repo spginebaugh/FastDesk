@@ -5,11 +5,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 import { OrganizationRoleBadge } from '@/components/shared/OrganizationRoleBadge'
 
-interface AgentProfileProps {
-  agent: OrganizationMemberWithProfile
+interface WorkerProfileProps {
+  worker: OrganizationMemberWithProfile
 }
 
-export function AgentProfile({ agent }: AgentProfileProps) {
+export function WorkerProfile({ worker }: WorkerProfileProps) {
   return (
     <div className="p-6 space-y-6">
       {/* Basic Information */}
@@ -20,14 +20,14 @@ export function AgentProfile({ agent }: AgentProfileProps) {
         <CardContent className="space-y-6">
           <div className="flex items-center space-x-4">
             <Avatar className="h-20 w-20 ring-2 ring-primary/20">
-              <AvatarImage src={agent.profile.avatar_url || undefined} />
+              <AvatarImage src={worker.profile.avatar_url || undefined} />
               <AvatarFallback className="bg-background-accent">
-                {agent.profile.full_name?.[0]?.toUpperCase() || agent.profile.email[0].toUpperCase()}
+                {worker.profile.full_name?.[0]?.toUpperCase() || worker.profile.email[0].toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h2 className="text-2xl font-bold">{agent.profile.full_name || 'Unknown'}</h2>
-              <p className="text-muted-foreground">{agent.profile.email}</p>
+              <h2 className="text-2xl font-bold">{worker.profile.full_name || 'Unknown'}</h2>
+              <p className="text-muted-foreground">{worker.profile.email}</p>
             </div>
           </div>
 
@@ -35,28 +35,28 @@ export function AgentProfile({ agent }: AgentProfileProps) {
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
               <div className="mt-1">
-                <UserStatusBadge status={agent.profile.user_status} />
+                <UserStatusBadge status={worker.profile.user_status} />
               </div>
             </div>
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">Role</h3>
               <div className="mt-1">
-                <OrganizationRoleBadge role={agent.organization_role} />
+                <OrganizationRoleBadge role={worker.organization_role} />
               </div>
             </div>
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">Joined Organization</h3>
               <p className="mt-1">
-                {agent.created_at 
-                  ? format(new Date(agent.created_at), 'MMM d, yyyy')
+                {worker.created_at 
+                  ? format(new Date(worker.created_at), 'MMM d, yyyy')
                   : '-'}
               </p>
             </div>
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">Last Updated</h3>
               <p className="mt-1">
-                {agent.updated_at
-                  ? format(new Date(agent.updated_at), 'MMM d, yyyy')
+                {worker.updated_at
+                  ? format(new Date(worker.updated_at), 'MMM d, yyyy')
                   : '-'}
               </p>
             </div>

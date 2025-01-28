@@ -13,7 +13,7 @@ describe('TicketMessage', () => {
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     is_internal: false,
-    sender_type: 'agent' as const,
+    sender_type: 'worker' as const,
     sender_id: 'user1'
   }
 
@@ -22,43 +22,50 @@ describe('TicketMessage', () => {
     avatar_url: 'https://example.com/avatar.jpg'
   }
 
+  const mockProps = {
+    message: mockMessage,
+    user: mockUser,
+    ticketCreatorId: 'creator1',
+    currentUserId: 'user2'
+  }
+
   it('renders message content correctly', () => {
-    render(<TicketMessage message={mockMessage} user={mockUser} />)
+    render(<TicketMessage {...mockProps} />)
     expect(screen.getByText('Test message content')).toBeInTheDocument()
   })
 
   it('displays sender name correctly', () => {
-    render(<TicketMessage message={mockMessage} user={mockUser} />)
+    render(<TicketMessage {...mockProps} />)
     expect(screen.getByText('John Doe')).toBeInTheDocument()
   })
 
   it('shows internal note label for internal messages', () => {
     const internalMessage = { ...mockMessage, is_internal: true }
-    render(<TicketMessage message={internalMessage} user={mockUser} />)
+    render(<TicketMessage {...mockProps} message={internalMessage} />)
     expect(screen.getByText('Internal Note')).toBeInTheDocument()
   })
 
   it('formats date correctly', () => {
     const date = new Date()
     const message = { ...mockMessage, created_at: date.toISOString() }
-    render(<TicketMessage message={message} user={mockUser} />)
+    render(<TicketMessage {...mockProps} message={message} />)
     expect(screen.getByText(format(date, 'PPp'))).toBeInTheDocument()
   })
 
   it('shows fallback for missing user name', () => {
-    render(<TicketMessage message={mockMessage} user={undefined} />)
+    render(<TicketMessage {...mockProps} user={undefined} />)
     expect(screen.getByText('Unknown User')).toBeInTheDocument()
   })
 
   it('shows initials in avatar fallback', () => {
-    render(<TicketMessage message={mockMessage} user={mockUser} />)
+    render(<TicketMessage {...mockProps} />)
     expect(screen.getByText('JD')).toBeInTheDocument()
   })
 
   it('applies internal message styling', () => {
     const internalMessage = { ...mockMessage, is_internal: true }
     const { container } = render(
-      <TicketMessage message={internalMessage} user={mockUser} />
+      <TicketMessage {...mockProps} message={internalMessage} />
     )
     const messageDiv = container.firstChild as HTMLElement
     expect(messageDiv).toHaveClass('border-l-semantic-warning')

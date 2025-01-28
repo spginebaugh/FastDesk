@@ -23,7 +23,7 @@ $$ language plpgsql;
 create type ticket_priority as enum ('low', 'medium', 'high', 'urgent');
 create type ticket_status as enum ('new', 'open', 'pending', 'resolved', 'closed');
 create type user_status as enum ('offline', 'online', 'away', 'transfers_only');
-create type ticket_source as enum ('customer_portal', 'agent_portal', 'email', 'api', 'system');
+create type ticket_source as enum ('customer_portal', 'worker_portal', 'email', 'api', 'system');
 create type channel_type as enum ('email', 'whatsapp', 'sms', 'web', 'telegram');
 create type organization_role as enum ('admin', 'member', 'customer');
 
@@ -34,7 +34,7 @@ create table user_profiles (
     full_name text,
     avatar_url text,
     company text,
-    user_type text not null default 'customer' check (user_type in ('agent', 'customer')),
+    user_type text not null default 'customer' check (user_type in ('worker', 'customer')),
     user_status user_status not null default 'offline',
     is_active boolean default true,
     external_id text,
@@ -92,7 +92,7 @@ create or replace function validate_ticket_created_by()
 returns trigger as $$
 begin
     -- Only validate that the created_by_id matches the user_type in user_profiles
-    if new.created_by_type in ('customer', 'agent') then
+    if new.created_by_type in ('customer', 'worker') then
         if not exists (
             select 1 
             from user_profiles 
@@ -130,7 +130,7 @@ create table tickets (
     ticket_priority ticket_priority not null default 'medium',
     ticket_source ticket_source not null default 'customer_portal',
     external_reference_id text,
-    created_by_type text not null check (created_by_type in ('customer', 'agent', 'system', 'api')),
+    created_by_type text not null check (created_by_type in ('customer', 'worker', 'system', 'api')),
     created_by_id uuid,
     metadata jsonb default '{}'::jsonb,
     integration_metadata jsonb default '{}'::jsonb,
@@ -157,14 +157,14 @@ create trigger validate_ticket_created_by_trigger
 create table ticket_messages (
     id uuid primary key default uuid_generate_v4(),
     ticket_id uuid not null references tickets(id) on delete cascade,
-    sender_type text not null check (sender_type in ('customer', 'agent', 'system')),
+    sender_type text not null check (sender_type in ('customer', 'worker', 'system')),
     sender_id uuid,
     content text not null check (length(trim(content)) > 0),
     is_internal boolean default false,
     created_at timestamptz default now(),
     updated_at timestamptz default now(),
     constraint check_valid_sender check (
-        (sender_type in ('agent', 'customer') and sender_id is not null) or
+        (sender_type in ('worker', 'customer') and sender_id is not null) or
         (sender_type = 'system' and sender_id is null)
     )
 );
@@ -173,7 +173,7 @@ create table ticket_messages (
 create table ticket_assignments (
     id uuid primary key default uuid_generate_v4(),
     ticket_id uuid references tickets(id) on delete cascade,
-    agent_id uuid references user_profiles(id) on delete cascade,
+    worker_id uuid references user_profiles(id) on delete cascade,
     organization_id uuid references organizations(id) on delete cascade,
     is_primary boolean default false,
     created_at timestamptz default now(),
@@ -322,10 +322,10 @@ create trigger ticket_status_change
 create or replace function track_first_response()
 returns trigger as $$
 begin
-    if new.sender_type = 'agent' and not exists (
+    if new.sender_type = 'worker' and not exists (
         select 1 from ticket_messages
         where ticket_id = new.ticket_id
-        and sender_type = 'agent'
+        and sender_type = 'worker'
         and created_at < new.created_at
     ) then
         update tickets
@@ -391,7 +391,7 @@ create policy "Users can update their own profile"
 -- Organization policies
 drop policy if exists "Organization members can view their organizations" on organizations;
 drop policy if exists "Only organization admins can update organization details" on organizations;
-drop policy if exists "Agents can create organizations" on organizations;
+drop policy if exists "Workers can create organizations" on organizations;
 
 create policy "Users can view organizations they are members of"
     on organizations for select
@@ -404,7 +404,7 @@ create policy "Users can view organizations they are members of"
         or exists (
             select 1 from user_profiles
             where id = auth.uid()
-            and user_type = 'agent'
+            and user_type = 'worker'
         )
     );
 
@@ -419,13 +419,13 @@ create policy "Only organization admins can update organization details"
         )
     );
 
-create policy "Agents can create organizations"
+create policy "Workers can create organizations"
     on organizations for insert
     with check (
         exists (
             select 1 from user_profiles
             where id = auth.uid()
-            and user_type = 'agent'
+            and user_type = 'worker'
         )
     );
 
@@ -481,11 +481,11 @@ create policy "Organization admins can insert members"
     with check (
         check_organization_admin(auth.uid(), organization_id)
         or (
-            -- Allow agents to add themselves as admin when creating a new organization
+            -- Allow workers to add themselves as admin when creating a new organization
             exists (
                 select 1 from user_profiles
                 where id = auth.uid()
-                and user_type = 'agent'
+                and user_type = 'worker'
                 and auth.uid() = profile_id  -- Only allowing self-insertion
                 and organization_role = 'admin'  -- Must be admin role
             )
@@ -503,7 +503,7 @@ create policy "Organization admins can delete members"
 -- Tickets policies
 drop policy if exists "Users can view tickets they created or are assigned to" on tickets;
 drop policy if exists "Users can create tickets" on tickets;
-drop policy if exists "Agents can update tickets they are assigned to" on tickets;
+drop policy if exists "Workers can update tickets they are assigned to" on tickets;
 
 create policy "Organization members can view all organization tickets"
     on tickets for select
@@ -514,16 +514,16 @@ create policy "Organization members can view all organization tickets"
             and organization_members.profile_id = auth.uid()
         )
         or (
-            -- Allow agents to view all tickets (including unassigned ones)
+            -- Allow workers to view all tickets (including unassigned ones)
             exists (
                 select 1 from user_profiles
                 where user_profiles.id = auth.uid()
-                and user_profiles.user_type = 'agent'
+                and user_profiles.user_type = 'worker'
             )
         )
     );
 
-create policy "Organization members and agents can create tickets"
+create policy "Organization members and workers can create tickets"
     on tickets for insert
     with check (
         (
@@ -537,11 +537,11 @@ create policy "Organization members and agents can create tickets"
         )
         or
         (
-            -- Allow agents to create tickets without an organization
+            -- Allow workers to create tickets without an organization
             exists (
                 select 1 from user_profiles
                 where user_profiles.id = auth.uid()
-                and user_profiles.user_type = 'agent'
+                and user_profiles.user_type = 'worker'
             )
         )
     );
@@ -555,11 +555,11 @@ create policy "Organization members can update tickets"
             and organization_members.profile_id = auth.uid()
         )
         or (
-            -- Allow agents to update any ticket
+            -- Allow workers to update any ticket
             exists (
                 select 1 from user_profiles
                 where user_profiles.id = auth.uid()
-                and user_profiles.user_type = 'agent'
+                and user_profiles.user_type = 'worker'
             )
         )
     );
@@ -613,7 +613,7 @@ create policy "Organization members can view templates"
         )
     );
 
-create policy "Only agents can manage templates"
+create policy "Only workers can manage templates"
     on templates for all
     using (
         exists (
@@ -621,7 +621,7 @@ create policy "Only agents can manage templates"
             join user_profiles up on up.id = om.profile_id
             where om.organization_id = templates.organization_id
             and om.profile_id = auth.uid()
-            and up.user_type = 'agent'
+            and up.user_type = 'worker'
             and om.organization_role in ('admin', 'member')
         )
     );
@@ -631,13 +631,13 @@ create policy "Published articles are visible to all authenticated users"
     on kb_articles for select
     using (kb_status = 'published' or author_id = auth.uid());
 
-create policy "Only agents can manage articles"
+create policy "Only workers can manage articles"
     on kb_articles for all
     using (
         exists (
             select 1 from user_profiles
             where user_profiles.id = auth.uid()
-            and user_profiles.user_type = 'agent'
+            and user_profiles.user_type = 'worker'
         )
     );
 
@@ -653,7 +653,7 @@ create policy "Users can view feedback for their tickets"
                 or exists (
                     select 1 from ticket_assignments
                     where ticket_assignments.ticket_id = tickets.id
-                    and ticket_assignments.agent_id = auth.uid()
+                    and ticket_assignments.worker_id = auth.uid()
                 )
                 or exists (
                     select 1 from organization_members
@@ -681,13 +681,13 @@ create policy "Tags are readable by all authenticated users"
     to authenticated
     using (true);
 
-create policy "Only agents can manage tags"
+create policy "Only workers can manage tags"
     on tags for all
     using (
         exists (
             select 1 from user_profiles
             where user_profiles.id = auth.uid()
-            and user_profiles.user_type = 'agent'
+            and user_profiles.user_type = 'worker'
         )
     );
 
@@ -703,7 +703,7 @@ create policy "Users can view tags for tickets they have access to"
                 or exists (
                     select 1 from ticket_assignments
                     where ticket_assignments.ticket_id = tickets.id
-                    and ticket_assignments.agent_id = auth.uid()
+                    and ticket_assignments.worker_id = auth.uid()
                 )
                 or exists (
                     select 1 from organization_members
@@ -715,13 +715,13 @@ create policy "Users can view tags for tickets they have access to"
         )
     );
 
-create policy "Only agents can manage ticket tags"
+create policy "Only workers can manage ticket tags"
     on ticket_tags for all
     using (
         exists (
             select 1 from user_profiles
             where user_profiles.id = auth.uid()
-            and user_profiles.user_type = 'agent'
+            and user_profiles.user_type = 'worker'
         )
     );
 
@@ -737,7 +737,7 @@ create policy "Users can view attachments for tickets they have access to"
                 or exists (
                     select 1 from ticket_assignments
                     where ticket_assignments.ticket_id = tickets.id
-                    and ticket_assignments.agent_id = auth.uid()
+                    and ticket_assignments.worker_id = auth.uid()
                 )
                 or exists (
                     select 1 from organization_members
@@ -760,7 +760,7 @@ create policy "Users can create attachments for their tickets"
                 or exists (
                     select 1 from ticket_assignments
                     where ticket_assignments.ticket_id = tickets.id
-                    and ticket_assignments.agent_id = auth.uid()
+                    and ticket_assignments.worker_id = auth.uid()
                 )
                 or exists (
                     select 1 from organization_members
@@ -788,8 +788,8 @@ begin
             raise exception 'Customers can only have the organization_role of "customer"';
         end if;
 
-        if user_type = 'agent' and new.organization_role not in ('admin', 'member') then
-            raise exception 'Agents can only have organization_role of "admin" or "member"';
+        if user_type = 'worker' and new.organization_role not in ('admin', 'member') then
+            raise exception 'Workers can only have organization_role of "admin" or "member"';
         end if;
 
         return new;

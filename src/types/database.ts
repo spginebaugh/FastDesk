@@ -184,40 +184,33 @@ export type Database = {
       }
       ticket_assignments: {
         Row: {
-          agent_id: string | null
           created_at: string | null
           id: string
           is_primary: boolean | null
           organization_id: string | null
           ticket_id: string | null
           updated_at: string | null
+          worker_id: string | null
         }
         Insert: {
-          agent_id?: string | null
           created_at?: string | null
           id?: string
           is_primary?: boolean | null
           organization_id?: string | null
           ticket_id?: string | null
           updated_at?: string | null
+          worker_id?: string | null
         }
         Update: {
-          agent_id?: string | null
           created_at?: string | null
           id?: string
           is_primary?: boolean | null
           organization_id?: string | null
           ticket_id?: string | null
           updated_at?: string | null
+          worker_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "ticket_assignments_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "ticket_assignments_organization_id_fkey"
             columns: ["organization_id"]
@@ -230,6 +223,13 @@ export type Database = {
             columns: ["ticket_id"]
             isOneToOne: false
             referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_assignments_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -537,6 +537,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_organization_admin: {
+        Args: {
+          user_id: string
+          org_id: string
+        }
+        Returns: boolean
+      }
+      check_organization_membership: {
+        Args: {
+          user_id: string
+          org_id: string
+        }
+        Returns: boolean
+      }
       citext:
         | {
             Args: {
@@ -599,7 +613,7 @@ export type Database = {
       ticket_priority: "low" | "medium" | "high" | "urgent"
       ticket_source:
         | "customer_portal"
-        | "agent_portal"
+        | "worker_portal"
         | "email"
         | "api"
         | "system"
