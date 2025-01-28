@@ -472,6 +472,71 @@ export type Database = {
           },
         ]
       }
+      user_notes: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          organization_id: string
+          updated_at: string | null
+          updated_by: string | null
+          user_id: string
+          user_notes: Json | null
+          user_tags: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          organization_id: string
+          updated_at?: string | null
+          updated_by?: string | null
+          user_id: string
+          user_notes?: Json | null
+          user_tags?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          organization_id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          user_id?: string
+          user_notes?: Json | null
+          user_tags?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_notes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_notes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_notes_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_notes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_profiles: {
         Row: {
           auth_provider: string | null

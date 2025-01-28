@@ -29,6 +29,7 @@ import { BotIcon, Loader2, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Textarea } from '@/components/ui/textarea'
 import { openAIService } from '@/services/openai-service'
+import { UserNotes } from '@/features/users/components/UserNotes'
 
 interface AIReplyBoxProps {
   isGenerating: boolean
@@ -65,7 +66,7 @@ function AIReplyBox({
         <div>
           <label className="text-sm font-medium mb-2 block">Custom Prompt</label>
           <Textarea 
-            className="min-h-[100px]"
+            className="min-h-[100px] border-secondary dark:border-secondary-dark"
             placeholder="Enter a custom prompt to guide the AI response..."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -75,7 +76,7 @@ function AIReplyBox({
         <div>
           <label className="text-sm font-medium mb-2 block">Generated Response</label>
           <Textarea 
-            className="min-h-[300px] mb-2"
+            className="min-h-[300px] mb-2 border-secondary dark:border-secondary-dark"
             placeholder={isGenerating ? "AI is generating a response..." : "Generated response will appear here. You can edit it after generation."}
             value={generatedContent}
             onChange={(e) => setGeneratedContent(e.target.value)}
@@ -216,6 +217,9 @@ export function TicketDetailPage() {
     ticket_priority?: TicketPriority;
     assignee?: string;
   }>({})
+  const [shouldUpdateNotes, setShouldUpdateNotes] = useState(false)
+  const [updateNotesFn, setUpdateNotesFn] = useState<(() => void) | null>(null)
+  const [hasNoteChanges, setHasNoteChanges] = useState(false)
 
   const {
     ticket,
@@ -411,8 +415,8 @@ export function TicketDetailPage() {
             </div>
 
             {/* Middle Section - Ticket Creator Profile */}
-            <div className="w-80 border-r border-border/50 bg-background p-6">
-              <div className="space-y-6">
+            <div className="w-80 border-r border-border/50 bg-background flex flex-col">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 <div className="flex items-center space-x-4">
                   <Avatar className="h-12 w-12">
                     <AvatarImage src={ticket.user.avatar_url || undefined} />
@@ -448,7 +452,35 @@ export function TicketDetailPage() {
                     </p>
                   </div>
                 </div>
+
+                {/* User Notes Content Section */}
+                {ticket.organization_id && (
+                  <div className="space-y-2">
+                    <UserNotes 
+                      userId={ticket.user_id} 
+                      organizationId={ticket.organization_id}
+                      renderButton={false}
+                      onUpdateNotes={(updateFn, hasChanges) => {
+                        setUpdateNotesFn(() => updateFn)
+                        setHasNoteChanges(hasChanges)
+                      }}
+                    />
+                  </div>
+                )}
               </div>
+
+              {/* User Notes Button Section */}
+              {ticket.organization_id && (
+                <div className="p-4 border-t border-border/50">
+                  <Button 
+                    className="w-full"
+                    onClick={() => updateNotesFn?.()}
+                    disabled={!hasNoteChanges}
+                  >
+                    Update Notes
+                  </Button>
+                </div>
+              )}
             </div>
           </>
         ) : (
