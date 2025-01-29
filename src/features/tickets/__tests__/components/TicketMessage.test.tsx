@@ -3,13 +3,15 @@ import { render, screen } from '@testing-library/react'
 import { TicketMessage } from '../../components/TicketMessage'
 import { format } from 'date-fns'
 import type { TicketMessage as TicketMessageType } from '../../types'
+import { createTiptapContent } from '@/lib/tiptap'
 import '@testing-library/jest-dom/vitest'
 
 describe('TicketMessage', () => {
   const mockMessage: TicketMessageType = {
     id: 'msg1',
     ticket_id: 'ticket1',
-    content: 'Test message content',
+    content: createTiptapContent('Test message content'),
+    content_format: 'tiptap',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     is_internal: false,

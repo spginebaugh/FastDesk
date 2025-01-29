@@ -9,7 +9,6 @@ import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 import { useAuth } from '@/hooks/useAuth'
 import { useNewTicket } from '../hooks/useNewTicket'
 import { TiptapEditor } from '@/components/ui/tiptap-editor'
-import { type TiptapContent } from '@/lib/tiptap'
 
 export function NewTicketPage() {
   const navigate = useNavigate()

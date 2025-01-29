@@ -8,7 +8,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from '@/lib/utils'
-import { Loader2 } from 'lucide-react'
 import { useTicketReply } from '../hooks/useTicketReply'
 import { TiptapEditor } from '@/components/ui/tiptap-editor'
 import { type TiptapContent } from '@/lib/tiptap'
@@ -43,13 +42,10 @@ export function TicketReplyBox({
 }: TicketReplyBoxProps) {
   const {
     content,
-    isGenerating,
     isPending,
     handleSubmit,
     handleContentChange,
     handleReplyTypeChange,
-    handleGenerateResponse,
-    setContent
   } = useTicketReply({
     ticketId,
     ticketTitle,

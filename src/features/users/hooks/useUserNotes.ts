@@ -4,8 +4,6 @@ import { useToast } from '@/components/ui/use-toast'
 import { Database, type Json } from '@/types/database'
 import { type TiptapContent, createTiptapContent, extractPlainText } from '@/lib/tiptap'
 
-type DbJson = Database['public']['Tables']['user_notes']['Row']['user_notes']
-
 interface UserNotes {
   content: TiptapContent
   content_format: 'tiptap' | 'plain'

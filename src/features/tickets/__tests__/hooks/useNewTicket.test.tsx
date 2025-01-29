@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import type { Organization } from '@/features/organizations/types'
 import type { Worker } from '../../types'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { createTiptapContent } from '@/lib/tiptap'
 
 // Mock dependencies
 vi.mock('../../services/ticketService')
@@ -123,7 +124,10 @@ describe('useNewTicket', () => {
     })
 
     expect(result.current.title).toBe('')
-    expect(result.current.content).toBe('')
+    expect(result.current.content).toEqual({
+      type: 'doc',
+      content: []
+    })
     expect(result.current.initialSettings).toEqual({
       ticket_priority: 'low',
       assignee: 'unassigned',
@@ -138,11 +142,11 @@ describe('useNewTicket', () => {
 
     act(() => {
       result.current.setTitle('New Ticket')
-      result.current.setContent('Ticket content')
+      result.current.setContent(createTiptapContent('Ticket content'))
     })
 
     expect(result.current.title).toBe('New Ticket')
-    expect(result.current.content).toBe('Ticket content')
+    expect(result.current.content).toEqual(createTiptapContent('Ticket content'))
   })
 
   it('should handle ticket priority change', () => {
@@ -193,7 +197,7 @@ describe('useNewTicket', () => {
     // Set form values
     act(() => {
       result.current.setTitle('Test Ticket')
-      result.current.setContent('Test Content')
+      result.current.setContent(createTiptapContent('Test Content'))
       result.current.handleTicketPriorityChange('high')
     })
 
@@ -211,7 +215,7 @@ describe('useNewTicket', () => {
     })
     expect(ticketService.createTicketMessage).toHaveBeenCalledWith({
       ticketId: 'ticket-123',
-      content: 'Test Content',
+      content: createTiptapContent('Test Content'),
       isInternal: false
     })
   })

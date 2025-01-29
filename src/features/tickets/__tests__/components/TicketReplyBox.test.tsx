@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { TicketReplyBox } from '../../components/TicketReplyBox'
 import { useMutation } from '@tanstack/react-query'
 import '@testing-library/jest-dom/vitest'
+import { createTiptapContent } from '@/lib/tiptap'
 
 // Mock dependencies
 const mockMutate = vi.fn()
@@ -29,6 +30,38 @@ vi.mock('@tanstack/react-query', () => ({
   useQueryClient: vi.fn(() => ({
     invalidateQueries: vi.fn()
   }))
+}))
+
+// Mock TiptapEditor component
+vi.mock('@/components/ui/tiptap-editor', () => ({
+  TiptapEditor: ({ content, onChange, placeholder, disabled }: any) => {
+    const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+      if (onChange) {
+        const text = (e.target as HTMLDivElement).textContent || ''
+        onChange({
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: text ? [{ type: 'text', text }] : undefined
+            }
+          ]
+        })
+      }
+    }
+
+    return (
+      <div 
+        data-testid="tiptap-editor"
+        contentEditable={!disabled}
+        data-placeholder={placeholder}
+        onInput={handleInput}
+        suppressContentEditableWarning={true}
+      >
+        {content?.content?.[0]?.content?.[0]?.text || ''}
+      </div>
+    )
+  }
 }))
 
 vi.mock('@/components/ui/use-toast', () => ({
@@ -71,7 +104,7 @@ describe('TicketReplyBox', () => {
   const mockProps = {
     ticketId: mockTicketId,
     ticketTitle: 'Test Ticket',
-    ticketContent: 'Initial ticket content',
+    ticketContent: createTiptapContent('Initial ticket content'),
     originalSenderFullName: 'John Doe',
     currentWorkerFullName: 'Support Agent',
     previousMessages: []
@@ -83,7 +116,9 @@ describe('TicketReplyBox', () => {
 
   it('renders reply form correctly', () => {
     render(<TicketReplyBox {...mockProps} />)
-    expect(screen.getByPlaceholderText('Type your reply...')).toBeInTheDocument()
+    const editor = screen.getByTestId('tiptap-editor')
+    expect(editor).toBeInTheDocument()
+    expect(editor).toHaveAttribute('data-placeholder', 'Type your reply...')
     expect(screen.getByText('Send Reply')).toBeInTheDocument()
   })
 
@@ -96,23 +131,34 @@ describe('TicketReplyBox', () => {
 
   it('handles content submission', async () => {
     render(<TicketReplyBox {...mockProps} />)
-    const textarea = screen.getByPlaceholderText('Type your reply...')
+    const editor = screen.getByTestId('tiptap-editor')
     const submitButton = screen.getByText('Send Reply')
 
-    fireEvent.change(textarea, { target: { value: 'Test reply' } })
+    // Simulate typing in the editor
+    fireEvent.input(editor, { target: { textContent: 'Test reply' } })
     fireEvent.click(submitButton)
 
     expect(mockMutate).toHaveBeenCalledWith({
       ticketId: mockTicketId,
-      content: 'Test reply',
+      content: {
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [{ type: 'text', text: 'Test reply' }]
+          }
+        ]
+      },
       isInternal: false
     })
   })
 
   it('toggles between public and internal replies', async () => {
     render(<TicketReplyBox {...mockProps} />)
-    const textarea = screen.getByPlaceholderText('Type your reply...')
-    fireEvent.change(textarea, { target: { value: 'Test internal note' } })
+    const editor = screen.getByTestId('tiptap-editor')
+    
+    // Simulate typing in the editor
+    fireEvent.input(editor, { target: { textContent: 'Test internal note' } })
 
     // Change select value using the mocked select
     const select = screen.getByTestId('select-input')
@@ -124,7 +170,15 @@ describe('TicketReplyBox', () => {
 
     expect(mockMutate).toHaveBeenCalledWith({
       ticketId: mockTicketId,
-      content: 'Test internal note',
+      content: {
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [{ type: 'text', text: 'Test internal note' }]
+          }
+        ]
+      },
       isInternal: true
     })
   })
