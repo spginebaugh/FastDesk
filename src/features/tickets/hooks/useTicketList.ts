@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ticketService } from '../services/ticketService'
+import { getTickets } from '../services'
+import { TicketStatus } from '../types'
 import { TicketWithUser } from '../types'
 
 type TicketView = 'assigned' | 'unassigned' | 'all' | 'recent'
@@ -10,39 +11,19 @@ interface UseTicketListOptions {
   userId?: string
 }
 
+interface UseTicketListParams {
+  userId?: string
+  status?: TicketStatus[]
+  unassigned?: boolean
+  recentlyUpdated?: boolean
+  organizationId?: string
+}
+
 // Sub-hook for fetching tickets based on view type
 function useTicketViews({ view = 'assigned', userId }: UseTicketListOptions) {
   const { data: tickets = [], isLoading } = useQuery({
-    queryKey: ['tickets', userId, view],
-    queryFn: () => {
-      switch (view) {
-        case 'assigned':
-          return ticketService.getTickets({ 
-            userId,
-            status: ['new', 'open', 'pending']
-          })
-        case 'unassigned':
-          return ticketService.getTickets({ 
-            status: ['new', 'open', 'pending'],
-            unassigned: true
-          })
-        case 'all':
-          return ticketService.getTickets({ 
-            status: ['new', 'open', 'pending']
-          })
-        case 'recent':
-          return ticketService.getTickets({ 
-            status: ['new', 'open', 'pending'],
-            recentlyUpdated: true
-          })
-        default:
-          return ticketService.getTickets({ 
-            userId,
-            status: ['new', 'open', 'pending']
-          })
-      }
-    },
-    enabled: !!userId
+    queryKey: ['tickets', { userId, status: ['new', 'open', 'pending'], unassigned: false, recentlyUpdated: false, organizationId: undefined }],
+    queryFn: () => getTickets({ userId, status: ['new', 'open', 'pending'], unassigned: false, recentlyUpdated: false, organizationId: undefined })
   })
 
   return {
@@ -80,8 +61,14 @@ function useTicketSelection(tickets: TicketWithUser[]) {
 }
 
 // Main hook that composes the sub-hooks
-export function useTicketList({ view = 'assigned', userId }: UseTicketListOptions) {
-  const { tickets, isLoading } = useTicketViews({ view, userId })
+export function useTicketList({ 
+  userId,
+  status = ['new', 'open', 'pending'],
+  unassigned = false,
+  recentlyUpdated = false,
+  organizationId
+}: UseTicketListParams = {}) {
+  const { tickets, isLoading } = useTicketViews({ view: 'assigned', userId })
   const {
     selectedTickets,
     setSelectedTickets,

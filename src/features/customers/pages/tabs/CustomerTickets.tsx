@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ticketService } from '@/features/tickets/services/ticketService'
+import { getTickets } from '@/features/tickets/services'
 import { TicketStatusBadge } from '@/components/shared/TicketStatusBadge'
 import { TicketPriorityBadge } from '@/components/shared/TicketPriorityBadge'
 
@@ -22,7 +22,7 @@ export function CustomerTickets({ customerId }: CustomerTicketsProps) {
   
   const { data: tickets = [], isLoading } = useQuery({
     queryKey: ['customer-tickets', customerId],
-    queryFn: () => ticketService.getTickets({ userId: customerId })
+    queryFn: () => getTickets({ userId: customerId })
   })
 
   const handleRowClick = (ticketId: string) => {

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
 import { useAuthStore } from '@/store/authStore'
-import { ticketService } from '@/features/tickets/services/ticketService'
+import { createSampleTicket } from '@/features/tickets/services'
 import { supabase } from '@/config/supabase/client'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
@@ -34,7 +34,7 @@ export function SignUpPage() {
       // Create a sample ticket for the new user
       if (user?.id) {
         try {
-          await ticketService.createSampleTicket(user.id)
+          await createSampleTicket({ userId: user.id })
         } catch (error) {
           console.error('Failed to create sample ticket:', error)
           // Don't throw here - we still want to complete signup even if sample ticket fails

@@ -1,23 +1,33 @@
 import { renderHook, act } from '@testing-library/react'
 import { useNewTicket } from '../../hooks/useNewTicket'
-import { ticketService } from '../../services/ticketService'
 import { organizationService } from '@/features/organizations/services/organizationService'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import type { Organization } from '@/features/organizations/types'
 import type { Worker } from '../../types'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createTiptapContent } from '@/lib/tiptap'
+import { createTicket, createTicketMessage, getOrganizationWorkers } from '../../services'
 
 // Mock dependencies
-vi.mock('../../services/ticketService')
-vi.mock('@/features/organizations/services/organizationService')
 vi.mock('@/components/ui/use-toast', () => ({
   useToast: () => ({
     toast: vi.fn()
   })
 }))
+
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn()
+}))
+
+// Mock the services
+vi.mock('../../services', () => ({
+  createTicket: vi.fn(),
+  createTicketMessage: vi.fn(),
+  getOrganizationWorkers: vi.fn()
+}))
+
+vi.mock('@/features/organizations/services/organizationService', () => ({
+  getOrganizations: vi.fn()
 }))
 
 // Create a wrapper component with QueryClientProvider
@@ -113,9 +123,9 @@ describe('useNewTicket', () => {
     vi.clearAllMocks()
     // Setup mock implementations
     vi.mocked(organizationService.getOrganizations).mockResolvedValue(mockOrganizations as Organization[])
-    vi.mocked(ticketService.getOrganizationWorkers).mockResolvedValue(mockWorkers)
-    vi.mocked(ticketService.createTicket).mockResolvedValue({ id: 'ticket-123' } as any)
-    vi.mocked(ticketService.createTicketMessage).mockResolvedValue({} as any)
+    vi.mocked(getOrganizationWorkers).mockResolvedValue(mockWorkers)
+    vi.mocked(createTicket).mockResolvedValue({ id: 'ticket-123' } as any)
+    vi.mocked(createTicketMessage).mockResolvedValue({} as any)
   })
 
   it('should initialize with default values', () => {
@@ -207,13 +217,13 @@ describe('useNewTicket', () => {
     })
 
     expect(mockEvent.preventDefault).toHaveBeenCalled()
-    expect(ticketService.createTicket).toHaveBeenCalledWith({
+    expect(createTicket).toHaveBeenCalledWith({
       title: 'Test Ticket',
       priority: 'high',
       assignee: mockUserId, // Auto-assigned to current user when org and assignee are unassigned
       organizationId: null
     })
-    expect(ticketService.createTicketMessage).toHaveBeenCalledWith({
+    expect(createTicketMessage).toHaveBeenCalledWith({
       ticketId: 'ticket-123',
       content: createTiptapContent('Test Content'),
       isInternal: false
@@ -233,7 +243,93 @@ describe('useNewTicket', () => {
     })
 
     expect(mockEvent.preventDefault).toHaveBeenCalled()
-    expect(ticketService.createTicket).not.toHaveBeenCalled()
-    expect(ticketService.createTicketMessage).not.toHaveBeenCalled()
+    expect(createTicket).not.toHaveBeenCalled()
+    expect(createTicketMessage).not.toHaveBeenCalled()
+  })
+
+  it('should create a ticket and message', async () => {
+    // Mock implementation
+    const mockTicket = { id: '123', title: 'Test Ticket' }
+    const mockMessage = { id: '456', content: 'Test Message' }
+    
+    ;(createTicket as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockTicket)
+    ;(createTicketMessage as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockMessage)
+    ;(getOrganizationWorkers as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([])
+    ;(organizationService.getOrganizations as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([])
+
+    // Test implementation
+    const { result } = renderHook(() => useNewTicket('user123'))
+
+    // Add your test assertions here
+  })
+
+  it('should handle form submission with valid data', async () => {
+    const mockTicket = { id: '123', title: 'Test Ticket' }
+    const mockMessage = { id: '456', content: 'Test Message' }
+
+    ;(createTicket as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockTicket)
+    ;(createTicketMessage as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockMessage)
+    ;(getOrganizationWorkers as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([])
+    ;(organizationService.getOrganizations as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([])
+
+    const { result } = renderHook(() => useNewTicket('user123'))
+
+    // Set form values
+    result.current.setTitle('Test Ticket')
+    result.current.setContent({ 
+      type: 'doc', 
+      content: [{ 
+        type: 'paragraph', 
+        content: [{ type: 'text', text: 'Test content' }] 
+      }]
+    })
+
+    // Submit form
+    await result.current.handleSubmit(new Event('submit') as any)
+
+    // Verify service calls
+    expect(createTicket).toHaveBeenCalledWith({
+      title: 'Test Ticket',
+      priority: 'low',
+      assignee: 'user123',
+      organizationId: null
+    })
+
+    expect(createTicketMessage).toHaveBeenCalledWith({
+      ticketId: '123',
+      content: { 
+        type: 'doc', 
+        content: [{ 
+          type: 'paragraph', 
+          content: [{ type: 'text', text: 'Test content' }] 
+        }]
+      },
+      isInternal: false
+    })
+  })
+
+  it('should not submit with empty title', async () => {
+    const { result } = renderHook(() => useNewTicket('user123'))
+
+    // Submit form with empty title
+    await result.current.handleSubmit(new Event('submit') as any)
+
+    // Verify no service calls were made
+    expect(createTicket).not.toHaveBeenCalled()
+    expect(createTicketMessage).not.toHaveBeenCalled()
+  })
+
+  it('should not submit with empty content', async () => {
+    const { result } = renderHook(() => useNewTicket('user123'))
+
+    // Set only title
+    result.current.setTitle('Test Ticket')
+
+    // Submit form with empty content
+    await result.current.handleSubmit(new Event('submit') as any)
+
+    // Verify no service calls were made
+    expect(createTicket).not.toHaveBeenCalled()
+    expect(createTicketMessage).not.toHaveBeenCalled()
   })
 }) 

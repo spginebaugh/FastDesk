@@ -25,7 +25,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { ticketService } from '@/features/tickets/services/ticketService'
+import { useQuery } from '@tanstack/react-query'
+import { getTickets, getTicket } from '@/features/tickets/services'
 
 type UserStatus = Database['public']['Enums']['user_status']
 
@@ -150,10 +151,11 @@ export function DashboardLayout() {
           } else {
             const ticketId = path.split('/').pop()
             try {
-              const ticket = await ticketService.getTicket(ticketId!)
+              const ticket = await getTicket({ ticketId: ticketId! })
               title = ticket.title
             } catch (error) {
               console.error('Failed to fetch ticket:', error)
+              title = 'Ticket'
             }
           }
         } else if (path === '/profile') {
@@ -171,6 +173,12 @@ export function DashboardLayout() {
       createTab()
     }
   }, [location.pathname, addTab, hasTab])
+
+  // Get recent tickets for the sidebar
+  const { data: recentTickets = [] } = useQuery({
+    queryKey: ['recent-tickets'],
+    queryFn: () => getTickets({ recentlyUpdated: true })
+  })
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-background flex">

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PieChart } from '@/components/ui/pie-chart'
-import { ticketService } from '@/features/tickets/services/ticketService'
+import { getTickets, getAllTicketAssignments } from '@/features/tickets/services'
 import { organizationService } from '@/features/organizations/services/organizationService'
 import { TICKET_STATUS_MAP } from '@/features/tickets/types'
 import { useState } from 'react'
@@ -53,7 +53,7 @@ export function DataPage() {
   // Get tickets for selected organization
   const { data: tickets = [], isLoading: isLoadingTickets } = useQuery({
     queryKey: ['tickets-metrics', selectedOrgId],
-    queryFn: () => ticketService.getTickets({ 
+    queryFn: () => getTickets({ 
       status: ['new', 'open', 'pending', 'resolved', 'closed'],
       organizationId: selectedOrgId 
     }),
@@ -63,7 +63,7 @@ export function DataPage() {
   // Get assignments for selected organization
   const { data: assignments = [], isLoading: isLoadingAssignments } = useQuery({
     queryKey: ['ticket-assignments', selectedOrgId],
-    queryFn: () => ticketService.getAllTicketAssignments(selectedOrgId),
+    queryFn: () => getAllTicketAssignments({ organizationId: selectedOrgId }),
     enabled: !!selectedOrgId
   })
 

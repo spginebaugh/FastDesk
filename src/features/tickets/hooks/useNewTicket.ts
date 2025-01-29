@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { useToast } from '@/components/ui/use-toast'
-import { ticketService } from '../services/ticketService'
+import { createTicket as createTicketService, createTicketMessage, getOrganizationWorkers } from '../services'
 import { organizationService } from '@/features/organizations/services/organizationService'
 import { TicketPriority } from '../types'
 import { useNavigate } from 'react-router-dom'
@@ -77,7 +77,7 @@ function useTicketOrganizationsAndWorkers(organizationId: string) {
       if (!organizationId || organizationId === 'unassigned') {
         return []
       }
-      return ticketService.getOrganizationWorkers(organizationId)
+      return getOrganizationWorkers(organizationId)
     },
     enabled: !!organizationId && organizationId !== 'unassigned'
   })
@@ -101,7 +101,7 @@ function useTicketCreation() {
       initialSettings: InitialSettings
       userId?: string
     }) => {
-      const ticket = await ticketService.createTicket({ 
+      const ticket = await createTicketService({ 
         title,
         priority: initialSettings.ticket_priority,
         assignee: initialSettings.organizationId === 'unassigned' && initialSettings.assignee === 'unassigned' 
@@ -109,7 +109,7 @@ function useTicketCreation() {
           : initialSettings.assignee,
         organizationId: initialSettings.organizationId === 'unassigned' ? null : initialSettings.organizationId
       })
-      await ticketService.createTicketMessage({
+      await createTicketMessage({
         ticketId: ticket.id,
         content,
         isInternal: false

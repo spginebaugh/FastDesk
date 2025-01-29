@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '@/components/ui/use-toast'
-import { ticketService } from '../services/ticketService'
+import { createTicketMessage } from '../services'
 import { responseGenerationService } from '@/features/ai-bot/services'
 import { TicketMessage } from '../types'
 import { type TiptapContent } from '@/lib/tiptap'
@@ -61,15 +61,16 @@ export function useTicketReply({
     onSetContent?.(content)
   }, [content, onSetContent])
 
-  const { mutate: sendReply, isPending: mutationPending } = useMutation<TicketMessage, Error, CreateMessageParams>({
-    mutationFn: (params) => ticketService.createTicketMessage(params),
+  const { mutate: replyToTicket, isPending } = useMutation({
+    mutationFn: async ({ content, isInternal }: { content: TiptapContent; isInternal: boolean }) => {
+      return createTicketMessage({ ticketId, content, isInternal })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ticket-messages', ticketId] })
       setContent(emptyTiptapContent)
       toast({
         title: 'Reply sent',
-        description: 'Your reply has been sent successfully.',
-        duration: 1000 // 1 second in milliseconds
+        description: 'Your reply has been sent successfully.'
       })
     },
     onError: () => {
@@ -84,7 +85,7 @@ export function useTicketReply({
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!content.content.length) return
-    sendReply({ ticketId, content, isInternal })
+    replyToTicket({ content, isInternal })
   }
 
   const handleGenerateResponse = async () => {
@@ -125,7 +126,7 @@ export function useTicketReply({
     content,
     isInternal,
     isGenerating,
-    isPending: mutationPending,
+    isPending,
     handleSubmit,
     handleContentChange,
     handleReplyTypeChange,
