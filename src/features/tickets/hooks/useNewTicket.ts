@@ -5,6 +5,12 @@ import { ticketService } from '../services/ticketService'
 import { organizationService } from '@/features/organizations/services/organizationService'
 import { TicketPriority } from '../types'
 import { useNavigate } from 'react-router-dom'
+import { type TiptapContent } from '@/lib/tiptap'
+
+const emptyTiptapContent: TiptapContent = {
+  type: 'doc',
+  content: []
+}
 
 interface InitialSettings {
   ticket_priority?: TicketPriority
@@ -15,7 +21,7 @@ interface InitialSettings {
 // Sub-hook for managing form state
 function useTicketFormState() {
   const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
+  const [content, setContent] = useState<TiptapContent>(emptyTiptapContent)
   const [initialSettings, setInitialSettings] = useState<InitialSettings>({
     ticket_priority: 'low',
     assignee: 'unassigned',
@@ -91,7 +97,7 @@ function useTicketCreation() {
   const { mutate: createTicket, isPending } = useMutation({
     mutationFn: async ({ title, content, initialSettings, userId }: {
       title: string
-      content: string
+      content: TiptapContent
       initialSettings: InitialSettings
       userId?: string
     }) => {
@@ -156,7 +162,7 @@ export function useNewTicket(userId: string | undefined) {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!title.trim() || !content.trim()) return
+    if (!title.trim() || !content.content.length) return
     createTicket({ title, content, initialSettings, userId })
   }
 

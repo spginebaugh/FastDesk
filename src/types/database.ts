@@ -322,7 +322,8 @@ export type Database = {
       }
       ticket_messages: {
         Row: {
-          content: string
+          content: Json
+          content_format: string
           created_at: string | null
           id: string
           is_internal: boolean | null
@@ -332,7 +333,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          content: string
+          content: Json
+          content_format?: string
           created_at?: string | null
           id?: string
           is_internal?: boolean | null
@@ -342,7 +344,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          content?: string
+          content?: Json
+          content_format?: string
           created_at?: string | null
           id?: string
           is_internal?: boolean | null
@@ -665,11 +668,29 @@ export type Database = {
         }
         Returns: string
       }
+      create_tiptap_content: {
+        Args: {
+          msg: string
+        }
+        Returns: Json
+      }
       exec_sql: {
         Args: {
           sql_query: string
         }
         Returns: undefined
+      }
+      ticket_message_plaintext: {
+        Args: {
+          content: Json
+        }
+        Returns: string
+      }
+      user_notes_plaintext: {
+        Args: {
+          notes: Json
+        }
+        Returns: string
       }
     }
     Enums: {

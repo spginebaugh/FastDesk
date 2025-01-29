@@ -27,9 +27,10 @@ import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 import { useTicketDetail } from '../hooks/useTicketDetail'
 import { BotIcon, Loader2, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Textarea } from '@/components/ui/textarea'
+import { TiptapEditor } from '@/components/ui/tiptap-editor'
 import { openAIService } from '@/services/openai-service'
 import { UserNotes } from '@/features/users/components/UserNotes'
+import { type TiptapContent } from '@/lib/tiptap'
 
 interface AIReplyBoxProps {
   isGenerating: boolean
@@ -38,9 +39,14 @@ interface AIReplyBoxProps {
   onGeneratePromptWithContext: (prompt: string) => void
   onEditResponse: (prompt: string) => void
   onEditResponseWithContext: (prompt: string) => void
-  generatedContent: string
-  setGeneratedContent: (content: string) => void
+  generatedContent: TiptapContent
+  setGeneratedContent: (content: TiptapContent) => void
   onUseResponse: () => void
+}
+
+const emptyTiptapContent: TiptapContent = {
+  type: 'doc',
+  content: []
 }
 
 function AIReplyBox({ 
@@ -54,7 +60,19 @@ function AIReplyBox({
   setGeneratedContent,
   onUseResponse 
 }: AIReplyBoxProps) {
-  const [prompt, setPrompt] = useState('')
+  const [promptContent, setPromptContent] = useState<TiptapContent>(emptyTiptapContent)
+
+  const handlePromptChange = (content: TiptapContent) => {
+    setPromptContent(content)
+  }
+
+  // Extract plain text from TipTap content for the API calls
+  const getPromptText = () => {
+    return promptContent.content
+      .map(node => node.content?.map(child => child.text || '').join('') || '')
+      .join('\n')
+      .trim()
+  }
 
   return (
     <div className="w-[36rem] border-r border-border/50 bg-background p-6 flex flex-col">
@@ -65,21 +83,21 @@ function AIReplyBox({
       <div className="flex-1 space-y-4">
         <div>
           <label className="text-sm font-medium mb-2 block">Custom Prompt</label>
-          <Textarea 
-            className="min-h-[100px] border-secondary dark:border-secondary-dark"
+          <TiptapEditor
+            content={promptContent}
+            onChange={handlePromptChange}
             placeholder="Enter a custom prompt to guide the AI response..."
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
+            className="min-h-[100px] border-secondary dark:border-secondary-dark"
           />
         </div>
 
         <div>
           <label className="text-sm font-medium mb-2 block">Generated Response</label>
-          <Textarea 
-            className="min-h-[300px] mb-2 border-secondary dark:border-secondary-dark"
+          <TiptapEditor
+            content={generatedContent}
+            onChange={setGeneratedContent}
             placeholder={isGenerating ? "AI is generating a response..." : "Generated response will appear here. You can edit it after generation."}
-            value={generatedContent}
-            onChange={(e) => setGeneratedContent(e.target.value)}
+            className="min-h-[300px] mb-2 border-secondary dark:border-secondary-dark"
           />
           <div className="flex justify-between items-center gap-2">
             <div className="flex gap-2 flex-wrap">
@@ -108,13 +126,13 @@ function AIReplyBox({
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    disabled={isGenerating || !prompt.trim()}
+                    disabled={isGenerating || !getPromptText()}
                     className={cn(
                       "border-border/50 text-foreground",
                       "hover:bg-primary/10 hover:text-primary",
                       "focus:ring-primary",
                       "bg-background-alt",
-                      (isGenerating || !prompt.trim()) && "opacity-50"
+                      (isGenerating || !getPromptText()) && "opacity-50"
                     )}
                   >
                     {isGenerating ? (
@@ -132,14 +150,14 @@ function AIReplyBox({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem 
-                    onClick={() => onGenerateCustomResponse(prompt)}
-                    disabled={isGenerating || !prompt.trim()}
+                    onClick={() => onGenerateCustomResponse(getPromptText())}
+                    disabled={isGenerating || !getPromptText()}
                   >
                     Without Message Context
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    onClick={() => onGeneratePromptWithContext(prompt)}
-                    disabled={isGenerating || !prompt.trim()}
+                    onClick={() => onGeneratePromptWithContext(getPromptText())}
+                    disabled={isGenerating || !getPromptText()}
                   >
                     With Message Context
                   </DropdownMenuItem>
@@ -149,13 +167,13 @@ function AIReplyBox({
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    disabled={isGenerating || !prompt.trim() || !generatedContent.trim()}
+                    disabled={isGenerating || !getPromptText() || !generatedContent.content.length}
                     className={cn(
                       "border-border/50 text-foreground",
                       "hover:bg-primary/10 hover:text-primary",
                       "focus:ring-primary",
                       "bg-background-alt",
-                      (isGenerating || !prompt.trim() || !generatedContent.trim()) && "opacity-50"
+                      (isGenerating || !getPromptText() || !generatedContent.content.length) && "opacity-50"
                     )}
                   >
                     {isGenerating ? (
@@ -173,14 +191,14 @@ function AIReplyBox({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem 
-                    onClick={() => onEditResponse(prompt)}
-                    disabled={isGenerating || !prompt.trim() || !generatedContent.trim()}
+                    onClick={() => onEditResponse(getPromptText())}
+                    disabled={isGenerating || !getPromptText() || !generatedContent.content.length}
                   >
                     Without Message Context
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    onClick={() => onEditResponseWithContext(prompt)}
-                    disabled={isGenerating || !prompt.trim() || !generatedContent.trim()}
+                    onClick={() => onEditResponseWithContext(getPromptText())}
+                    disabled={isGenerating || !getPromptText() || !generatedContent.content.length}
                   >
                     With Message Context
                   </DropdownMenuItem>
@@ -194,7 +212,7 @@ function AIReplyBox({
       <div className="flex gap-2 justify-end mt-4">
         <Button 
           onClick={onUseResponse}
-          disabled={!generatedContent || isGenerating}
+          disabled={!generatedContent.content.length || isGenerating}
         >
           Use Response
         </Button>
@@ -203,6 +221,8 @@ function AIReplyBox({
   )
 }
 
+type MessageRole = 'user' | 'worker'
+
 export function TicketDetailPage() {
   const { ticketId } = useParams()
   const { user } = useAuthStore()
@@ -210,14 +230,13 @@ export function TicketDetailPage() {
   const [editedTitle, setEditedTitle] = useState('')
   const [isAIReplyOpen, setIsAIReplyOpen] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generatedContent, setGeneratedContent] = useState('')
-  const [replyContent, setReplyContent] = useState('')
+  const [generatedContent, setGeneratedContent] = useState<TiptapContent>(emptyTiptapContent)
+  const [replyContent, setReplyContent] = useState<TiptapContent>(emptyTiptapContent)
   const [pendingChanges, setPendingChanges] = useState<{
     ticket_status?: TicketStatus;
     ticket_priority?: TicketPriority;
     assignee?: string;
   }>({})
-  const [shouldUpdateNotes, setShouldUpdateNotes] = useState(false)
   const [updateNotesFn, setUpdateNotesFn] = useState<(() => void) | null>(null)
   const [hasNoteChanges, setHasNoteChanges] = useState(false)
 
@@ -294,6 +313,113 @@ export function TicketDetailPage() {
   }
 
   const hasChanges = Object.keys(pendingChanges).length > 0
+
+  const handleGenerateResponse = async () => {
+    if (!ticket || !messages.length) return
+    
+    try {
+      setIsGenerating(true)
+      const response = await openAIService.generateTicketResponse({
+        ticketTitle: ticket.title,
+        originalSenderFullName: ticket.user.full_name || 'Unknown User',
+        currentWorkerFullName: user?.user_metadata?.full_name,
+        ticketContent: messages[0].content,
+        previousMessages: messages.map(msg => ({
+          content: msg.content,
+          role: msg.sender_type as MessageRole,
+          senderFullName: msg.sender?.full_name || 'Unknown User'
+        }))
+      })
+      setGeneratedContent(response)
+    } catch (error) {
+      console.error('Failed to generate AI response:', error)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleGenerateCustomResponse = async (prompt: string) => {
+    try {
+      setIsGenerating(true)
+      const response = await openAIService.generateCustomResponse({ prompt })
+      setGeneratedContent(response)
+    } catch (error) {
+      console.error('Failed to generate custom AI response:', error)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleGeneratePromptWithContext = async (prompt: string) => {
+    if (!ticket || !messages.length) return
+    
+    try {
+      setIsGenerating(true)
+      const response = await openAIService.generatePromptWithContext({
+        ticketTitle: ticket.title,
+        originalSenderFullName: ticket.user.full_name || 'Unknown User',
+        currentWorkerFullName: user?.user_metadata?.full_name,
+        ticketContent: messages[0].content,
+        previousMessages: messages.map(msg => ({
+          content: msg.content,
+          role: msg.sender_type as MessageRole,
+          senderFullName: msg.sender?.full_name || 'Unknown User'
+        })),
+        prompt
+      })
+      setGeneratedContent(response)
+    } catch (error) {
+      console.error('Failed to generate AI response with prompt:', error)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleEditResponse = async (prompt: string) => {
+    try {
+      setIsGenerating(true)
+      const response = await openAIService.editResponse({
+        prompt,
+        currentResponse: generatedContent
+      })
+      setGeneratedContent(response)
+    } catch (error) {
+      console.error('Failed to edit AI response:', error)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleEditResponseWithContext = async (prompt: string) => {
+    if (!ticket || !messages.length) return
+    
+    try {
+      setIsGenerating(true)
+      const response = await openAIService.editResponseWithContext({
+        ticketTitle: ticket.title,
+        originalSenderFullName: ticket.user.full_name || 'Unknown User',
+        currentWorkerFullName: user?.user_metadata?.full_name,
+        ticketContent: messages[0].content,
+        previousMessages: messages.map(msg => ({
+          content: msg.content,
+          role: msg.sender_type as MessageRole,
+          senderFullName: msg.sender?.full_name || 'Unknown User'
+        })),
+        prompt,
+        currentResponse: generatedContent
+      })
+      setGeneratedContent(response)
+    } catch (error) {
+      console.error('Failed to edit AI response with context:', error)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleUseResponse = () => {
+    setReplyContent(generatedContent)
+    setIsAIReplyOpen(false)
+  }
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-full">Loading...</div>
@@ -488,114 +614,12 @@ export function TicketDetailPage() {
             isGenerating={isGenerating}
             generatedContent={generatedContent}
             setGeneratedContent={setGeneratedContent}
-            onGenerateResponse={async () => {
-              try {
-                setIsGenerating(true)
-                const response = await openAIService.generateTicketResponse({
-                  ticketTitle: ticket.title,
-                  ticketContent: messages[0]?.content || '',
-                  originalSenderFullName: ticket.user.full_name || ticket.user.email,
-                  currentWorkerFullName: user?.user_metadata?.full_name,
-                  previousMessages: messages.map(msg => ({
-                    content: msg.content,
-                    role: msg.sender_type === 'customer' ? 'user' : 'worker',
-                    senderFullName: msg.sender_type === 'customer' 
-                      ? (ticket.user.full_name || ticket.user.email)
-                      : (msg.sender?.full_name || 'Support Worker')
-                  }))
-                })
-                setGeneratedContent(response)
-              } catch (error) {
-                console.error('Failed to generate AI response:', error)
-                // TODO: Show error toast
-              } finally {
-                setIsGenerating(false)
-              }
-            }}
-            onGenerateCustomResponse={async (prompt) => {
-              try {
-                setIsGenerating(true)
-                const response = await openAIService.generateCustomResponse({
-                  prompt
-                })
-                setGeneratedContent(response)
-              } catch (error) {
-                console.error('Failed to generate custom AI response:', error)
-                // TODO: Show error toast
-              } finally {
-                setIsGenerating(false)
-              }
-            }}
-            onGeneratePromptWithContext={async (prompt) => {
-              try {
-                setIsGenerating(true)
-                const response = await openAIService.generatePromptWithContext({
-                  ticketTitle: ticket.title,
-                  ticketContent: messages[0]?.content || '',
-                  originalSenderFullName: ticket.user.full_name || ticket.user.email,
-                  currentWorkerFullName: user?.user_metadata?.full_name,
-                  previousMessages: messages.map(msg => ({
-                    content: msg.content,
-                    role: msg.sender_type === 'customer' ? 'user' : 'worker',
-                    senderFullName: msg.sender_type === 'customer' 
-                      ? (ticket.user.full_name || ticket.user.email)
-                      : (msg.sender?.full_name || 'Support Worker')
-                  })),
-                  prompt
-                })
-                setGeneratedContent(response)
-              } catch (error) {
-                console.error('Failed to generate AI response with prompt:', error)
-                // TODO: Show error toast
-              } finally {
-                setIsGenerating(false)
-              }
-            }}
-            onEditResponse={async (prompt) => {
-              try {
-                setIsGenerating(true)
-                const response = await openAIService.editResponse({
-                  prompt,
-                  currentResponse: generatedContent
-                })
-                setGeneratedContent(response)
-              } catch (error) {
-                console.error('Failed to edit response:', error)
-                // TODO: Show error toast
-              } finally {
-                setIsGenerating(false)
-              }
-            }}
-            onEditResponseWithContext={async (prompt) => {
-              try {
-                setIsGenerating(true)
-                const response = await openAIService.editResponseWithContext({
-                  ticketTitle: ticket.title,
-                  ticketContent: messages[0]?.content || '',
-                  originalSenderFullName: ticket.user.full_name || ticket.user.email,
-                  currentWorkerFullName: user?.user_metadata?.full_name,
-                  previousMessages: messages.map(msg => ({
-                    content: msg.content,
-                    role: msg.sender_type === 'customer' ? 'user' : 'worker',
-                    senderFullName: msg.sender_type === 'customer' 
-                      ? (ticket.user.full_name || ticket.user.email)
-                      : (msg.sender?.full_name || 'Support Worker')
-                  })),
-                  prompt,
-                  currentResponse: generatedContent
-                })
-                setGeneratedContent(response)
-              } catch (error) {
-                console.error('Failed to edit response with context:', error)
-                // TODO: Show error toast
-              } finally {
-                setIsGenerating(false)
-              }
-            }}
-            onUseResponse={() => {
-              setReplyContent(generatedContent)
-              setIsAIReplyOpen(false)
-            }}
+            onGenerateResponse={handleGenerateResponse}
+            onGenerateCustomResponse={handleGenerateCustomResponse}
+            onGeneratePromptWithContext={handleGeneratePromptWithContext}
+            onEditResponse={handleEditResponse}
+            onEditResponseWithContext={handleEditResponseWithContext}
+            onUseResponse={handleUseResponse}
           />
         )}
 
@@ -617,15 +641,13 @@ export function TicketDetailPage() {
             <TicketReplyBox 
               ticketId={ticketId!} 
               ticketTitle={ticket.title}
-              ticketContent={messages[0]?.content || ''}
+              ticketContent={messages[0].content}
               originalSenderFullName={ticket.user.full_name || ticket.user.email}
               currentWorkerFullName={user?.user_metadata?.full_name}
               previousMessages={messages.map(msg => ({
                 content: msg.content,
-                role: msg.sender_type === 'customer' ? 'user' : 'worker',
-                senderFullName: msg.sender_type === 'customer' 
-                  ? (ticket.user.full_name || ticket.user.email)
-                  : (msg.sender?.full_name || 'Support Worker')
+                role: msg.sender_type as MessageRole,
+                senderFullName: msg.sender?.full_name || 'Unknown User'
               }))}
               initialContent={replyContent}
               onSetContent={setReplyContent}

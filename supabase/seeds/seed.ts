@@ -22,6 +22,92 @@ const supabaseAdmin = createClient(
   }
 )
 
+async function executeSqlFile(filePath: string, replacements: boolean = false) {
+  console.log(`Reading SQL file: ${filePath}`)
+  
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`SQL file not found at path: ${filePath}`)
+  }
+
+  let sqlContent = fs.readFileSync(filePath, 'utf8')
+
+  // Replace placeholder values if needed
+  if (replacements) {
+    TEST_USERS.forEach((user, index) => {
+      const placeholderIndex = index + 1
+      const replacements = {
+        [`USER_ID_${placeholderIndex}`]: user.id,
+        [`USER_EMAIL_${placeholderIndex}`]: user.email,
+        [`USER_FULL_NAME_${placeholderIndex}`]: user.full_name,
+        [`USER_TYPE_${placeholderIndex}`]: user.user_type
+      }
+
+      Object.entries(replacements).forEach(([placeholder, value]) => {
+        // Use word boundaries to prevent partial matches
+        sqlContent = sqlContent.replace(new RegExp(`\\b${placeholder}\\b`, 'g'), value)
+      })
+    })
+  }
+
+  // Split SQL content into statements, preserving dollar-quoted strings
+  const statements: string[] = []
+  let currentStatement = ''
+  let inDollarQuote = false
+  let dollarQuoteTag = ''
+
+  const lines = sqlContent.split('\n')
+  
+  for (const line of lines) {
+    const trimmedLine = line.trim()
+    
+    // Skip empty lines and comments
+    if (!trimmedLine || trimmedLine.startsWith('--')) {
+      continue
+    }
+
+    // Check for dollar quote start/end
+    if (!inDollarQuote) {
+      const dollarQuoteMatch = trimmedLine.match(/\$\$|\$[a-zA-Z]*\$/g)
+      if (dollarQuoteMatch) {
+        inDollarQuote = true
+        dollarQuoteTag = dollarQuoteMatch[0]
+      }
+    } else if (trimmedLine.includes(dollarQuoteTag)) {
+      inDollarQuote = false
+      dollarQuoteTag = ''
+    }
+
+    currentStatement += line + '\n'
+
+    // If we're not in a dollar quote and the line ends with a semicolon,
+    // we've reached the end of a statement
+    if (!inDollarQuote && trimmedLine.endsWith(';')) {
+      statements.push(currentStatement.trim())
+      currentStatement = ''
+    }
+  }
+
+  // Add any remaining statement
+  if (currentStatement.trim()) {
+    statements.push(currentStatement.trim())
+  }
+
+  // Execute each statement
+  for (const statement of statements) {
+    if (!statement) continue
+
+    const { error } = await supabaseAdmin.rpc('exec_sql', {
+      sql_query: statement
+    })
+
+    if (error) {
+      console.error('Error executing SQL statement:', error)
+      console.error('Statement:', statement)
+      throw error
+    }
+  }
+}
+
 async function seedDatabase() {
   try {
     console.log('Starting database seed...')
@@ -48,51 +134,17 @@ async function seedDatabase() {
       console.log(`Created user ${user.email} with ID ${user.id} successfully`)
     }
 
-    // Step 2: Run the SQL seed file
-    console.log('Running SQL seed...')
-    const sqlSeedPath = path.join(__dirname, '../seed.sql.template')
-    
-    console.log('Looking for SQL file at:', sqlSeedPath)
-    
-    if (!fs.existsSync(sqlSeedPath)) {
-      throw new Error(`seed.sql.template not found at path: ${sqlSeedPath}`)
-    }
+    // Step 2: Run the initial SQL seed file
+    console.log('Running initial SQL seed...')
+    await executeSqlFile(path.join(__dirname, '../seed-initial-data.sql'), true)
 
-    let sqlSeed = fs.readFileSync(sqlSeedPath, 'utf8')
+    // Step 3: Create TipTap content function
+    console.log('Creating TipTap content function...')
+    await executeSqlFile(path.join(__dirname, '../functions/create-tiptap-content.sql'), false)
 
-    // Replace placeholder values in SQL with exact values from config
-    TEST_USERS.forEach((user, index) => {
-      const placeholderIndex = index + 1
-      const replacements = {
-        [`USER_ID_${placeholderIndex}`]: user.id,
-        [`USER_EMAIL_${placeholderIndex}`]: user.email,
-        [`USER_FULL_NAME_${placeholderIndex}`]: user.full_name,
-        [`USER_TYPE_${placeholderIndex}`]: user.user_type
-      }
-
-      Object.entries(replacements).forEach(([placeholder, value]) => {
-        // Use word boundaries to prevent partial matches
-        sqlSeed = sqlSeed.replace(new RegExp(`\\b${placeholder}\\b`, 'g'), value)
-      })
-    })
-
-    // Split and execute SQL statements
-    const statements = sqlSeed
-      .split(';')
-      .map(stmt => stmt.trim())
-      .filter(stmt => stmt.length > 0)
-
-    for (const statement of statements) {
-      const { error } = await supabaseAdmin.rpc('exec_sql', {
-        sql_query: statement
-      })
-
-      if (error) {
-        console.error('Error executing SQL statement:', error)
-        console.error('Statement:', statement)
-        throw error
-      }
-    }
+    // Step 4: Run the ticket messages SQL seed file
+    console.log('Running ticket messages SQL seed...')
+    await executeSqlFile(path.join(__dirname, '../seed-ticket-messages.sql'), true)
 
     console.log('Database seeded successfully!')
   } catch (error) {

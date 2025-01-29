@@ -7,25 +7,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 import { useTicketReply } from '../hooks/useTicketReply'
+import { TiptapEditor } from '@/components/ui/tiptap-editor'
+import { type TiptapContent } from '@/lib/tiptap'
+import { type Json } from '@/types/database'
 
 interface TicketReplyBoxProps {
   ticketId: string
   ticketTitle: string
-  ticketContent: string
+  ticketContent: Json
   originalSenderFullName: string
   currentWorkerFullName?: string
   previousMessages: Array<{
-    content: string
+    content: Json
     role: 'user' | 'worker'
     senderFullName: string
   }>
   rightElement?: ReactNode
-  initialContent?: string
-  onSetContent?: (content: string) => void
+  initialContent?: TiptapContent
+  onSetContent?: (content: TiptapContent) => void
 }
 
 export function TicketReplyBox({ 
@@ -62,8 +64,8 @@ export function TicketReplyBox({
   return (
     <form onSubmit={handleSubmit} className="border-t border-border/50 bg-background-alt p-4">
       <div className="space-y-4">
-        <Textarea
-          value={content}
+        <TiptapEditor
+          content={content}
           onChange={handleContentChange}
           placeholder="Type your reply..."
           className={cn(
@@ -71,6 +73,7 @@ export function TicketReplyBox({
             "placeholder:text-muted-foreground",
             "focus-visible:ring-primary"
           )}
+          disabled={isPending}
         />
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -106,11 +109,11 @@ export function TicketReplyBox({
           </div>
           <Button 
             type="submit" 
-            disabled={isPending || !content.trim()}
+            disabled={isPending || !content}
             className={cn(
               "bg-primary hover:bg-primary/90",
               "transition-colors duration-200",
-              (isPending || !content.trim()) && "opacity-50"
+              (isPending || !content) && "opacity-50"
             )}
           >
             {isPending ? 'Sending...' : 'Send Reply'}

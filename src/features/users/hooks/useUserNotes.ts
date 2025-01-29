@@ -1,12 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/config/supabase/client'
 import { useToast } from '@/components/ui/use-toast'
-import { Database } from '@/types/database'
+import { Database, type Json } from '@/types/database'
+import { type TiptapContent, createTiptapContent, extractPlainText } from '@/lib/tiptap'
 
 type DbJson = Database['public']['Tables']['user_notes']['Row']['user_notes']
 
 interface UserNotes {
-  content: string
+  content: TiptapContent
+  content_format: 'tiptap' | 'plain'
+  plaintext: string
+  created_at: string
   updated_at: string
   updated_by?: {
     full_name: string
@@ -47,22 +51,42 @@ export function useUserNotes({ userId, organizationId }: UseUserNotesOptions) {
 
       if (error) throw error
 
+      const now = new Date().toISOString()
+      const emptyNote: UserNotes = {
+        content: createTiptapContent(''),
+        content_format: 'tiptap',
+        plaintext: '',
+        created_at: now,
+        updated_at: now
+      }
+
       // If no record exists yet, return empty data
       if (!data) {
         return {
-          notes: { content: '', updated_at: new Date().toISOString() },
+          notes: emptyNote,
           tags: []
         }
       }
 
       // Safely cast the JSON data to our expected types
-      const notesArray = ((data.user_notes as DbJson) || []) as unknown as UserNotes[]
-      const notes = notesArray[0] || { 
-        content: '', 
+      const notesArray = Array.isArray(data.user_notes) 
+        ? (data.user_notes as unknown as UserNotes[]) 
+        : []
+      
+      const notes = notesArray[0] || {
+        ...emptyNote,
         updated_at: data.updated_at,
         updated_by: data.updated_by
       }
-      const tags = ((data.user_tags as DbJson) || []) as unknown as UserTag[]
+
+      // Ensure notes.content is a valid TiptapContent
+      if (!notes.content || typeof notes.content !== 'object' || !('type' in notes.content)) {
+        notes.content = createTiptapContent(notes.plaintext || '')
+      }
+
+      const tags = Array.isArray(data.user_tags) 
+        ? (data.user_tags as unknown as UserTag[]) 
+        : []
 
       return {
         notes,
@@ -73,7 +97,7 @@ export function useUserNotes({ userId, organizationId }: UseUserNotesOptions) {
   })
 
   const updateNotesMutation = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async (content: TiptapContent) => {
       const { data: existingData, error: fetchError } = await supabase
         .from('user_notes')
         .select('id')
@@ -83,20 +107,24 @@ export function useUserNotes({ userId, organizationId }: UseUserNotesOptions) {
 
       if (fetchError) throw fetchError
 
+      const now = new Date().toISOString()
       const noteData: UserNotes = {
         content,
-        updated_at: new Date().toISOString()
+        content_format: 'tiptap',
+        plaintext: extractPlainText(content),
+        created_at: now,
+        updated_at: now
       }
 
       // Wrap the note data in an array to satisfy the JSON array constraint
-      const notesArray = [noteData]
+      const notesArray = [noteData] as unknown as Json
 
       if (existingData) {
         // Update existing record
         const { error } = await supabase
           .from('user_notes')
           .update({
-            user_notes: notesArray as unknown as DbJson
+            user_notes: notesArray
           })
           .eq('user_id', userId)
           .eq('organization_id', organizationId)
@@ -109,7 +137,7 @@ export function useUserNotes({ userId, organizationId }: UseUserNotesOptions) {
           .insert({
             user_id: userId,
             organization_id: organizationId,
-            user_notes: notesArray as unknown as DbJson
+            user_notes: notesArray
           })
 
         if (error) throw error
@@ -145,12 +173,14 @@ export function useUserNotes({ userId, organizationId }: UseUserNotesOptions) {
 
       if (fetchError) throw fetchError
 
+      const tagsJson = tags as unknown as Json
+
       if (existingData) {
         // Update existing record
         const { error } = await supabase
           .from('user_notes')
           .update({ 
-            user_tags: tags as unknown as DbJson
+            user_tags: tagsJson
           })
           .eq('user_id', userId)
           .eq('organization_id', organizationId)
@@ -163,7 +193,7 @@ export function useUserNotes({ userId, organizationId }: UseUserNotesOptions) {
           .insert({
             user_id: userId,
             organization_id: organizationId,
-            user_tags: tags as unknown as DbJson
+            user_tags: tagsJson
           })
 
         if (error) throw error
@@ -189,7 +219,13 @@ export function useUserNotes({ userId, organizationId }: UseUserNotesOptions) {
   })
 
   return {
-    notes: userNotes?.notes || { content: '', updated_at: new Date().toISOString() },
+    notes: userNotes?.notes || {
+      content: createTiptapContent(''),
+      content_format: 'tiptap',
+      plaintext: '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
     tags: userNotes?.tags || [],
     isLoading,
     updateNotes: updateNotesMutation.mutate,

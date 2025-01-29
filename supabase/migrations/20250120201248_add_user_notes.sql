@@ -1,3 +1,52 @@
+-- Create function to validate user notes structure
+create or replace function validate_user_notes()
+returns trigger as $$
+declare
+    note_record record;
+begin
+    -- Validate user_notes is an array
+    if jsonb_typeof(new.user_notes) != 'array' then
+        raise exception 'user_notes must be an array';
+    end if;
+
+    -- Validate each note in the array
+    for note_record in select value as note from jsonb_array_elements(new.user_notes)
+    loop
+        if jsonb_typeof(note_record.note->'content') != 'object' then
+            raise exception 'Each note must have a content object';
+        end if;
+
+        if jsonb_typeof(note_record.note->'content'->'plaintext') != 'string' then
+            raise exception 'Each note must have a plaintext field';
+        end if;
+
+        if not (note_record.note->>'content_format')::text = any (array['tiptap', 'plain']) then
+            raise exception 'content_format must be either tiptap or plain';
+        end if;
+
+        if jsonb_typeof(note_record.note->'created_at') != 'string' then
+            raise exception 'Each note must have a created_at timestamp';
+        end if;
+
+        if jsonb_typeof(note_record.note->'updated_at') != 'string' then
+            raise exception 'Each note must have an updated_at timestamp';
+        end if;
+    end loop;
+
+    return new;
+end;
+$$ language plpgsql;
+
+-- Create function to extract all plaintext content from notes
+create or replace function user_notes_plaintext(notes jsonb)
+returns text
+language sql
+immutable
+as $$
+    select string_agg(note->'content'->>'plaintext', ' ')
+    from jsonb_array_elements(notes) note;
+$$;
+
 -- Create user notes table
 create table user_notes (
     id uuid primary key default uuid_generate_v4(),
@@ -9,9 +58,17 @@ create table user_notes (
     updated_at timestamptz default now(),
     created_by uuid references user_profiles(id) on delete set null,
     updated_by uuid references user_profiles(id) on delete set null,
-    constraint valid_user_tags check (jsonb_typeof(user_tags) = 'array'),
-    constraint valid_user_notes check (jsonb_typeof(user_notes) = 'array')
+    constraint valid_user_tags check (jsonb_typeof(user_tags) = 'array')
 );
+
+-- Create trigger for user notes validation
+create trigger validate_user_notes_trigger
+    before insert or update on user_notes
+    for each row
+    execute function validate_user_notes();
+
+-- Create index on plaintext content for faster searching
+create index idx_user_notes_plaintext on user_notes using gin (to_tsvector('english', user_notes_plaintext(user_notes)));
 
 -- Create indexes for better query performance
 create index idx_user_notes_organization on user_notes(organization_id);

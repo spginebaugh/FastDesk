@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { useUserNotes } from '../hooks/useUserNotes'
 import { cn } from '@/lib/utils'
 import { Loader2, Plus, X } from 'lucide-react'
+import { TiptapEditor } from '@/components/ui/tiptap-editor'
+import { type TiptapContent, createTiptapContent } from '@/lib/tiptap'
 
 interface UserNotesProps {
   userId: string
@@ -17,7 +18,7 @@ interface UserNotesProps {
 }
 
 export function UserNotes({ userId, organizationId, renderButton = true, onUpdate, onUpdateNotes }: UserNotesProps) {
-  const [noteContent, setNoteContent] = useState<string>('')
+  const [noteContent, setNoteContent] = useState<TiptapContent>(createTiptapContent(''))
   const [newTag, setNewTag] = useState('')
   const {
     notes,
@@ -29,26 +30,26 @@ export function UserNotes({ userId, organizationId, renderButton = true, onUpdat
     isUpdatingTags
   } = useUserNotes({ userId, organizationId })
 
-  const currentContent = noteContent || ''
-  const serverContent = notes?.content || ''
+  const currentContent = noteContent
+  const serverContent = notes?.content || createTiptapContent('')
 
   // Initialize note content from the server data
   useEffect(() => {
-    if (notes?.content !== noteContent) {
-      setNoteContent(notes?.content || '')
+    if (notes?.content && JSON.stringify(notes.content) !== JSON.stringify(noteContent)) {
+      setNoteContent(notes.content)
     }
   }, [notes?.content])
 
   const handleUpdateNotes = () => {
-    if (currentContent.trim() === serverContent.trim()) return
-    updateNotes(currentContent.trim())
+    if (JSON.stringify(currentContent) === JSON.stringify(serverContent)) return
+    updateNotes(currentContent)
     onUpdate?.()
   }
 
   // Expose handleUpdateNotes to parent
   useEffect(() => {
     if (onUpdateNotes) {
-      const hasChanges = currentContent.trim() !== serverContent.trim()
+      const hasChanges = JSON.stringify(currentContent) !== JSON.stringify(serverContent)
       onUpdateNotes(handleUpdateNotes, hasChanges)
     }
   }, [onUpdateNotes, noteContent, notes?.content, currentContent, serverContent])
@@ -122,11 +123,12 @@ export function UserNotes({ userId, organizationId, renderButton = true, onUpdat
       {/* Notes Section */}
       <div className="space-y-2">
         <h4 className="text-sm font-medium">Notes</h4>
-        <Textarea
+        <TiptapEditor
+          content={notes?.content || createTiptapContent('')}
+          onChange={setNoteContent}
           placeholder="Add notes about this user..."
-          value={currentContent}
-          onChange={(e) => setNoteContent(e.target.value)}
           className="min-h-[200px] border-secondary dark:border-secondary-dark"
+          disabled={isUpdatingNotes}
         />
         {notes?.updated_by && (
           <p className="text-xs text-muted-foreground">
@@ -139,7 +141,7 @@ export function UserNotes({ userId, organizationId, renderButton = true, onUpdat
         <div className="pt-4 border-t border-border">
           <Button
             onClick={handleUpdateNotes}
-            disabled={currentContent.trim() === serverContent.trim() || isUpdatingNotes}
+            disabled={JSON.stringify(currentContent) === JSON.stringify(serverContent) || isUpdatingNotes}
             className="w-full"
           >
             {isUpdatingNotes ? (

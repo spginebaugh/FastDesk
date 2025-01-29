@@ -2,6 +2,8 @@ import { format } from 'date-fns'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { TicketMessage as TicketMessageType, UserProfile, MessageSender } from '../types'
 import { cn } from '@/lib/utils'
+import { TiptapViewer } from '@/components/ui/tiptap-viewer'
+import { type TiptapContent } from '@/lib/tiptap'
 
 interface TicketMessageProps {
   message: TicketMessageType
@@ -72,8 +74,11 @@ export function TicketMessage({ message, isInitialMessage, user, ticketCreatorId
               </p>
             </div>
           </div>
-          <div className="mt-2 text-sm text-foreground whitespace-pre-wrap break-all overflow-hidden max-w-full">
-            {message.content}
+          <div className="mt-2 text-sm text-foreground overflow-hidden max-w-full">
+            <TiptapViewer 
+              content={message.content as TiptapContent} 
+              className="prose dark:prose-invert prose-sm"
+            />
           </div>
         </div>
       </div>

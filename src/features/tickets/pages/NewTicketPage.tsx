@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { format } from 'date-fns'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -9,6 +8,8 @@ import { TICKET_PRIORITY_MAP } from '../types'
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 import { useAuth } from '@/hooks/useAuth'
 import { useNewTicket } from '../hooks/useNewTicket'
+import { TiptapEditor } from '@/components/ui/tiptap-editor'
+import { type TiptapContent } from '@/lib/tiptap'
 
 export function NewTicketPage() {
   const navigate = useNavigate()
@@ -170,13 +171,12 @@ export function NewTicketPage() {
                 <label htmlFor="message" className="text-sm font-medium">
                   Message
                 </label>
-                <Textarea
-                  id="message"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                <TiptapEditor
+                  content={content}
+                  onChange={setContent}
                   placeholder="Type your message..."
                   className="min-h-[200px] bg-background"
-                  required
+                  disabled={isPending}
                 />
               </div>
 
@@ -190,7 +190,7 @@ export function NewTicketPage() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isPending || !title.trim() || !content.trim()}
+                  disabled={isPending || !title.trim() || !content.content.length}
                 >
                   {isPending ? 'Creating...' : 'Create Ticket'}
                 </Button>

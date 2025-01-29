@@ -4,26 +4,33 @@ import { useToast } from '@/components/ui/use-toast'
 import { ticketService } from '../services/ticketService'
 import { openAIService } from '@/services/openai-service'
 import { TicketMessage } from '../types'
+import { type TiptapContent } from '@/lib/tiptap'
+import { type Json } from '@/types/database'
 
 interface UseTicketReplyOptions {
   ticketId: string
   ticketTitle: string
-  ticketContent: string
+  ticketContent: Json
   originalSenderFullName: string
   currentWorkerFullName?: string
   previousMessages: Array<{
-    content: string
+    content: Json
     role: 'user' | 'worker'
     senderFullName: string
   }>
-  initialContent?: string
-  onSetContent?: (content: string) => void
+  initialContent?: TiptapContent
+  onSetContent?: (content: TiptapContent) => void
 }
 
 interface CreateMessageParams {
   ticketId: string
-  content: string
+  content: TiptapContent
   isInternal: boolean
+}
+
+const emptyTiptapContent: TiptapContent = {
+  type: 'doc',
+  content: []
 }
 
 export function useTicketReply({
@@ -36,10 +43,9 @@ export function useTicketReply({
   initialContent,
   onSetContent
 }: UseTicketReplyOptions) {
-  const [content, setContent] = useState(initialContent || '')
+  const [content, setContent] = useState<TiptapContent>(initialContent || emptyTiptapContent)
   const [isInternal, setIsInternal] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [isPending, setIsPending] = useState(false)
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
@@ -59,7 +65,7 @@ export function useTicketReply({
     mutationFn: (params) => ticketService.createTicketMessage(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ticket-messages', ticketId] })
-      setContent('')
+      setContent(emptyTiptapContent)
       toast({
         title: 'Reply sent',
         description: 'Your reply has been sent successfully.',
@@ -77,7 +83,7 @@ export function useTicketReply({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!content.trim()) return
+    if (!content.content.length) return
     sendReply({ ticketId, content, isInternal })
   }
 
@@ -111,8 +117,8 @@ export function useTicketReply({
     setIsInternal(value === 'internal')
   }
 
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value)
+  const handleContentChange = (newContent: TiptapContent) => {
+    setContent(newContent)
   }
 
   return {

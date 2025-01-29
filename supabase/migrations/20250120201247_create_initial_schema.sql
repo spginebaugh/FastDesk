@@ -153,13 +153,69 @@ create trigger validate_ticket_created_by_trigger
     for each row
     execute function validate_ticket_created_by();
 
+-- Create function to validate ticket message content
+create or replace function validate_ticket_message_content()
+returns trigger as $$
+declare
+    content_type text;
+begin
+    -- Validate content is an object
+    if jsonb_typeof(new.content) != 'object' then
+        raise exception 'Message content must be a JSON object, got %', jsonb_typeof(new.content);
+    end if;
+
+    -- Validate plaintext content exists and is non-empty
+    if jsonb_typeof(new.content->'plaintext') != 'string' then
+        raise exception 'Message content must have a plaintext field of type string, got %', 
+            coalesce(jsonb_typeof(new.content->'plaintext'), 'null');
+    end if;
+
+    if length(trim((new.content->>'plaintext')::text)) = 0 then
+        raise exception 'Message plaintext content cannot be empty';
+    end if;
+
+    -- Validate content has required fields for rich text
+    if new.content_format = 'tiptap' then
+        -- Validate type field
+        if jsonb_typeof(new.content->'type') != 'string' then
+            raise exception 'TipTap content must have type field of type string, got %',
+                coalesce(jsonb_typeof(new.content->'type'), 'null');
+        end if;
+
+        -- Get and validate content type
+        content_type := new.content->>'type';
+        if content_type != 'doc' then
+            raise exception 'TipTap content type must be "doc", got %', content_type;
+        end if;
+
+        -- Validate content array
+        if jsonb_typeof(new.content->'content') != 'array' then
+            raise exception 'TipTap content must have content field of type array, got %',
+                coalesce(jsonb_typeof(new.content->'content'), 'null');
+        end if;
+    end if;
+
+    return new;
+end;
+$$ language plpgsql;
+
+-- Create index function for plaintext search
+create or replace function ticket_message_plaintext(content jsonb)
+returns text
+language sql
+immutable
+as $$
+    select content->>'plaintext';
+$$;
+
 -- Ticket messages table
 create table ticket_messages (
     id uuid primary key default uuid_generate_v4(),
     ticket_id uuid not null references tickets(id) on delete cascade,
     sender_type text not null check (sender_type in ('customer', 'worker', 'system')),
     sender_id uuid,
-    content text not null check (length(trim(content)) > 0),
+    content jsonb not null,
+    content_format text not null default 'tiptap' check (content_format in ('tiptap', 'plain')),
     is_internal boolean default false,
     created_at timestamptz default now(),
     updated_at timestamptz default now(),
@@ -168,6 +224,15 @@ create table ticket_messages (
         (sender_type = 'system' and sender_id is null)
     )
 );
+
+-- Create trigger for ticket message content validation
+create trigger validate_ticket_message_content_trigger
+    before insert or update on ticket_messages
+    for each row
+    execute function validate_ticket_message_content();
+
+-- Create index on plaintext content for faster searching
+create index idx_ticket_messages_plaintext on ticket_messages using gin (to_tsvector('english', ticket_message_plaintext(content)));
 
 -- Ticket assignments table
 create table ticket_assignments (

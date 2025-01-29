@@ -2,6 +2,8 @@ import { supabase } from '@/config/supabase/client'
 import { TicketWithUser, TicketStatus, TicketMessage, TicketPriority } from '../types'
 import { subDays } from 'date-fns'
 import crypto from 'crypto'
+import { type TiptapContent } from '@/lib/tiptap'
+import { type Json } from '@/types/database'
 
 interface GetTicketsParams {
   userId?: string
@@ -156,13 +158,15 @@ export const ticketService = {
     // Map messages with their senders
     return messages.map(message => ({
       ...message,
+      content_format: 'tiptap',
+      sender_type: message.sender_type as 'customer' | 'worker',
       sender: message.sender_id
         ? {
             full_name: sendersMap.get(message.sender_id)?.full_name ?? 'Unknown User',
             avatar_url: sendersMap.get(message.sender_id)?.avatar_url ?? null
           }
         : undefined
-    }))
+    })) as TicketMessage[]
   },
 
   async createTicket({ 
@@ -232,7 +236,7 @@ export const ticketService = {
     return ticket as TicketWithUser
   },
 
-  async createTicketMessage({ ticketId, content, isInternal }: { ticketId: string, content: string, isInternal: boolean }) {
+  async createTicketMessage({ ticketId, content, isInternal }: { ticketId: string, content: TiptapContent, isInternal: boolean }): Promise<TicketMessage> {
     const { data: userProfile } = await supabase.auth.getUser()
     if (!userProfile.user) throw new Error('User not authenticated')
 
@@ -242,10 +246,11 @@ export const ticketService = {
       .insert([
         {
           ticket_id: ticketId,
-          content,
+          content: content as Json,
+          content_format: 'tiptap' as const,
           is_internal: isInternal,
           sender_id: userProfile.user.id,
-          sender_type: 'worker'
+          sender_type: 'worker' as const
         }
       ])
       .select()
@@ -253,21 +258,21 @@ export const ticketService = {
 
     if (messageError) throw messageError
 
-    // Then get the sender profile
-    const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('full_name, avatar_url')
-      .eq('id', userProfile.user.id)
-      .single()
+    // Update the ticket's updated_at timestamp
+    const { error: ticketError } = await supabase
+      .from('tickets')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', ticketId)
 
-    if (profileError) throw profileError
+    if (ticketError) throw ticketError
 
-    // Return combined data
     return {
       ...message,
+      content_format: 'tiptap',
+      sender_type: 'worker',
       sender: {
-        full_name: profile.full_name,
-        avatar_url: profile.avatar_url
+        full_name: userProfile.user.user_metadata?.full_name || userProfile.user.email,
+        avatar_url: userProfile.user.user_metadata?.avatar_url || null
       }
     } as TicketMessage
   },

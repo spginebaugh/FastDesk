@@ -1,8 +1,9 @@
-import { Database } from '@/types/database'
+import { Database, type Json } from '@/types/database'
 
 export type Ticket = Database['public']['Tables']['tickets']['Row']
-export type TicketStatus = Database['public']['Enums']['ticket_status']
-export type TicketPriority = Database['public']['Enums']['ticket_priority']
+export type TicketStatus = 'new' | 'open' | 'pending' | 'resolved' | 'closed'
+export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent'
+export type TicketSource = 'customer_portal' | 'worker_portal' | 'email' | 'api' | 'system'
 export type UserProfile = Database['public']['Tables']['user_profiles']['Row']
 export type SenderType = 'customer' | 'worker' | 'system'
 
@@ -28,8 +29,39 @@ export interface TicketMessageJoinResult extends BaseTicketMessage {
   sender: UserProfile | null
 }
 
-export interface TicketMessage extends BaseTicketMessage {
+export interface TicketMessage {
+  id: string
+  ticket_id: string
+  content: Json
+  content_format: 'tiptap'
+  is_internal: boolean | null
+  sender_id: string | null
+  sender_type: 'customer' | 'worker'
+  created_at: string | null
+  updated_at: string | null
   sender?: MessageSender
+}
+
+export interface TicketWithUser {
+  id: string
+  title: string
+  ticket_status: TicketStatus
+  ticket_priority: TicketPriority
+  ticket_source: TicketSource
+  created_at: string | null
+  updated_at: string | null
+  user_id: string
+  organization_id: string | null
+  created_by_type: string
+  created_by_id: string | null
+  first_response_at: string | null
+  resolved_at: string | null
+  due_date: string | null
+  external_reference_id: string | null
+  metadata: Json | null
+  integration_metadata: Json | null
+  custom_fields: Json | null
+  user: UserProfile
 }
 
 export const TICKET_STATUS_MAP = {
