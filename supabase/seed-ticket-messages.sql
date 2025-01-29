@@ -160,18 +160,6 @@ DECLARE
     MSG_TS_8 CONSTANT text := 'Let''s break down the recursive types into smaller chunks. Here''s how to restructure them...';
     MSG_TS_9 CONSTANT text := 'You might also want to consider using template literal types instead. Here''s an alternative approach...';
     MSG_TS_10 CONSTANT text := 'Implemented the changes but now seeing type inference issues with our React components using these utility types.';
-
-    -- OAuth Messages
-    MSG_OA_1 CONSTANT text := 'Experiencing race conditions with OAuth token refresh in multi-tab setup. Using refresh token rotation with JWT. Sometimes results in valid tokens being invalidated. Implementation uses localStorage for token storage.';
-    MSG_OA_2 CONSTANT text := 'This is a common issue with multi-tab token management. Please share: 1) Your token refresh logic 2) How you''re handling tab synchronization';
-    MSG_OA_3 CONSTANT text := '[Shares code] We''re using the localStorage "storage" event for cross-tab communication, but it seems unreliable.';
-    MSG_OA_4 CONSTANT text := 'I see the problem. You need to implement proper token synchronization using BroadcastChannel API. Here''s the corrected implementation...';
-    MSG_OA_5 CONSTANT text := 'Internal note: Customer needs to implement proper token management strategy. Current approach won''t scale.';
-    MSG_OA_6 CONSTANT text := 'You should also implement a mutex lock for token refresh operations. Here''s how using Service Workers...';
-    MSG_OA_7 CONSTANT text := 'Implemented BroadcastChannel and mutex, but still seeing occasional token invalidation during poor network conditions.';
-    MSG_OA_8 CONSTANT text := 'Let''s add offline support and retry queuing. Here''s how to handle token refresh during network issues...';
-    MSG_OA_9 CONSTANT text := 'Consider using IndexedDB for token storage instead of localStorage. Here''s a more robust implementation...';
-    MSG_OA_10 CONSTANT text := 'After switching to IndexedDB, we''re seeing sporadic "QuotaExceededError" errors and some tokens aren''t being persisted.';
 BEGIN
     INSERT INTO ticket_messages (id, ticket_id, sender_type, sender_id, content, content_format, is_internal) 
     VALUES
@@ -333,30 +321,6 @@ BEGIN
     ('c7c7c7c7-0000-4000-cc00-000000000007', '33333333-4444-5555-6666-777777777777', 'customer', 'USER_ID_18', create_tiptap_content(MSG_RDS_7), 'tiptap', false),
     ('c8c8c8c8-0000-4000-cc00-000000000008', '33333333-4444-5555-6666-777777777777', 'worker', 'USER_ID_27', create_tiptap_content(MSG_RDS_8), 'tiptap', false),
     ('c9c9c9c9-0000-4000-cc00-000000000009', '33333333-4444-5555-6666-777777777777', 'worker', 'USER_ID_30', create_tiptap_content(MSG_RDS_9), 'tiptap', false),
-    ('c0c0c0c0-0000-4000-cc00-000000000010', '33333333-4444-5555-6666-777777777777', 'customer', 'USER_ID_18', create_tiptap_content(MSG_RDS_10), 'tiptap', false),
-
-    -- TypeScript Issue Thread (44444444-5555-6666-7777-888888888888)
-    ('d1d1d1d1-0000-4000-dd00-000000000001', '44444444-5555-6666-7777-888888888888', 'customer', 'USER_ID_20', create_tiptap_content(MSG_TS_1), 'tiptap', false),
-    ('d2d2d2d2-0000-4000-dd00-000000000002', '44444444-5555-6666-7777-888888888888', 'worker', 'USER_ID_28', create_tiptap_content(MSG_TS_2), 'tiptap', false),
-    ('d3d3d3d3-0000-4000-dd00-000000000003', '44444444-5555-6666-7777-888888888888', 'customer', 'USER_ID_20', create_tiptap_content(MSG_TS_3), 'tiptap', false),
-    ('d4d4d4d4-0000-4000-dd00-000000000004', '44444444-5555-6666-7777-888888888888', 'worker', 'USER_ID_28', create_tiptap_content(MSG_TS_4), 'tiptap', false),
-    ('d5d5d5d5-0000-4000-dd00-000000000005', '44444444-5555-6666-7777-888888888888', 'worker', 'USER_ID_28', create_tiptap_content(MSG_TS_5), 'tiptap', true),
-    ('d6d6d6d6-0000-4000-dd00-000000000006', '44444444-5555-6666-7777-888888888888', 'worker', 'USER_ID_31', create_tiptap_content(MSG_TS_6), 'tiptap', false),
-    ('d7d7d7d7-0000-4000-dd00-000000000007', '44444444-5555-6666-7777-888888888888', 'customer', 'USER_ID_20', create_tiptap_content(MSG_TS_7), 'tiptap', false),
-    ('d8d8d8d8-0000-4000-dd00-000000000008', '44444444-5555-6666-7777-888888888888', 'worker', 'USER_ID_28', create_tiptap_content(MSG_TS_8), 'tiptap', false),
-    ('d9d9d9d9-0000-4000-dd00-000000000009', '44444444-5555-6666-7777-888888888888', 'worker', 'USER_ID_29', create_tiptap_content(MSG_TS_9), 'tiptap', false),
-    ('d0d0d0d0-0000-4000-dd00-000000000010', '44444444-5555-6666-7777-888888888888', 'customer', 'USER_ID_20', create_tiptap_content(MSG_TS_10), 'tiptap', false),
-
-    -- OAuth Issue Thread (55555555-6666-7777-8888-999999999999)
-    ('e1e1e1e1-0000-4000-ee00-000000000001', '55555555-6666-7777-8888-999999999999', 'customer', 'USER_ID_22', create_tiptap_content(MSG_OA_1), 'tiptap', false),
-    ('e2e2e2e2-0000-4000-ee00-000000000002', '55555555-6666-7777-8888-999999999999', 'worker', 'USER_ID_1', create_tiptap_content(MSG_OA_2), 'tiptap', false),
-    ('e3e3e3e3-0000-4000-ee00-000000000003', '55555555-6666-7777-8888-999999999999', 'customer', 'USER_ID_22', create_tiptap_content(MSG_OA_3), 'tiptap', false),
-    ('e4e4e4e4-0000-4000-ee00-000000000004', '55555555-6666-7777-8888-999999999999', 'worker', 'USER_ID_1', create_tiptap_content(MSG_OA_4), 'tiptap', false),
-    ('e5e5e5e5-0000-4000-ee00-000000000005', '55555555-6666-7777-8888-999999999999', 'worker', 'USER_ID_1', create_tiptap_content(MSG_OA_5), 'tiptap', true),
-    ('e6e6e6e6-0000-4000-ee00-000000000006', '55555555-6666-7777-8888-999999999999', 'worker', 'USER_ID_30', create_tiptap_content(MSG_OA_6), 'tiptap', false),
-    ('e7e7e7e7-0000-4000-ee00-000000000007', '55555555-6666-7777-8888-999999999999', 'customer', 'USER_ID_22', create_tiptap_content(MSG_OA_7), 'tiptap', false),
-    ('e8e8e8e8-0000-4000-ee00-000000000008', '55555555-6666-7777-8888-999999999999', 'worker', 'USER_ID_2', create_tiptap_content(MSG_OA_8), 'tiptap', false),
-    ('e9e9e9e9-0000-4000-ee00-000000000009', '55555555-6666-7777-8888-999999999999', 'worker', 'USER_ID_27', create_tiptap_content(MSG_OA_9), 'tiptap', false),
-    ('e0e0e0e0-0000-4000-ee00-000000000010', '55555555-6666-7777-8888-999999999999', 'customer', 'USER_ID_22', create_tiptap_content(MSG_OA_10), 'tiptap', false);
+    ('c0c0c0c0-0000-4000-cc00-000000000010', '33333333-4444-5555-6666-777777777777', 'customer', 'USER_ID_18', create_tiptap_content(MSG_RDS_10), 'tiptap', false);
 END;
 $$;

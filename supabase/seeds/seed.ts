@@ -146,6 +146,10 @@ async function seedDatabase() {
     console.log('Running ticket messages SQL seed...')
     await executeSqlFile(path.join(__dirname, '../seed-ticket-messages.sql'), true)
 
+    // Step 5: Run the ticket stories SQL seed file
+    console.log('Running ticket stories SQL seed...')
+    await executeSqlFile(path.join(__dirname, '../seed-ticket-stories.sql'), true)
+
     console.log('Database seeded successfully!')
   } catch (error) {
     console.error('Error seeding database:', error)

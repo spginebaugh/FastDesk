@@ -88,12 +88,6 @@ INSERT INTO organization_members (organization_id, profile_id, organization_role
     ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_23', 'customer'),
     ('e8b2c49c-f34d-4c5b-8d54-d123f229a86f', 'USER_ID_25', 'customer');
 
--- Insert tags
-INSERT INTO tags (id, name, color, description) VALUES
-    ('a1a2c49c-f34d-4c5b-8d54-d123f229a111', 'bug', '#FF0000', 'Software bugs and issues'),
-    ('b2b3c49c-f34d-4c5b-8d54-d123f229b222', 'feature-request', '#00FF00', 'New feature requests'),
-    ('c3c4c49c-f34d-4c5b-8d54-d123f229c333', 'billing', '#0000FF', 'Billing related issues');
-
 -- Insert templates
 INSERT INTO templates (id, title, content, organization_id, created_by) VALUES
     ('d4d5c49c-f34d-4c5b-8d54-d123f229d444', 'Welcome Response', 'Thank you for contacting FastDesk support. I''ll be happy to help you today.', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'USER_ID_1'),
@@ -130,10 +124,7 @@ INSERT INTO tickets (id, title, user_id, organization_id, ticket_status, ticket_
     ('ffffffff-ffff-4fff-ffff-ffffffffffff', 'WebRTC ICE Candidate Negotiation Failing Behind Corporate Proxy', 'USER_ID_12', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'open', 'high', 'customer_portal', 'customer', 'USER_ID_12'),
     ('11111111-2222-4333-4444-555555555555', 'gRPC Stream Memory Leak in Node.js Client', 'USER_ID_14', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'new', 'high', 'email', 'customer', 'USER_ID_14'),
     ('22222222-3333-4444-5555-666666666666', 'ElasticSearch Percolator Query Performance Degradation', 'USER_ID_16', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'open', 'medium', 'customer_portal', 'customer', 'USER_ID_16'),
-    ('33333333-4444-5555-6666-777777777777', 'Docker Image Layer Caching Issues in CI/CD Pipeline', 'USER_ID_18', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'new', 'high', 'customer_portal', 'customer', 'USER_ID_18'),
-    ('44444444-5555-6666-7777-888888888888', 'TypeScript Generic Constraints Breaking After Upgrade', 'USER_ID_20', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'open', 'medium', 'customer_portal', 'customer', 'USER_ID_20'),
-    ('55555555-6666-7777-8888-999999999999', 'OAuth2 Token Refresh Race Condition in Multi-Tab Environment', 'USER_ID_22', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'pending', 'high', 'customer_portal', 'customer', 'USER_ID_22');
-
+    ('33333333-4444-5555-6666-777777777777', 'Docker Image Layer Caching Issues in CI/CD Pipeline', 'USER_ID_18', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', 'new', 'high', 'customer_portal', 'customer', 'USER_ID_18');
 -- Insert ticket assignments
 INSERT INTO ticket_assignments (ticket_id, worker_id, organization_id, is_primary) VALUES
     -- Existing assignments
@@ -165,25 +156,7 @@ INSERT INTO ticket_assignments (ticket_id, worker_id, organization_id, is_primar
     ('ffffffff-ffff-4fff-ffff-ffffffffffff', 'USER_ID_2', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true),
     ('11111111-2222-4333-4444-555555555555', 'USER_ID_30', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true),
     ('22222222-3333-4444-5555-666666666666', 'USER_ID_31', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true),
-    ('33333333-4444-5555-6666-777777777777', 'USER_ID_27', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true),
-    ('44444444-5555-6666-7777-888888888888', 'USER_ID_28', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true),
-    ('55555555-6666-7777-8888-999999999999', 'USER_ID_1', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true);
-
--- Insert ticket tags
-INSERT INTO ticket_tags (ticket_id, tag_id) VALUES
-    ('f6f7c49c-f34d-4c5b-8d54-d123f229f666', 'a1a2c49c-f34d-4c5b-8d54-d123f229a111'),
-    ('a7a8c49c-f34d-4c5b-8d54-d123f229a777', 'c3c4c49c-f34d-4c5b-8d54-d123f229c333'),
-    ('b8b9c49c-f34d-4c5b-8d54-d123f229b888', 'b2b3c49c-f34d-4c5b-8d54-d123f229b222'),
-    ('bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb', 'b2b3c49c-f34d-4c5b-8d54-d123f229b222'),
-    ('cccccccc-cccc-4ccc-cccc-cccccccccccc', 'a1a2c49c-f34d-4c5b-8d54-d123f229a111'),
-    ('dddddddd-dddd-4ddd-dddd-dddddddddddd', 'a1a2c49c-f34d-4c5b-8d54-d123f229a111'),
-    ('eeeeeeee-eeee-4eee-eeee-eeeeeeeeeeee', 'b2b3c49c-f34d-4c5b-8d54-d123f229b222'),
-    ('ffffffff-ffff-4fff-ffff-ffffffffffff', 'a1a2c49c-f34d-4c5b-8d54-d123f229a111'),
-    ('11111111-2222-4333-4444-555555555555', 'a1a2c49c-f34d-4c5b-8d54-d123f229a111'),
-    ('22222222-3333-4444-5555-666666666666', 'b2b3c49c-f34d-4c5b-8d54-d123f229b222'),
-    ('33333333-4444-5555-6666-777777777777', 'a1a2c49c-f34d-4c5b-8d54-d123f229a111'),
-    ('44444444-5555-6666-7777-888888888888', 'a1a2c49c-f34d-4c5b-8d54-d123f229a111'),
-    ('55555555-6666-7777-8888-999999999999', 'b2b3c49c-f34d-4c5b-8d54-d123f229b222');
+    ('33333333-4444-5555-6666-777777777777', 'USER_ID_27', 'd7a2c49c-f34d-4c5b-8d54-d123f229a86d', true);
 
 -- Insert knowledge base articles
 INSERT INTO kb_articles (id, title, content, author_id, kb_status, published_at) VALUES

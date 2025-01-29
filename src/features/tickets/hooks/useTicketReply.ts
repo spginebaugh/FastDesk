@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '@/components/ui/use-toast'
 import { ticketService } from '../services/ticketService'
-import { openAIService } from '@/services/openai-service'
+import { responseGenerationService } from '@/features/ai-bot/services'
 import { TicketMessage } from '../types'
 import { type TiptapContent } from '@/lib/tiptap'
 import { type Json } from '@/types/database'
@@ -90,7 +90,7 @@ export function useTicketReply({
   const handleGenerateResponse = async () => {
     try {
       setIsGenerating(true)
-      const generatedResponse = await openAIService.generateTicketResponse({
+      const generatedResponse = await responseGenerationService.generateTicketResponse({
         ticketTitle,
         originalSenderFullName,
         currentWorkerFullName,
