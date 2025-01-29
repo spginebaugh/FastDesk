@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/config/supabase/client'
 import { useToast } from '@/components/ui/use-toast'
-import { Database, type Json } from '@/types/database'
+import { type Json } from '@/types/database'
 import { type TiptapContent, createTiptapContent, extractPlainText } from '@/lib/tiptap'
 
 interface UserNotes {
