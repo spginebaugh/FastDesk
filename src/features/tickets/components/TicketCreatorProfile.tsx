@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 import { UserNotes } from '@/features/users/components/UserNotes'
 import { type Database } from '@/types/database'
+import * as Popover from '@radix-ui/react-popover'
+import { Input } from '@/components/ui/input'
 
 type UserStatus = Database['public']['Enums']['user_status']
 
@@ -86,7 +88,29 @@ export function TicketCreatorProfile({
 
       {/* User Notes Button Section */}
       {organizationId && (
-        <div className="p-4 border-t border-border/50">
+        <div className="p-4 border-t border-border/50 space-y-2">
+          <Popover.Root>
+            <Popover.Trigger asChild>
+              <Button variant="outline" className="w-full">
+                Generate AI Notes
+              </Button>
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content className="bg-popover text-popover-foreground p-4 rounded-md shadow-md w-[300px] z-50">
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Enter Prompt</h4>
+                  <Input
+                    placeholder="Enter your prompt here..."
+                    className="w-full"
+                  />
+                  <Button className="w-full">
+                    Generate
+                  </Button>
+                </div>
+                <Popover.Arrow className="fill-popover" />
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
           <Button 
             className="w-full"
             onClick={onSaveNotes}
