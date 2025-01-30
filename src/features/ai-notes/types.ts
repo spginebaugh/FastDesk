@@ -1,4 +1,5 @@
 import { type Database } from '@/types/database'
+import { type Json } from '@/types/database'
 
 export type TargetType = 'tags' | 'notes' | 'both'
 export type ActionType = 'update' | 'recreate'
@@ -19,7 +20,11 @@ export interface UserContext {
 
 export interface NotesContext {
   existingNotes?: string
-  existingTags?: string[]
+  existingTags?: {
+    id: string
+    name: string
+  }[]
+  ticketMessages?: string
 }
 
 export interface GenerationContext {

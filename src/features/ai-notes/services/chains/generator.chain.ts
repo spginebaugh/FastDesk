@@ -1,8 +1,7 @@
 import { z } from 'zod'
 import { ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate } from '@langchain/core/prompts'
-import { RunnableSequence } from '@langchain/core/runnables'
 import { StructuredOutputParser } from 'langchain/output_parsers'
-import type { ParsedPrompt, GenerationContext, GeneratedContent } from '../../types'
+import type { ParsedPrompt, GenerationContext } from '../../types'
 import { chatModel } from '@/config/openai/client'
 
 const outputSchema = z.object({
@@ -10,8 +9,6 @@ const outputSchema = z.object({
   tags: z.array(z.string()).optional(),
   explanation: z.string(),
 })
-
-type GeneratorOutput = z.infer<typeof outputSchema>
 
 const parser = StructuredOutputParser.fromZodSchema(outputSchema)
 
@@ -29,13 +26,18 @@ const generatePromptTemplate = (parsedPrompt: ParsedPrompt) => {
       Email: {userEmail}
       Company: {userCompany}
       
-      Existing Tags: {existingTags}
+      Current Notes (DO NOT MODIFY): {existingNotes}
+      Current Tags (TO BE UPDATED): {existingTags}
+      
+      User's Ticket Messages:
+      {ticketMessages}
       
       Original Prompt: {originalPrompt}
       
       {formatInstructions}
       
-      Generate appropriate tags that categorize this user.
+      Generate appropriate tags that categorize this user. DO NOT modify the existing notes.
+      Take into account the existing notes, ticket messages, and current tags when generating new tags.
     `
   } else if (parsedPrompt.targetType === 'notes') {
     humanTemplate = `
@@ -47,13 +49,18 @@ const generatePromptTemplate = (parsedPrompt: ParsedPrompt) => {
       Email: {userEmail}
       Company: {userCompany}
       
-      Existing Notes: {existingNotes}
+      Current Notes (TO BE UPDATED): {existingNotes}
+      Current Tags (DO NOT MODIFY): {existingTags}
+      
+      User's Ticket Messages:
+      {ticketMessages}
       
       Original Prompt: {originalPrompt}
       
       {formatInstructions}
       
-      Generate appropriate notes about this user.
+      Generate appropriate notes about this user. DO NOT modify the existing tags.
+      Take into account the existing notes, ticket messages, and current tags when generating new notes.
     `
   } else {
     humanTemplate = `
@@ -65,14 +72,18 @@ const generatePromptTemplate = (parsedPrompt: ParsedPrompt) => {
       Email: {userEmail}
       Company: {userCompany}
       
-      Existing Notes: {existingNotes}
-      Existing Tags: {existingTags}
+      Current Notes (TO BE UPDATED): {existingNotes}
+      Current Tags (TO BE UPDATED): {existingTags}
+      
+      User's Ticket Messages:
+      {ticketMessages}
       
       Original Prompt: {originalPrompt}
       
       {formatInstructions}
       
       Generate appropriate notes and tags for this user.
+      Take into account the existing notes, ticket messages, and current tags when generating new content.
     `
   }
 
@@ -106,12 +117,33 @@ export const createGeneratorChain = () => {
       console.log('[GeneratorChain] Creating prompt template for input:', input)
       const template = generatePromptTemplate(input.parsedPrompt)
       
+      // Ensure notes are properly formatted for display
+      const existingNotes = input.context.notes.existingNotes
+      console.log('[GeneratorChain] Raw existing notes:', existingNotes)
+      
+      const formattedNotes = existingNotes && existingNotes.trim() !== '' 
+        ? existingNotes 
+        : 'No existing notes'
+      
+      console.log('[GeneratorChain] Formatted notes:', formattedNotes)
+
+      // Format ticket messages
+      const ticketMessages = input.context.notes.ticketMessages
+      console.log('[GeneratorChain] Raw ticket messages:', ticketMessages)
+      
+      const formattedMessages = ticketMessages && ticketMessages.trim() !== ''
+        ? ticketMessages
+        : 'No ticket messages found'
+      
+      console.log('[GeneratorChain] Formatted ticket messages:', formattedMessages)
+      
       const variables = {
         userName: input.context.user.fullName || 'Unknown',
         userEmail: input.context.user.email || 'No Email',
         userCompany: input.context.user.company || 'No Company',
-        existingNotes: input.context.notes.existingNotes || 'No existing notes',
-        existingTags: input.context.notes.existingTags?.join(', ') || 'No existing tags',
+        existingNotes: formattedNotes,
+        existingTags: input.context.notes.existingTags?.map(tag => tag.name).join(', ') || 'No existing tags',
+        ticketMessages: formattedMessages,
         originalPrompt: input.parsedPrompt.originalPrompt,
         formatInstructions
       }

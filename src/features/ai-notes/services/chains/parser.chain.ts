@@ -1,6 +1,5 @@
 import { z } from 'zod'
 import { ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate } from '@langchain/core/prompts'
-import { RunnableSequence } from '@langchain/core/runnables'
 import { StructuredOutputParser } from 'langchain/output_parsers'
 import { parserModel } from '@/config/openai/client'
 
@@ -14,12 +13,6 @@ const outputSchema = z.object({
   reasoning: z.string(),
 })
 
-interface ParsedPrompt {
-  targetType: 'tags' | 'notes' | 'both'
-  action: 'update' | 'recreate'
-  originalPrompt: string
-  reasoning: string
-}
 
 const parser = StructuredOutputParser.fromZodSchema(outputSchema)
 
