@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMemo, useCallback } from 'react'
 import { 
   getTicket, 
   getTicketMessages, 
@@ -16,30 +17,47 @@ interface UseTicketDetailOptions {
 
 // Sub-hook for fetching ticket data
 function useTicketData({ ticketId }: UseTicketDetailOptions) {
-  // Fetch ticket details
+  // Fetch ticket details with proper caching settings
   const { data: ticket, isLoading: isLoadingTicket } = useQuery({
     queryKey: ['ticket', ticketId],
-    queryFn: () => getTicket({ ticketId })
+    queryFn: () => getTicket({ ticketId }),
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    gcTime: 3600000, // Cache for 1 hour
+    enabled: !!ticketId
   })
 
-  // Fetch ticket messages
+  // Fetch ticket messages with proper caching
   const { data: messages = [], isLoading: isLoadingMessages } = useQuery({
     queryKey: ['ticket-messages', ticketId],
-    queryFn: () => getTicketMessages({ ticketId })
+    queryFn: () => getTicketMessages({ ticketId }),
+    staleTime: 30000,
+    gcTime: 3600000,
+    enabled: !!ticketId
   })
 
-  // Fetch current assignment
+  // Fetch current assignment with proper caching
   const { data: currentAssignment, isLoading: isLoadingAssignment } = useQuery({
     queryKey: ['ticket-assignment', ticketId],
-    queryFn: () => getTicketAssignment(ticketId)
+    queryFn: () => getTicketAssignment(ticketId),
+    staleTime: 30000,
+    gcTime: 3600000,
+    enabled: !!ticketId
   })
 
-  return {
+  // Memoize the return value
+  return useMemo(() => ({
     ticket,
     messages,
     currentAssignment,
     isLoading: isLoadingTicket || isLoadingMessages || isLoadingAssignment
-  }
+  }), [
+    ticket,
+    messages,
+    currentAssignment,
+    isLoadingTicket,
+    isLoadingMessages,
+    isLoadingAssignment
+  ])
 }
 
 // Sub-hook for fetching available workers
@@ -50,13 +68,15 @@ function useAvailableWorkers(organizationId: string | null | undefined) {
       if (!organizationId) return []
       return getOrganizationWorkers(organizationId)
     },
+    staleTime: 30000,
+    gcTime: 3600000,
     enabled: !!organizationId
   })
 
-  return {
+  return useMemo(() => ({
     availableWorkers,
     isLoadingWorkers
-  }
+  }), [availableWorkers, isLoadingWorkers])
 }
 
 // Sub-hook for ticket mutations
@@ -64,76 +84,68 @@ function useTicketMutations(ticketId: string) {
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
-  // Update ticket mutation
-  const { mutate: updateTicketDetails } = useMutation({
-    mutationFn: (updates: Partial<{ 
-      title: string
-      ticket_status: TicketStatus
-      ticket_priority: TicketPriority 
-    }>) => updateTicket({ ticketId, updates }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
-      toast({
-        title: 'Ticket updated',
-        description: 'Ticket settings have been updated successfully.'
-      })
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to update ticket settings. Please try again.',
-        variant: 'destructive'
-      })
-    }
-  })
+  // Memoize mutation callbacks
+  const updateTicketDetails = useCallback(async (updates: Partial<{ 
+    title: string
+    ticket_status: TicketStatus
+    ticket_priority: TicketPriority 
+  }>) => {
+    const { mutateAsync } = useMutation({
+      mutationFn: () => updateTicket({ ticketId, updates }),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
+        toast({
+          title: 'Ticket updated',
+          description: 'Ticket settings have been updated successfully.'
+        })
+      },
+      onError: () => {
+        toast({
+          title: 'Error',
+          description: 'Failed to update ticket settings. Please try again.',
+          variant: 'destructive'
+        })
+      }
+    })
+    return mutateAsync()
+  }, [ticketId, queryClient, toast])
 
-  // Update assignment mutation
-  const { mutate: assignTicket } = useMutation({
-    mutationFn: (workerId: string | null) => updateTicketAssignment({ ticketId, workerId }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ticket-assignment', ticketId] })
-      toast({
-        title: 'Assignment updated',
-        description: 'Ticket assignment has been updated successfully.'
-      })
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to update ticket assignment. Please try again.',
-        variant: 'destructive'
-      })
-    }
-  })
+  const assignTicket = useCallback(async (workerId: string | null) => {
+    const { mutateAsync } = useMutation({
+      mutationFn: () => updateTicketAssignment({ ticketId, workerId }),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['ticket-assignment', ticketId] })
+        toast({
+          title: 'Assignment updated',
+          description: 'Ticket assignment has been updated successfully.'
+        })
+      },
+      onError: () => {
+        toast({
+          title: 'Error',
+          description: 'Failed to update ticket assignment. Please try again.',
+          variant: 'destructive'
+        })
+      }
+    })
+    return mutateAsync()
+  }, [ticketId, queryClient, toast])
 
-  return {
+  return useMemo(() => ({
     updateTicketDetails,
     assignTicket
-  }
+  }), [updateTicketDetails, assignTicket])
 }
 
 // Main hook that composes the sub-hooks
 export function useTicketDetail({ ticketId }: UseTicketDetailOptions) {
-  const {
-    ticket,
-    messages,
-    currentAssignment,
-    isLoading: isLoadingTicketData
-  } = useTicketData({ ticketId })
-
-  const {
-    availableWorkers,
-    isLoadingWorkers
-  } = useAvailableWorkers(ticket?.organization_id)
-
+  const ticketData = useTicketData({ ticketId })
+  const availableWorkersData = useAvailableWorkers(ticketData.ticket?.organization_id)
   const mutations = useTicketMutations(ticketId)
 
-  return {
-    ticket,
-    messages,
-    currentAssignment,
-    availableWorkers,
-    isLoading: isLoadingTicketData || isLoadingWorkers,
+  return useMemo(() => ({
+    ...ticketData,
+    ...availableWorkersData,
     mutations
-  }
+  }), [ticketData, availableWorkersData, mutations])
 } 

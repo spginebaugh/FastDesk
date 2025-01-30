@@ -1,11 +1,14 @@
 import { format } from 'date-fns'
+import { useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
 import { UserNotes } from '@/features/users/components/UserNotes'
-import { type Database } from '@/types/database'
+import { useAINotes } from '@/features/ai-notes/hooks/useAINotes'
+import type { Database } from '@/types/database'
 import * as Popover from '@radix-ui/react-popover'
-import { Input } from '@/components/ui/input'
+import { Loader2 } from 'lucide-react'
 
 type UserStatus = Database['public']['Enums']['user_status']
 
@@ -34,6 +37,33 @@ export function TicketCreatorProfile({
   onSaveNotes,
   hasNoteChanges
 }: TicketCreatorProfileProps) {
+  const [prompt, setPrompt] = useState('')
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false)
+  
+  const { generate, isGenerating } = useAINotes({
+    userId: user.id,
+    organizationId: organizationId || '',
+    onSuccess: (result) => {
+      // Update notes with AI generated content
+      onUpdateNotes(() => {
+        // TODO: Implement the actual notes update logic
+        console.log('AI Generated Content:', result.data)
+      }, true)
+      setIsPopoverOpen(false)
+      setPrompt('')
+    },
+    onError: (error) => {
+      // TODO: Show error toast
+      console.error('AI Generation Error:', error)
+      setIsPopoverOpen(false)
+    },
+  })
+
+  const handleGenerate = async () => {
+    if (!prompt.trim() || !organizationId) return
+    await generate(prompt)
+  }
+
   return (
     <div className="w-80 border-r border-border/50 bg-background flex flex-col">
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -89,22 +119,38 @@ export function TicketCreatorProfile({
       {/* User Notes Button Section */}
       {organizationId && (
         <div className="p-4 border-t border-border/50 space-y-2">
-          <Popover.Root>
+          <Popover.Root open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
             <Popover.Trigger asChild>
               <Button variant="outline" className="w-full">
                 Generate AI Notes
               </Button>
             </Popover.Trigger>
             <Popover.Portal>
-              <Popover.Content className="bg-popover text-popover-foreground p-4 rounded-md shadow-md w-[300px] z-50">
+              <Popover.Content 
+                className="bg-popover text-popover-foreground p-4 rounded-md shadow-md w-[300px] z-50"
+                sideOffset={5}
+              >
                 <div className="space-y-2">
                   <h4 className="font-medium text-sm">Enter Prompt</h4>
                   <Input
                     placeholder="Enter your prompt here..."
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
                     className="w-full"
                   />
-                  <Button className="w-full">
-                    Generate
+                  <Button 
+                    className="w-full" 
+                    onClick={handleGenerate}
+                    disabled={isGenerating || !prompt.trim()}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      'Generate'
+                    )}
                   </Button>
                 </div>
                 <Popover.Arrow className="fill-popover" />

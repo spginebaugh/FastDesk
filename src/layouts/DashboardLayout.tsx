@@ -25,18 +25,23 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getTickets, getTicket } from '@/features/tickets/services'
+import { TicketWithUser } from '@/features/tickets/types'
 
 type UserStatus = Database['public']['Enums']['user_status']
 
 export function DashboardLayout() {
+  console.log('[DashboardLayout] Rendering')
+  
   const { user, signOut } = useAuthStore()
   const [userStatus, setUserStatus] = useState<UserStatus>('offline')
   const location = useLocation()
-  const { addTab, hasTab } = useTabStore()
+  const { addTab, hasTab, updateTab } = useTabStore()
+  const queryClient = useQueryClient()
   
   useEffect(() => {
+    console.log('[DashboardLayout] Mount/Update')
     const fetchUserStatus = async () => {
       if (!user?.id) return
       
@@ -121,6 +126,7 @@ export function DashboardLayout() {
   // Handle tab creation for specific routes
   useEffect(() => {
     const path = location.pathname
+    console.log('[DashboardLayout] Tab effect running, path:', path)
     
     // List of paths that should not create tabs
     const excludedPaths = [
@@ -136,13 +142,18 @@ export function DashboardLayout() {
       path === '/profile' || // Profile settings
       path === '/settings' // Other settings pages
     
+    console.log('[DashboardLayout] Should create tab:', shouldCreateTab)
+    
     if (!shouldCreateTab) {
       return
     }
     
     // If we're not already tracking this path as a tab
-    if (!hasTab(path)) {
-      const createTab = async () => {
+    const hasExistingTab = hasTab(path)
+    console.log('[DashboardLayout] Has existing tab:', hasExistingTab)
+    
+    if (!hasExistingTab) {
+      const createTab = () => {
         let title = 'New Tab'
         
         if (path.startsWith('/tickets/')) {
@@ -150,13 +161,28 @@ export function DashboardLayout() {
             title = 'New Ticket'
           } else {
             const ticketId = path.split('/').pop()
-            try {
-              const ticket = await getTicket({ ticketId: ticketId! })
-              title = ticket.title
-            } catch (error) {
-              console.error('Failed to fetch ticket:', error)
-              title = 'Ticket'
-            }
+            console.log('[DashboardLayout] Creating tab for ticket:', ticketId)
+            
+            // Try to get ticket from React Query cache
+            const ticket = queryClient.getQueryData<TicketWithUser>(['ticket', ticketId])
+            console.log('[DashboardLayout] Ticket from cache:', ticket?.title)
+            
+            title = ticket?.title || 'Loading...'
+            
+            // Update tab title when ticket data is available
+            console.log('[DashboardLayout] Fetching ticket data for tab')
+            queryClient.fetchQuery<TicketWithUser>({
+              queryKey: ['ticket', ticketId],
+              queryFn: () => getTicket({ ticketId: ticketId! })
+            }).then(ticket => {
+              console.log('[DashboardLayout] Fetched ticket for tab:', ticket?.title)
+              if (ticket?.title && hasTab(path)) {
+                console.log('[DashboardLayout] Updating tab title to:', ticket.title)
+                updateTab(path, { title: ticket.title })
+              }
+            }).catch(() => {
+              console.error('Failed to fetch ticket for tab')
+            })
           }
         } else if (path === '/profile') {
           title = 'Profile'
@@ -164,6 +190,7 @@ export function DashboardLayout() {
           title = 'Settings'
         }
         
+        console.log('[DashboardLayout] Adding initial tab with title:', title)
         addTab({
           title,
           path,
@@ -172,13 +199,17 @@ export function DashboardLayout() {
       
       createTab()
     }
-  }, [location.pathname, addTab, hasTab])
+  }, [location.pathname, addTab, hasTab, queryClient, updateTab])
 
   // Get recent tickets for the sidebar
   const { data: recentTickets = [] } = useQuery({
     queryKey: ['recent-tickets'],
     queryFn: () => getTickets({ recentlyUpdated: true })
   })
+
+  useEffect(() => {
+    return () => console.log('[DashboardLayout] Unmount')
+  }, [])
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-background flex">

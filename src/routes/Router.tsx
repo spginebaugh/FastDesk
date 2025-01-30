@@ -12,6 +12,8 @@ import { OrganizationListPage, OrganizationDetailPage } from '@/features/organiz
 import { CustomerDetailPage } from '@/features/customers/pages/CustomerDetailPage'
 import { DataPage } from '@/features/data/pages/DataPage'
 import { WorkerProfilePage } from '@/features/organizations/pages/WorkerProfilePage'
+import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -31,9 +33,26 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
   return <>{children}</>
 }
 
+function RouteChangeLogger() {
+  const location = useLocation()
+  
+  useEffect(() => {
+    console.log('[Router] Location changed:', {
+      pathname: location.pathname,
+      search: location.search,
+      hash: location.hash
+    })
+  }, [location])
+
+  return null
+}
+
 export function Router() {
+  console.log('[Router] Rendering Router')
+  
   return (
     <BrowserRouter>
+      <RouteChangeLogger />
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />

@@ -12,6 +12,7 @@ interface TabStore {
   tabs: Tab[]
   activeTabId: string | null
   addTab: (tab: Omit<Tab, 'id'>) => void
+  updateTab: (path: string, updates: Partial<Omit<Tab, 'id'>>) => void
   removeTab: (id: string) => string | null // Returns the path to navigate to
   setActiveTab: (id: string) => void
   setActiveTabByPath: (path: string) => void
@@ -27,13 +28,26 @@ export const useTabStore = create<TabStore>()(
 
       addTab: (tab) => {
         const id = crypto.randomUUID()
+        console.log('[TabStore] Adding tab:', { ...tab, id })
         set((state) => ({
           tabs: [...state.tabs, { ...tab, id }],
           activeTabId: id,
         }))
       },
 
+      updateTab: (path, updates) => {
+        console.log('[TabStore] Updating tab:', { path, updates })
+        set((state) => ({
+          tabs: state.tabs.map((tab) => 
+            tab.path === path 
+              ? { ...tab, ...updates }
+              : tab
+          )
+        }))
+      },
+
       removeTab: (id) => {
+        console.log('[TabStore] Removing tab:', id)
         const state = get()
         const tabIndex = state.tabs.findIndex((tab) => tab.id === id)
         const isActive = state.activeTabId === id
@@ -50,6 +64,7 @@ export const useTabStore = create<TabStore>()(
             null
 
           nextTabPath = nextTab?.path ?? '/dashboard'
+          console.log('[TabStore] Next tab path:', nextTabPath)
         }
 
         set((state) => ({
@@ -63,24 +78,31 @@ export const useTabStore = create<TabStore>()(
       },
 
       setActiveTab: (id) => {
+        console.log('[TabStore] Setting active tab:', id)
         set({ activeTabId: id })
       },
 
       setActiveTabByPath: (path) => {
+        console.log('[TabStore] Setting active tab by path:', path)
         const tab = get().getTabByPath(path)
         if (tab) {
+          console.log('[TabStore] Found tab for path:', tab.id)
           set({ activeTabId: tab.id })
         }
       },
 
       hasTab: (path) => {
         const { tabs } = get()
-        return tabs.some((tab) => tab.path === path)
+        const hasTab = tabs.some((tab) => tab.path === path)
+        console.log('[TabStore] Checking has tab:', { path, hasTab })
+        return hasTab
       },
 
       getTabByPath: (path) => {
         const { tabs } = get()
-        return tabs.find((tab) => tab.path === path)
+        const tab = tabs.find((tab) => tab.path === path)
+        console.log('[TabStore] Getting tab by path:', { path, foundTab: !!tab })
+        return tab
       },
     }),
     {

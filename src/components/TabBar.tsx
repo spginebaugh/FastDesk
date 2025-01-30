@@ -10,8 +10,15 @@ export function TabBar() {
   const navigate = useNavigate()
   const location = useLocation()
 
+  console.log('[TabBar] Rendering with:', {
+    tabCount: tabs.length,
+    activeTabId,
+    currentPath: location.pathname
+  })
+
   // Sync active tab with current location
   useEffect(() => {
+    console.log('[TabBar] Location changed, syncing active tab:', location.pathname)
     setActiveTabByPath(location.pathname)
   }, [location.pathname, setActiveTabByPath])
 
@@ -20,15 +27,18 @@ export function TabBar() {
   }
 
   const handleTabClick = (id: string, path: string) => {
+    console.log('[TabBar] Tab clicked:', { id, path })
     setActiveTab(id)
     navigate(path)
   }
 
   const handleCloseTab = (e: React.MouseEvent, id: string) => {
+    console.log('[TabBar] Closing tab:', id)
     e.stopPropagation()
     const tab = tabs.find((t) => t.id === id)
     const nextPath = removeTab(id)
     if (nextPath && location.pathname === tab?.path) {
+      console.log('[TabBar] Navigating to next path:', nextPath)
       navigate(nextPath)
     }
   }

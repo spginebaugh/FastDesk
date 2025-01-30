@@ -1,6 +1,5 @@
 import { supabase } from '@/config/supabase/client'
 import { getAuthenticatedUser, getUserOrganizationIds, getTicketAssignment, getOrganizationWorkers } from './helper'
-import { type Worker } from '../types'
 
 interface UpdateTicketAssignmentParams {
   ticketId: string

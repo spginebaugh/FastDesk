@@ -20,10 +20,16 @@ interface UseTicketListParams {
 }
 
 // Sub-hook for fetching tickets based on view type
-function useTicketViews({ view = 'assigned', userId }: UseTicketListOptions) {
+function useTicketViews({ 
+  userId,
+  status,
+  unassigned,
+  recentlyUpdated,
+  organizationId
+}: UseTicketListParams) {
   const { data: tickets = [], isLoading } = useQuery({
-    queryKey: ['tickets', { userId, status: ['new', 'open', 'pending'], unassigned: false, recentlyUpdated: false, organizationId: undefined }],
-    queryFn: () => getTickets({ userId, status: ['new', 'open', 'pending'], unassigned: false, recentlyUpdated: false, organizationId: undefined })
+    queryKey: ['tickets', { userId, status, unassigned, recentlyUpdated, organizationId }],
+    queryFn: () => getTickets({ userId, status, unassigned, recentlyUpdated, organizationId })
   })
 
   return {
@@ -66,9 +72,19 @@ export function useTicketList({
   status = ['new', 'open', 'pending'],
   unassigned = false,
   recentlyUpdated = false,
-  organizationId
-}: UseTicketListParams = {}) {
-  const { tickets, isLoading } = useTicketViews({ view: 'assigned', userId })
+  organizationId,
+  view
+}: UseTicketListParams & { view?: TicketView } = {}) {
+  // Convert view to appropriate flags
+  const effectiveParams = {
+    userId,
+    status: view === 'all' ? undefined : status,
+    unassigned: view === 'unassigned' ? true : unassigned,
+    recentlyUpdated: view === 'recent' ? true : recentlyUpdated,
+    organizationId
+  }
+
+  const { tickets, isLoading } = useTicketViews(effectiveParams)
   const {
     selectedTickets,
     setSelectedTickets,
