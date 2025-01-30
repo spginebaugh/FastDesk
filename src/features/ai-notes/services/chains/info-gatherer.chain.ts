@@ -31,10 +31,10 @@ async function getUserInfo(userId: string): Promise<UserContext> {
 }
 
 async function getUserTicketMessages(userId: string): Promise<string> {
-  // Get all tickets created by the user
+  // Get all tickets created by the user, including custom_fields
   const { data: tickets, error: ticketsError } = await supabase
     .from('tickets')
-    .select('id, title, ticket_status')
+    .select('id, title, ticket_status, custom_fields')
     .eq('user_id', userId)
 
   if (ticketsError) {
@@ -48,6 +48,19 @@ async function getUserTicketMessages(userId: string): Promise<string> {
 
   // Get messages from all tickets
   const messagePromises = tickets.map(async ticket => {
+    // Capitalize and format ticket status
+    const formattedStatus = ticket.ticket_status.charAt(0).toUpperCase() + ticket.ticket_status.slice(1)
+    
+    // For closed or resolved tickets, use the AI summary
+    if (['closed', 'resolved'].includes(ticket.ticket_status)) {
+      const customFields = ticket.custom_fields as { ai_summary?: string } | null
+      const aiSummary = customFields?.ai_summary
+      if (aiSummary) {
+        return `[Ticket: ${ticket.title} - Status: ${formattedStatus}]\nSummary: ${aiSummary}`
+      }
+    }
+    
+    // For other tickets, show the full conversation
     const messages = await getTicketMessages({ ticketId: ticket.id })
     
     // Format all messages with sender type and content
@@ -68,8 +81,6 @@ async function getUserTicketMessages(userId: string): Promise<string> {
     .filter(Boolean)
     .join('\n')
 
-    // Capitalize and format ticket status
-    const formattedStatus = ticket.ticket_status.charAt(0).toUpperCase() + ticket.ticket_status.slice(1)
     return `[Ticket: ${ticket.title} - Status: ${formattedStatus}]\n${formattedMessages}`
   })
 
