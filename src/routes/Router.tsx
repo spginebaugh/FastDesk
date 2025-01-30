@@ -76,6 +76,7 @@ export function Router() {
           <Route path="views/unassigned" element={<TicketListPage view="unassigned" />} />
           <Route path="views/all" element={<TicketListPage view="all" />} />
           <Route path="views/recently-updated" element={<TicketListPage view="recent" />} />
+          <Route path="views/solved" element={<TicketListPage view="solved" />} />
           
           {/* Ticket Routes */}
           <Route path="tickets/new" element={<NewTicketPage />} />

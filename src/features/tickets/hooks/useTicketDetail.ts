@@ -84,52 +84,57 @@ function useTicketMutations(ticketId: string) {
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
-  // Memoize mutation callbacks
+  const { mutateAsync: updateTicketMutation } = useMutation({
+    mutationFn: (updates: Partial<{ 
+      title: string
+      ticket_status: TicketStatus
+      ticket_priority: TicketPriority 
+    }>) => updateTicket({ ticketId, updates }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
+      toast({
+        title: 'Ticket updated',
+        description: 'Ticket settings have been updated successfully.'
+      })
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to update ticket settings. Please try again.',
+        variant: 'destructive'
+      })
+    }
+  })
+
+  const { mutateAsync: assignTicketMutation } = useMutation({
+    mutationFn: (workerId: string | null) => updateTicketAssignment({ ticketId, workerId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ticket-assignment', ticketId] })
+      toast({
+        title: 'Assignment updated',
+        description: 'Ticket assignment has been updated successfully.'
+      })
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to update ticket assignment. Please try again.',
+        variant: 'destructive'
+      })
+    }
+  })
+
   const updateTicketDetails = useCallback(async (updates: Partial<{ 
     title: string
     ticket_status: TicketStatus
     ticket_priority: TicketPriority 
   }>) => {
-    const { mutateAsync } = useMutation({
-      mutationFn: () => updateTicket({ ticketId, updates }),
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
-        toast({
-          title: 'Ticket updated',
-          description: 'Ticket settings have been updated successfully.'
-        })
-      },
-      onError: () => {
-        toast({
-          title: 'Error',
-          description: 'Failed to update ticket settings. Please try again.',
-          variant: 'destructive'
-        })
-      }
-    })
-    return mutateAsync()
-  }, [ticketId, queryClient, toast])
+    return updateTicketMutation(updates)
+  }, [updateTicketMutation])
 
   const assignTicket = useCallback(async (workerId: string | null) => {
-    const { mutateAsync } = useMutation({
-      mutationFn: () => updateTicketAssignment({ ticketId, workerId }),
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['ticket-assignment', ticketId] })
-        toast({
-          title: 'Assignment updated',
-          description: 'Ticket assignment has been updated successfully.'
-        })
-      },
-      onError: () => {
-        toast({
-          title: 'Error',
-          description: 'Failed to update ticket assignment. Please try again.',
-          variant: 'destructive'
-        })
-      }
-    })
-    return mutateAsync()
-  }, [ticketId, queryClient, toast])
+    return assignTicketMutation(workerId)
+  }, [assignTicketMutation])
 
   return useMemo(() => ({
     updateTicketDetails,

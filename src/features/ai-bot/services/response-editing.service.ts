@@ -1,5 +1,6 @@
 import { createTiptapContent } from '@/lib/tiptap';
-import { openai, OPENAI_CONFIG } from '@/config/openai/client';
+import { chatModel } from '@/config/openai/client';
+import { SystemMessage, HumanMessage } from '@langchain/core/messages';
 import {
   buildConversationThread,
   buildWorkerContext,
@@ -15,20 +16,17 @@ import {
 export const responseEditingService = {
   async editResponse({ prompt, currentResponse }: EditResponseParams) {
     try {
-      const response = await openai.chat.completions.create({
-        model: OPENAI_CONFIG.DEFAULT_MODEL,
-        messages: [
-          {
-            role: "system",
-            content: "You are a helpful support worker. Write your responses as if you are the worker. Provide clear, concise, and technically accurate guidance. Avoid revealing internal notes. Respond in a professional tone."
-          },
-          createEditResponseMessage({ currentResponse, prompt })
-        ],
-        temperature: OPENAI_CONFIG.DEFAULT_TEMPERATURE,
-        max_tokens: OPENAI_CONFIG.DEFAULT_MAX_TOKENS
-      });
+      const editMessage = createEditResponseMessage({ currentResponse, prompt });
 
-      return createTiptapContent(response.choices[0]?.message?.content || '');
+      const messages = [
+        new SystemMessage(
+          "You are a helpful support worker. Write your responses as if you are the worker. Provide clear, concise, and technically accurate guidance. Avoid revealing internal notes. Respond in a professional tone."
+        ),
+        new HumanMessage(editMessage.content?.toString() || '')
+      ];
+
+      const response = await chatModel.invoke(messages);
+      return createTiptapContent(response.content.toString());
     } catch (error) {
       console.error('Error editing response:', error);
       throw new Error('Failed to edit response');
@@ -47,23 +45,22 @@ export const responseEditingService = {
       const conversationThread = buildConversationThread(previousMessages);
       const workerContext = buildWorkerContext(currentWorkerFullName, previousMessages);
 
-      const response = await openai.chat.completions.create({
-        model: OPENAI_CONFIG.DEFAULT_MODEL,
-        messages: [
-          createBaseSystemMessage({ ticketTitle, originalSenderFullName, currentWorkerFullName }),
-          createEditResponseWithContextMessage({
-            conversationThread,
-            workerContext,
-            currentResponse,
-            prompt,
-            originalSenderFullName
-          })
-        ],
-        temperature: OPENAI_CONFIG.DEFAULT_TEMPERATURE,
-        max_tokens: OPENAI_CONFIG.DEFAULT_MAX_TOKENS
+      const baseSystemMessage = createBaseSystemMessage({ ticketTitle, originalSenderFullName, currentWorkerFullName });
+      const editMessage = createEditResponseWithContextMessage({
+        conversationThread,
+        workerContext,
+        currentResponse,
+        prompt,
+        originalSenderFullName
       });
 
-      return createTiptapContent(response.choices[0]?.message?.content || '');
+      const messages = [
+        new SystemMessage(baseSystemMessage.content?.toString() || ''),
+        new HumanMessage(editMessage.content?.toString() || '')
+      ];
+
+      const response = await chatModel.invoke(messages);
+      return createTiptapContent(response.content.toString());
     } catch (error) {
       console.error('Error editing response with context:', error);
       throw new Error('Failed to edit response with context');

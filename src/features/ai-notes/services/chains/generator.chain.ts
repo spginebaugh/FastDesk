@@ -1,9 +1,9 @@
 import { z } from 'zod'
-import { PromptTemplate } from '@langchain/core/prompts'
-import { ChatOpenAI } from '@langchain/openai'
+import { ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate } from '@langchain/core/prompts'
 import { RunnableSequence } from '@langchain/core/runnables'
 import { StructuredOutputParser } from 'langchain/output_parsers'
 import type { ParsedPrompt, GenerationContext, GeneratedContent } from '../../types'
+import { chatModel } from '@/config/openai/client'
 
 const outputSchema = z.object({
   notes: z.string().optional(),
@@ -16,97 +16,127 @@ type GeneratorOutput = z.infer<typeof outputSchema>
 const parser = StructuredOutputParser.fromZodSchema(outputSchema)
 
 const generatePromptTemplate = (parsedPrompt: ParsedPrompt) => {
+  const systemTemplate = 'You are a helpful assistant that generates user notes and tags based on context.'
+  
+  let humanTemplate: string
   if (parsedPrompt.targetType === 'tags') {
-    return PromptTemplate.fromTemplate(`
+    humanTemplate = `
       Generate tags for a user based on the following context.
       Action: ${parsedPrompt.action === 'update' ? 'Update existing tags' : 'Create new tags'}
       
       User Information:
-      Name: {user_name}
-      Email: {user_email}
-      Company: {user_company}
+      Name: {userName}
+      Email: {userEmail}
+      Company: {userCompany}
       
-      Existing Tags: {existing_tags}
+      Existing Tags: {existingTags}
       
-      Original Prompt: {original_prompt}
+      Original Prompt: {originalPrompt}
       
-      {format_instructions}
+      {formatInstructions}
       
       Generate appropriate tags that categorize this user.
-    `)
-  }
-  
-  if (parsedPrompt.targetType === 'notes') {
-    return PromptTemplate.fromTemplate(`
+    `
+  } else if (parsedPrompt.targetType === 'notes') {
+    humanTemplate = `
       Generate notes for a user based on the following context.
       Action: ${parsedPrompt.action === 'update' ? 'Update existing notes' : 'Create new notes'}
       
       User Information:
-      Name: {user_name}
-      Email: {user_email}
-      Company: {user_company}
+      Name: {userName}
+      Email: {userEmail}
+      Company: {userCompany}
       
-      Existing Notes: {existing_notes}
+      Existing Notes: {existingNotes}
       
-      Original Prompt: {original_prompt}
+      Original Prompt: {originalPrompt}
       
-      {format_instructions}
+      {formatInstructions}
       
       Generate appropriate notes about this user.
-    `)
+    `
+  } else {
+    humanTemplate = `
+      Generate both notes and tags for a user based on the following context.
+      Action: ${parsedPrompt.action === 'update' ? 'Update existing content' : 'Create new content'}
+      
+      User Information:
+      Name: {userName}
+      Email: {userEmail}
+      Company: {userCompany}
+      
+      Existing Notes: {existingNotes}
+      Existing Tags: {existingTags}
+      
+      Original Prompt: {originalPrompt}
+      
+      {formatInstructions}
+      
+      Generate appropriate notes and tags for this user.
+    `
   }
-  
-  return PromptTemplate.fromTemplate(`
-    Generate both notes and tags for a user based on the following context.
-    Action: ${parsedPrompt.action === 'update' ? 'Update existing content' : 'Create new content'}
-    
-    User Information:
-    Name: {user_name}
-    Email: {user_email}
-    Company: {user_company}
-    
-    Existing Notes: {existing_notes}
-    Existing Tags: {existing_tags}
-    
-    Original Prompt: {original_prompt}
-    
-    {format_instructions}
-    
-    Generate appropriate notes and tags for this user.
-  `)
+
+  return ChatPromptTemplate.fromMessages([
+    SystemMessagePromptTemplate.fromTemplate(systemTemplate),
+    HumanMessagePromptTemplate.fromTemplate(humanTemplate)
+  ])
 }
 
-const model = new ChatOpenAI({
-  modelName: 'gpt-4-turbo-preview',
-  temperature: 0.7,
-})
+const model = chatModel
 
 interface GeneratorChainInput {
   parsedPrompt: ParsedPrompt
   context: GenerationContext
 }
 
+const formatTag = (tag: string): string => {
+  // Convert spaces to hyphens and remove any other invalid characters
+  return tag
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-_]/g, '')
+}
+
 export const createGeneratorChain = () => {
-  return RunnableSequence.from([
-    {
-      promptTemplate: (input: GeneratorChainInput) => generatePromptTemplate(input.parsedPrompt),
-      format_instructions: parser.getFormatInstructions(),
-      user_name: (input: GeneratorChainInput) => input.context.user.fullName || 'Unknown',
-      user_email: (input: GeneratorChainInput) => input.context.user.email,
-      user_company: (input: GeneratorChainInput) => input.context.user.company || 'Unknown',
-      existing_notes: (input: GeneratorChainInput) => input.context.notes.existingNotes || '',
-      existing_tags: (input: GeneratorChainInput) => input.context.notes.existingTags?.join(', ') || '',
-      original_prompt: (input: GeneratorChainInput) => input.parsedPrompt.originalPrompt,
-    },
-    (input) => input.promptTemplate,
-    model,
-    parser,
-    (output: GeneratorOutput): GeneratedContent => ({
-      notes: output.notes,
-      tags: output.tags,
-      explanation: output.explanation,
-    }),
-  ])
+  const formatInstructions = parser.getFormatInstructions()
+
+  return {
+    invoke: async (input: GeneratorChainInput) => {
+      console.log('[GeneratorChain] Creating prompt template for input:', input)
+      const template = generatePromptTemplate(input.parsedPrompt)
+      
+      const variables = {
+        userName: input.context.user.fullName || 'Unknown',
+        userEmail: input.context.user.email || 'No Email',
+        userCompany: input.context.user.company || 'No Company',
+        existingNotes: input.context.notes.existingNotes || 'No existing notes',
+        existingTags: input.context.notes.existingTags?.join(', ') || 'No existing tags',
+        originalPrompt: input.parsedPrompt.originalPrompt,
+        formatInstructions
+      }
+
+      console.log('[GeneratorChain] Variables prepared:', variables)
+      
+      const messages = await template.invoke(variables)
+      console.log('[GeneratorChain] Messages generated:', messages)
+      
+      const modelOutput = await model.invoke(messages)
+      console.log('[GeneratorChain] Model output:', modelOutput)
+      
+      const parsed = await parser.invoke(modelOutput)
+      console.log('[GeneratorChain] Parsed output:', parsed)
+      
+      const result = {
+        notes: parsed.notes || '',
+        tags: (parsed.tags || []).map(formatTag).filter(Boolean), // Format tags and remove any empty strings
+        explanation: parsed.explanation,
+      }
+      
+      console.log('[GeneratorChain] Final result:', result)
+      return result
+    }
+  }
 }
 
 export type GeneratorChain = ReturnType<typeof createGeneratorChain> 

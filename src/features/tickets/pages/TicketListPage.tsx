@@ -18,14 +18,15 @@ import { cn } from '@/lib/utils'
 import { useTicketList } from '../hooks/useTicketList'
 
 interface TicketListPageProps {
-  view?: 'assigned' | 'unassigned' | 'all' | 'recent'
+  view?: 'assigned' | 'unassigned' | 'all' | 'recent' | 'solved'
 }
 
 const titles = {
   assigned: 'Your unresolved tickets',
   unassigned: 'Unassigned tickets',
   all: 'All unsolved tickets',
-  recent: 'Recently updated tickets'
+  recent: 'Recently updated tickets',
+  solved: 'Solved tickets'
 }
 
 export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
@@ -130,6 +131,25 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
                   <Link to="/views/recently-updated">
                     <Ticket className="mr-2 h-4 w-4" />
                     Recently updated
+                  </Link>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={cn(
+                    "w-full justify-start text-foreground hover:text-primary hover:bg-primary/10",
+                    "transition-colors duration-200",
+                    view === 'solved' && [
+                      "bg-primary/10",
+                      "text-primary",
+                      "hover:bg-primary/20"
+                    ]
+                  )}
+                  asChild
+                >
+                  <Link to="/views/solved">
+                    <Ticket className="mr-2 h-4 w-4" />
+                    Solved tickets
                   </Link>
                 </Button>
               </div>

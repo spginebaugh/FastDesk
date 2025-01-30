@@ -73,8 +73,12 @@ export async function generateAINotes({
     const infoGathererChain = createInfoGathererChain()
     const generatorChain = createGeneratorChain()
 
+    console.log('[AINotesService] Parsing prompt:', prompt)
+    
     // Parse the prompt
-    const parsedPrompt = await parserChain.invoke(prompt)
+    const parsedPrompt = await parserChain.invoke({ originalPrompt: prompt })
+
+    console.log('[AINotesService] Parsed prompt result:', parsedPrompt)
 
     // Gather context
     const context = await infoGathererChain.invoke({

@@ -1,14 +1,16 @@
 import { format } from 'date-fns'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { UserStatusBadge } from '@/components/shared/UserStatusBadge'
-import { UserNotes } from '@/features/users/components/UserNotes'
+import { UserNotes, type UserNotesRef } from '@/features/users/components/UserNotes'
 import { useAINotes } from '@/features/ai-notes/hooks/useAINotes'
+import { useUserNotes } from '@/features/users/hooks/useUserNotes'
 import type { Database } from '@/types/database'
 import * as Popover from '@radix-ui/react-popover'
 import { Loader2 } from 'lucide-react'
+import { createTiptapContent, type TiptapContent } from '@/lib/tiptap'
 
 type UserStatus = Database['public']['Enums']['user_status']
 
@@ -40,15 +42,35 @@ export function TicketCreatorProfile({
   const [prompt, setPrompt] = useState('')
   const [isPopoverOpen, setIsPopoverOpen] = useState(false)
   
+  // Reference to the UserNotes component
+  const notesRef = useRef<UserNotesRef>(null)
+  
+  // Get access to the updateTags function
+  const { updateTags } = useUserNotes({
+    userId: user.id,
+    organizationId: organizationId || ''
+  })
+  
   const { generate, isGenerating } = useAINotes({
     userId: user.id,
     organizationId: organizationId || '',
     onSuccess: (result) => {
-      // Update notes with AI generated content
-      onUpdateNotes(() => {
-        // TODO: Implement the actual notes update logic
-        console.log('AI Generated Content:', result.data)
-      }, true)
+      // Create Tiptap content from AI generated notes
+      const content = createTiptapContent(result.data.notes || '')
+      
+      // Update the notes in the editor without saving to database
+      notesRef.current?.setNoteContent(content)
+      
+      // Add the AI generated tags
+      if (result.data.tags && result.data.tags.length > 0) {
+        const newTags = result.data.tags.map(tagName => ({
+          id: crypto.randomUUID(),
+          name: tagName.trim(),
+          color: '#' + Math.floor(Math.random()*16777215).toString(16) // Random color
+        }))
+        updateTags(newTags)
+      }
+      
       setIsPopoverOpen(false)
       setPrompt('')
     },
@@ -107,6 +129,7 @@ export function TicketCreatorProfile({
         {organizationId && (
           <div className="space-y-2">
             <UserNotes 
+              ref={notesRef}
               userId={user.id} 
               organizationId={organizationId}
               renderButton={false}

@@ -1,9 +1,12 @@
 import { z } from 'zod'
-import { PromptTemplate } from '@langchain/core/prompts'
-import { ChatOpenAI } from '@langchain/openai'
+import { ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate } from '@langchain/core/prompts'
 import { RunnableSequence } from '@langchain/core/runnables'
 import { StructuredOutputParser } from 'langchain/output_parsers'
-import type { ParsedPrompt } from '../../types'
+import { parserModel } from '@/config/openai/client'
+
+interface ParserChainInput {
+  originalPrompt: string
+}
 
 const outputSchema = z.object({
   targetType: z.enum(['tags', 'notes', 'both']),
@@ -11,49 +14,50 @@ const outputSchema = z.object({
   reasoning: z.string(),
 })
 
-type ParserOutput = z.infer<typeof outputSchema>
+interface ParsedPrompt {
+  targetType: 'tags' | 'notes' | 'both'
+  action: 'update' | 'recreate'
+  originalPrompt: string
+  reasoning: string
+}
 
 const parser = StructuredOutputParser.fromZodSchema(outputSchema)
 
-const prompt = PromptTemplate.fromTemplate(`
-Given the following user prompt for AI note generation, analyze what the user wants to do.
-Determine if they want to:
-1. Update or generate tags
-2. Update or generate notes
-3. Both tags and notes
-
-Also determine if they want to:
-A. Update existing content
-B. Recreate from scratch
-
-User Prompt: {input}
-
-{format_instructions}
-
-Provide your analysis in the requested JSON format with a brief reasoning.
-`)
-
-const model = new ChatOpenAI({
-  modelName: 'gpt-4-turbo-preview',
-  temperature: 0,
-})
+const model = parserModel
 
 export const createParserChain = () => {
-  return RunnableSequence.from([
-    {
-      input: (input: string) => input,
-      format_instructions: parser.getFormatInstructions(),
-    },
-    prompt,
-    model,
-    parser,
-    // Transform the output into our internal ParsedPrompt type
-    (output: ParserOutput, runInput: { input: string }): ParsedPrompt => ({
-      targetType: output.targetType,
-      action: output.action,
-      originalPrompt: runInput.input,
-    }),
+  const formatInstructions = parser.getFormatInstructions()
+  
+  const prompt = ChatPromptTemplate.fromMessages([
+    SystemMessagePromptTemplate.fromTemplate(
+      'You are a helpful assistant that analyzes user prompts to determine their intent regarding notes and tags.'
+    ),
+    HumanMessagePromptTemplate.fromTemplate(
+      `Given the following user prompt, determine if they want to update/recreate their tags, notes, or both.
+Original prompt: {originalPrompt}
+
+{format_instructions}`
+    )
   ])
+
+  return {
+    invoke: async (input: ParserChainInput) => {
+      const messages = await prompt.invoke({
+        originalPrompt: input.originalPrompt,
+        format_instructions: formatInstructions
+      })
+      
+      const modelOutput = await model.invoke(messages)
+      const parsed = await parser.invoke(modelOutput)
+      
+      return {
+        targetType: parsed.targetType,
+        action: parsed.action,
+        originalPrompt: input.originalPrompt,
+        reasoning: parsed.reasoning,
+      }
+    }
+  }
 }
 
 export type ParserChain = ReturnType<typeof createParserChain> 

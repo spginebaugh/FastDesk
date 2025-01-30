@@ -1,12 +1,28 @@
-export { getTickets } from './get-tickets.service'
-export { getTicket } from './get-ticket.service'
-export { createTicket } from './create-ticket.service'
-export { updateTicket } from './update-ticket.service'
-export { getTicketMessages, createTicketMessage } from './ticket-messages.service'
-export { 
+import { getTicketById, queryTickets } from './ticket-query.service'
+import { createTicket } from './create-ticket.service'
+import { updateTicket } from './update-ticket.service'
+import { getTicketMessages, createTicketMessage } from './ticket-messages.service'
+import { 
   getTicketAssignment, 
   getOrganizationWorkers,
   updateTicketAssignment,
   getAllTicketAssignments
 } from './ticket-assignments.service'
-export { createSampleTicket } from './create-sample-ticket.service' 
+import { createSampleTicket } from './create-sample-ticket.service'
+
+// Re-export with original names for backward compatibility
+export const getTicket = getTicketById
+export const getTickets = queryTickets
+
+// Export other services as is
+export {
+  createTicket,
+  updateTicket,
+  getTicketMessages,
+  createTicketMessage,
+  getTicketAssignment,
+  getOrganizationWorkers,
+  updateTicketAssignment,
+  getAllTicketAssignments,
+  createSampleTicket
+} 

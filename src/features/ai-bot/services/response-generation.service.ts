@@ -1,5 +1,6 @@
 import { createTiptapContent } from '@/lib/tiptap';
-import { openai, OPENAI_CONFIG } from '@/config/openai/client';
+import { chatModel } from '@/config/openai/client';
+import { SystemMessage, HumanMessage } from '@langchain/core/messages';
 import {
   buildConversationThread,
   buildWorkerContext,
@@ -27,22 +28,21 @@ export const responseGenerationService = {
       const workerContext = buildWorkerContext(currentWorkerFullName, previousMessages);
       const lastUserMessage = getLastUserMessage(previousMessages, ticketContent);
 
-      const response = await openai.chat.completions.create({
-        model: OPENAI_CONFIG.DEFAULT_MODEL,
-        messages: [
-          createBaseSystemMessage({ ticketTitle, originalSenderFullName, currentWorkerFullName }),
-          createTicketResponseMessage({
-            conversationThread,
-            workerContext,
-            lastUserMessage,
-            originalSenderFullName
-          })
-        ],
-        temperature: OPENAI_CONFIG.DEFAULT_TEMPERATURE,
-        max_tokens: OPENAI_CONFIG.DEFAULT_MAX_TOKENS
+      const baseSystemMessage = createBaseSystemMessage({ ticketTitle, originalSenderFullName, currentWorkerFullName });
+      const ticketMessage = createTicketResponseMessage({
+        conversationThread,
+        workerContext,
+        lastUserMessage,
+        originalSenderFullName
       });
 
-      return createTiptapContent(response.choices[0]?.message?.content || '');
+      const messages = [
+        new SystemMessage(baseSystemMessage.content?.toString() || ''),
+        new HumanMessage(ticketMessage.content?.toString() || '')
+      ];
+
+      const response = await chatModel.invoke(messages);
+      return createTiptapContent(response.content.toString());
     } catch (error) {
       console.error('Error generating AI response:', error);
       throw new Error('Failed to generate AI response');
@@ -62,23 +62,22 @@ export const responseGenerationService = {
       const workerContext = buildWorkerContext(currentWorkerFullName, previousMessages);
       const lastUserMessage = getLastUserMessage(previousMessages, ticketContent);
 
-      const response = await openai.chat.completions.create({
-        model: OPENAI_CONFIG.DEFAULT_MODEL,
-        messages: [
-          createBaseSystemMessage({ ticketTitle, originalSenderFullName, currentWorkerFullName }),
-          createPromptWithContextMessage({
-            conversationThread,
-            workerContext,
-            lastUserMessage,
-            originalSenderFullName,
-            prompt
-          })
-        ],
-        temperature: OPENAI_CONFIG.DEFAULT_TEMPERATURE,
-        max_tokens: OPENAI_CONFIG.DEFAULT_MAX_TOKENS
+      const baseSystemMessage = createBaseSystemMessage({ ticketTitle, originalSenderFullName, currentWorkerFullName });
+      const contextMessage = createPromptWithContextMessage({
+        conversationThread,
+        workerContext,
+        lastUserMessage,
+        originalSenderFullName,
+        prompt
       });
 
-      return createTiptapContent(response.choices[0]?.message?.content || '');
+      const messages = [
+        new SystemMessage(baseSystemMessage.content?.toString() || ''),
+        new HumanMessage(contextMessage.content?.toString() || '')
+      ];
+
+      const response = await chatModel.invoke(messages);
+      return createTiptapContent(response.content.toString());
     } catch (error) {
       console.error('Error generating AI response with prompt:', error);
       throw new Error('Failed to generate AI response with prompt');
@@ -87,23 +86,15 @@ export const responseGenerationService = {
 
   async generateCustomResponse({ prompt }: GenerateCustomResponseParams) {
     try {
-      const response = await openai.chat.completions.create({
-        model: OPENAI_CONFIG.DEFAULT_MODEL,
-        messages: [
-          {
-            role: "system",
-            content: "You are a helpful support worker. Write your responses as if you are the worker. Provide clear, concise, and technically accurate guidance. Avoid revealing internal notes. Respond in a professional tone."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        temperature: OPENAI_CONFIG.DEFAULT_TEMPERATURE,
-        max_tokens: OPENAI_CONFIG.DEFAULT_MAX_TOKENS
-      });
+      const messages = [
+        new SystemMessage(
+          "You are a helpful support worker. Write your responses as if you are the worker. Provide clear, concise, and technically accurate guidance. Avoid revealing internal notes. Respond in a professional tone."
+        ),
+        new HumanMessage(prompt)
+      ];
 
-      return createTiptapContent(response.choices[0]?.message?.content || '');
+      const response = await chatModel.invoke(messages);
+      return createTiptapContent(response.content.toString());
     } catch (error) {
       console.error('Error generating custom AI response:', error);
       throw new Error('Failed to generate custom AI response');

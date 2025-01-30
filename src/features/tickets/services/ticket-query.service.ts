@@ -3,6 +3,15 @@ import { TicketStatus, TicketWithUser } from '../types'
 import { getAuthenticatedUser, getUserOrganizationIds } from './helper'
 import { subDays } from 'date-fns'
 
+const TICKET_SELECT_QUERY = `
+  *,
+  user:user_profiles!tickets_user_id_fkey(*)
+`
+
+interface GetTicketByIdParams {
+  ticketId: string
+}
+
 interface GetTicketsParams {
   userId?: string
   status?: TicketStatus[]
@@ -11,7 +20,22 @@ interface GetTicketsParams {
   organizationId?: string
 }
 
-export async function getTickets({ 
+export async function getTicketById({ ticketId }: GetTicketByIdParams): Promise<TicketWithUser> {
+  const user = await getAuthenticatedUser()
+  const userOrgIds = await getUserOrganizationIds(user.id)
+
+  const { data, error } = await supabase
+    .from('tickets')
+    .select(TICKET_SELECT_QUERY)
+    .eq('id', ticketId)
+    .in('organization_id', userOrgIds)
+    .single()
+
+  if (error) throw error
+  return data as TicketWithUser
+}
+
+export async function queryTickets({ 
   userId, 
   status = ['new', 'open', 'pending'],
   unassigned = false,
@@ -23,10 +47,7 @@ export async function getTickets({
 
   let query = supabase
     .from('tickets')
-    .select(`
-      *,
-      user:user_profiles!tickets_user_id_fkey(*)
-    `)
+    .select(TICKET_SELECT_QUERY)
     .order('updated_at', { ascending: false })
     .in('organization_id', userOrgIds)
   

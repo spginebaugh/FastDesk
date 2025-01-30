@@ -4,7 +4,7 @@ import { getTickets } from '../services'
 import { TicketStatus } from '../types'
 import { TicketWithUser } from '../types'
 
-type TicketView = 'assigned' | 'unassigned' | 'all' | 'recent'
+type TicketView = 'assigned' | 'unassigned' | 'all' | 'recent' | 'solved'
 
 interface UseTicketListOptions {
   view?: TicketView
@@ -78,7 +78,11 @@ export function useTicketList({
   // Convert view to appropriate flags
   const effectiveParams = {
     userId,
-    status: view === 'all' ? undefined : status,
+    status: view === 'all' 
+      ? undefined 
+      : view === 'solved' 
+        ? (['closed', 'resolved'] as TicketStatus[])
+        : status,
     unassigned: view === 'unassigned' ? true : unassigned,
     recentlyUpdated: view === 'recent' ? true : recentlyUpdated,
     organizationId

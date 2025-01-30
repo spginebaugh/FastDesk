@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -16,7 +16,14 @@ interface UserNotesProps {
   onUpdateNotes?: (updateFn: () => void, hasChanges: boolean) => void
 }
 
-export function UserNotes({ userId, organizationId, renderButton = true, onUpdate, onUpdateNotes }: UserNotesProps) {
+export interface UserNotesRef {
+  setNoteContent: (content: TiptapContent) => void
+}
+
+export const UserNotes = forwardRef<UserNotesRef, UserNotesProps>(function UserNotes(
+  { userId, organizationId, renderButton = true, onUpdate, onUpdateNotes },
+  ref
+) {
   const [noteContent, setNoteContent] = useState<TiptapContent>(createTiptapContent(''))
   const [newTag, setNewTag] = useState('')
   const {
@@ -52,6 +59,13 @@ export function UserNotes({ userId, organizationId, renderButton = true, onUpdat
       onUpdateNotes(handleUpdateNotes, hasChanges)
     }
   }, [onUpdateNotes, noteContent, notes?.content, currentContent, serverContent])
+
+  // Expose setNoteContent to parent through ref
+  useImperativeHandle(ref, () => ({
+    setNoteContent: (content: TiptapContent) => {
+      setNoteContent(content)
+    }
+  }), [])
 
   const handleAddTag = () => {
     if (!newTag.trim()) return
@@ -123,7 +137,7 @@ export function UserNotes({ userId, organizationId, renderButton = true, onUpdat
       <div className="space-y-2">
         <h4 className="text-sm font-medium">Notes</h4>
         <TiptapEditor
-          content={notes?.content || createTiptapContent('')}
+          content={noteContent}
           onChange={setNoteContent}
           placeholder="Add notes about this user..."
           className="min-h-[200px] border-secondary dark:border-secondary-dark"
@@ -156,4 +170,4 @@ export function UserNotes({ userId, organizationId, renderButton = true, onUpdat
       )}
     </div>
   )
-} 
+}) 
