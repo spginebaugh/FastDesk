@@ -16,9 +16,15 @@ import { TicketStatusBadge } from '@/components/shared/TicketStatusBadge'
 import { TicketPriorityBadge } from '@/components/shared/TicketPriorityBadge'
 import { cn } from '@/lib/utils'
 import { useTicketList } from '../hooks/useTicketList'
+import { TicketSummaryLightbulb } from '../components/TicketSummaryLightbulb'
 
 interface TicketListPageProps {
   view?: 'assigned' | 'unassigned' | 'all' | 'recent' | 'solved'
+}
+
+interface TicketCustomFields {
+  ai_summary?: string;
+  summary_generated_at?: string;
 }
 
 const titles = {
@@ -211,11 +217,19 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
                     className="cursor-pointer"
                   >
                     <TableCell onClick={(e) => e.stopPropagation()}>
-                      <Checkbox 
-                        className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                        checked={selectedTickets.includes(ticket.id)}
-                        onCheckedChange={(checked: boolean) => handleTicketSelection(ticket.id, checked)}
-                      />
+                      <div className="flex items-center gap-2">
+                        <Checkbox 
+                          className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          checked={selectedTickets.includes(ticket.id)}
+                          onCheckedChange={(checked: boolean) => handleTicketSelection(ticket.id, checked)}
+                        />
+                        {view === 'solved' && (
+                          <TicketSummaryLightbulb 
+                            summary={(ticket.custom_fields as TicketCustomFields | null)?.ai_summary} 
+                            className="ml-2"
+                          />
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell 
                       className="font-medium"

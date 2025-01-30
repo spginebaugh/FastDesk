@@ -17,6 +17,7 @@ interface UseTicketListParams {
   unassigned?: boolean
   recentlyUpdated?: boolean
   organizationId?: string
+  showAllOrganizationTickets?: boolean
 }
 
 // Sub-hook for fetching tickets based on view type
@@ -25,11 +26,12 @@ function useTicketViews({
   status,
   unassigned,
   recentlyUpdated,
-  organizationId
+  organizationId,
+  showAllOrganizationTickets
 }: UseTicketListParams) {
   const { data: tickets = [], isLoading } = useQuery({
-    queryKey: ['tickets', { userId, status, unassigned, recentlyUpdated, organizationId }],
-    queryFn: () => getTickets({ userId, status, unassigned, recentlyUpdated, organizationId })
+    queryKey: ['tickets', { userId, status, unassigned, recentlyUpdated, organizationId, showAllOrganizationTickets }],
+    queryFn: () => getTickets({ userId, status, unassigned, recentlyUpdated, organizationId, showAllOrganizationTickets })
   })
 
   return {
@@ -78,14 +80,14 @@ export function useTicketList({
   // Convert view to appropriate flags
   const effectiveParams = {
     userId,
-    status: view === 'all' 
-      ? undefined 
-      : view === 'solved' 
-        ? (['closed', 'resolved'] as TicketStatus[])
-        : status,
+    status: view === 'solved' 
+      ? (['closed', 'resolved'] as TicketStatus[])
+      : status,
     unassigned: view === 'unassigned' ? true : unassigned,
     recentlyUpdated: view === 'recent' ? true : recentlyUpdated,
-    organizationId
+    organizationId,
+    // Show all organization tickets when view is 'all' or 'solved'
+    showAllOrganizationTickets: view === 'all' || view === 'solved'
   }
 
   const { tickets, isLoading } = useTicketViews(effectiveParams)

@@ -120,14 +120,14 @@ BEGIN
     (TICKET_ID_01, 'Unable to connect to the internet on Fedora 36', CUSTOMER_ID_01, ORG_ID, 'open', 'medium', 'customer_portal', 'customer', CUSTOMER_ID_01),
     (TICKET_ID_02, 'Trouble installing AppXYZ on Fedora', CUSTOMER_ID_01, ORG_ID, 'open', 'low', 'customer_portal', 'customer', CUSTOMER_ID_01),
     (TICKET_ID_03, 'VM running very slowly', CUSTOMER_ID_01, ORG_ID, 'open', 'medium', 'customer_portal', 'customer', CUSTOMER_ID_01),
-    (TICKET_ID_04, 'New SD card not recognized', CUSTOMER_ID_02, ORG_ID, 'closed', 'medium', 'customer_portal', 'customer', CUSTOMER_ID_02),
-    (TICKET_ID_05, 'Lens AF not working on Canon EOS 80D', CUSTOMER_ID_02, ORG_ID, 'closed', 'medium', 'customer_portal', 'customer', CUSTOMER_ID_02),
+    (TICKET_ID_04, 'New SD card not recognized', CUSTOMER_ID_02, ORG_ID, 'open', 'medium', 'customer_portal', 'customer', CUSTOMER_ID_02),
+    (TICKET_ID_05, 'Lens AF not working on Canon EOS 80D', CUSTOMER_ID_02, ORG_ID, 'open', 'medium', 'customer_portal', 'customer', CUSTOMER_ID_02),
     (TICKET_ID_06, 'Battery dies after 30 shots', CUSTOMER_ID_02, ORG_ID, 'open', 'high', 'customer_portal', 'customer', CUSTOMER_ID_02),
-    (TICKET_ID_07, 'Slow Wi-Fi on new router', CUSTOMER_ID_03, ORG_ID, 'closed', 'medium', 'customer_portal', 'customer', CUSTOMER_ID_03),
-    (TICKET_ID_08, 'How do I enable a guest network?', CUSTOMER_ID_03, ORG_ID, 'closed', 'low', 'customer_portal', 'customer', CUSTOMER_ID_03),
+    (TICKET_ID_07, 'Slow Wi-Fi on new router', CUSTOMER_ID_03, ORG_ID, 'open', 'medium', 'customer_portal', 'customer', CUSTOMER_ID_03),
+    (TICKET_ID_08, 'How do I enable a guest network?', CUSTOMER_ID_03, ORG_ID, 'open', 'low', 'customer_portal', 'customer', CUSTOMER_ID_03),
     (TICKET_ID_09, 'Wi-Fi drops frequently', CUSTOMER_ID_03, ORG_ID, 'open', 'high', 'customer_portal', 'customer', CUSTOMER_ID_03),
-    (TICKET_ID_10, 'Not getting password reset email', CUSTOMER_ID_04, ORG_ID, 'closed', 'high', 'customer_portal', 'customer', CUSTOMER_ID_04),
-    (TICKET_ID_11, 'Double charged for Premium', CUSTOMER_ID_04, ORG_ID, 'closed', 'high', 'customer_portal', 'customer', CUSTOMER_ID_04),
+    (TICKET_ID_10, 'Not getting password reset email', CUSTOMER_ID_04, ORG_ID, 'open', 'high', 'customer_portal', 'customer', CUSTOMER_ID_04),
+    (TICKET_ID_11, 'Double charged for Premium', CUSTOMER_ID_04, ORG_ID, 'open', 'high', 'customer_portal', 'customer', CUSTOMER_ID_04),
     (TICKET_ID_12, 'Premium features locked', CUSTOMER_ID_04, ORG_ID, 'open', 'high', 'customer_portal', 'customer', CUSTOMER_ID_04);
 
     -- Insert ticket assignments

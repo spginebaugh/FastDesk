@@ -9,6 +9,7 @@ import {
   getAllTicketAssignments
 } from './ticket-assignments.service'
 import { createSampleTicket } from './create-sample-ticket.service'
+import { generateTicketSummary } from './ticket-summary.service'
 
 // Re-export with original names for backward compatibility
 export const getTicket = getTicketById
@@ -24,5 +25,6 @@ export {
   getOrganizationWorkers,
   updateTicketAssignment,
   getAllTicketAssignments,
-  createSampleTicket
+  createSampleTicket,
+  generateTicketSummary
 } 

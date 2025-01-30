@@ -18,6 +18,7 @@ interface GetTicketsParams {
   unassigned?: boolean
   recentlyUpdated?: boolean
   organizationId?: string
+  showAllOrganizationTickets?: boolean
 }
 
 export async function getTicketById({ ticketId }: GetTicketByIdParams): Promise<TicketWithUser> {
@@ -40,7 +41,8 @@ export async function queryTickets({
   status = ['new', 'open', 'pending'],
   unassigned = false,
   recentlyUpdated = false,
-  organizationId
+  organizationId,
+  showAllOrganizationTickets = false
 }: GetTicketsParams = {}): Promise<TicketWithUser[]> {
   const user = await getAuthenticatedUser()
   const userOrgIds = await getUserOrganizationIds(user.id, organizationId)
@@ -60,7 +62,7 @@ export async function queryTickets({
     if (ticketIds.length > 0) {
       query = query.not('id', 'in', `(${ticketIds.map(id => `"${id}"`).join(',')})`)
     }
-  } else if (userId) {
+  } else if (userId && !showAllOrganizationTickets) {
     // Check if the user is a customer or an worker
     const { data: userProfile } = await supabase
       .from('user_profiles')
@@ -72,7 +74,7 @@ export async function queryTickets({
       // For customers, show tickets they created
       query = query.eq('user_id', userId)
     } else {
-      // For workers, show tickets assigned to them
+      // For workers, show tickets assigned to them unless showAllOrganizationTickets is true
       const { data: assignedTickets } = await supabase
         .from('ticket_assignments')
         .select('ticket_id')
