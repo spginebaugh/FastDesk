@@ -6,6 +6,12 @@ import { HumanMessage, SystemMessage, AIMessage } from '@langchain/core/messages
 
 // Helper function to send error response
 function sendError(res: VercelResponse, status: number, error: string, code: string) {
+  // Use Vercel's error reporting in production
+  if (process.env.VERCEL) {
+    console.error(new Error(`[${code}] ${error}`));
+  } else {
+    console.error(`[ERROR] ${code}: ${error}`);
+  }
   return res.status(status).json({ error, code } as ErrorResponse);
 }
 
@@ -30,6 +36,16 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
+  console.log('[INFO] Chat API request received:', {
+    method: req.method,
+    url: req.url,
+    hasBody: !!req.body,
+    env: {
+      NODE_ENV: process.env.NODE_ENV,
+      hasOpenAIKey: !!process.env.OPENAI_API_KEY
+    }
+  });
+
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', process.env.NODE_ENV === 'production'
@@ -42,6 +58,7 @@ export default async function handler(
 
   // Handle preflight request
   if (req.method === 'OPTIONS') {
+    console.log('[INFO] Handling OPTIONS request');
     return res.status(200).end();
   }
 
@@ -53,21 +70,26 @@ export default async function handler(
 
     // Validate OpenAI API key
     if (!process.env.OPENAI_API_KEY) {
+      console.error('[ERROR] OpenAI API key missing in environment');
       return sendError(res, 500, 'OpenAI API key is not configured', 'OPENAI_CONFIG_ERROR');
     }
 
+    console.log('[INFO] Validating request body');
     // Validate request body
     const validatedData = chatRequestSchema.parse(req.body) as ChatRequest;
     if (!validatedData.messages || validatedData.messages.length === 0) {
       return sendError(res, 400, 'Messages array cannot be empty', 'INVALID_REQUEST');
     }
 
+    console.log('[INFO] Getting chat model instance');
     // Get the chat model instance
     const chatModel = getChatModel();
 
+    console.log('[INFO] Converting messages');
     // Convert messages to LangChain format
     const langChainMessages = convertToLangChainMessages(validatedData.messages);
 
+    console.log('[INFO] Calling OpenAI');
     // Call OpenAI with the validated messages
     const response = await chatModel.call(langChainMessages, {
       temperature: validatedData.temperature ?? 0.7,
@@ -78,14 +100,16 @@ export default async function handler(
       return sendError(res, 500, 'Invalid response from OpenAI', 'OPENAI_RESPONSE_ERROR');
     }
 
+    console.log('[INFO] Processing response');
     const chatResponse: ChatResponse = {
       content: response.content.toString(),
       role: 'assistant',
     };
 
+    console.log('[INFO] Sending successful response');
     return res.status(200).json(chatResponse);
   } catch (error) {
-    console.error('Chat API Error:', error);
+    console.error('[ERROR] Chat API Error:', error);
     
     if (error instanceof Error) {
       // Handle specific error types
@@ -95,6 +119,12 @@ export default async function handler(
       if (error.name === 'OpenAIConfigError') {
         return sendError(res, 500, error.message, 'OPENAI_CONFIG_ERROR');
       }
+      // Log the full error details in production
+      console.error('[ERROR] Full error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      });
       return sendError(res, 500, error.message, 'INTERNAL_SERVER_ERROR');
     }
     
