@@ -6,7 +6,7 @@ import cors from 'cors';
 
 // Initialize CORS middleware
 const corsMiddleware = cors({
-  methods: ['POST'],
+  methods: ['POST', 'OPTIONS'],
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://fast-desk-psi.vercel.app'] 
     : ['http://localhost:3000', 'http://127.0.0.1:3000'],
@@ -20,6 +20,11 @@ export default async function handler(
 ) {
   // Handle CORS
   await new Promise((resolve) => corsMiddleware(req, res, resolve));
+
+  // If the request is just the OPTIONS preflight, return 200 immediately:
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
   // Validate HTTP method
   if (req.method !== 'POST') {
