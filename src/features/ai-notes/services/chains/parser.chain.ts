@@ -2,6 +2,8 @@ import { z } from 'zod'
 import { ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate } from '@langchain/core/prompts'
 import { StructuredOutputParser } from 'langchain/output_parsers'
 import { parserModel } from '@/config/openai/client'
+import { langsmithClient, LANGSMITH_PROJECT, ENABLE_TRACING } from '@/config/langsmith/client'
+import { LangChainTracer } from 'langchain/callbacks'
 
 interface ParserChainInput {
   originalPrompt: string
@@ -21,6 +23,12 @@ const model = parserModel
 export const createParserChain = () => {
   const formatInstructions = parser.getFormatInstructions()
   
+  // Initialize LangSmith tracer
+  const tracer = ENABLE_TRACING ? new LangChainTracer({
+    projectName: LANGSMITH_PROJECT,
+    client: langsmithClient,
+  }) : undefined
+
   const prompt = ChatPromptTemplate.fromMessages([
     SystemMessagePromptTemplate.fromTemplate(
       'You are a helpful assistant that analyzes user prompts to determine their intent regarding notes and tags.'
@@ -38,10 +46,23 @@ Original prompt: {originalPrompt}
       const messages = await prompt.invoke({
         originalPrompt: input.originalPrompt,
         format_instructions: formatInstructions
+      }, {
+        callbacks: tracer ? [tracer] : undefined,
+        runName: 'AI Notes Parser Prompt',
+        tags: ['ai-notes', 'parser-chain']
       })
       
-      const modelOutput = await model.invoke(messages)
-      const parsed = await parser.invoke(modelOutput)
+      const modelOutput = await model.invoke(messages, {
+        callbacks: tracer ? [tracer] : undefined,
+        runName: 'AI Notes Parser Model',
+        tags: ['ai-notes', 'llm-call']
+      })
+
+      const parsed = await parser.invoke(modelOutput, {
+        callbacks: tracer ? [tracer] : undefined,
+        runName: 'AI Notes Parser Output',
+        tags: ['ai-notes', 'output-parser']
+      })
       
       return {
         targetType: parsed.targetType,

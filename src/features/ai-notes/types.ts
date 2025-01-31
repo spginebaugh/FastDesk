@@ -1,6 +1,3 @@
-import { type Database } from '@/types/database'
-import { type Json } from '@/types/database'
-
 export type TargetType = 'tags' | 'notes' | 'both'
 export type ActionType = 'update' | 'recreate'
 

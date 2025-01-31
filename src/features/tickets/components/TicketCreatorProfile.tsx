@@ -10,7 +10,7 @@ import { useUserNotes } from '@/features/users/hooks/useUserNotes'
 import type { Database } from '@/types/database'
 import * as Popover from '@radix-ui/react-popover'
 import { Loader2 } from 'lucide-react'
-import { createTiptapContent, type TiptapContent } from '@/lib/tiptap'
+import { createTiptapContent } from '@/lib/tiptap'
 
 type UserStatus = Database['public']['Enums']['user_status']
 

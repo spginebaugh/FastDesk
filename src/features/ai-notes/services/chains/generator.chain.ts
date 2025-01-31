@@ -3,6 +3,8 @@ import { ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemp
 import { StructuredOutputParser } from 'langchain/output_parsers'
 import type { ParsedPrompt, GenerationContext } from '../../types'
 import { chatModel } from '@/config/openai/client'
+import { langsmithClient, LANGSMITH_PROJECT, ENABLE_TRACING } from '@/config/langsmith/client'
+import { LangChainTracer } from 'langchain/callbacks'
 
 const outputSchema = z.object({
   notes: z.string().optional(),
@@ -112,6 +114,12 @@ const formatTag = (tag: string): string => {
 export const createGeneratorChain = () => {
   const formatInstructions = parser.getFormatInstructions()
 
+  // Initialize LangSmith tracer
+  const tracer = ENABLE_TRACING ? new LangChainTracer({
+    projectName: LANGSMITH_PROJECT,
+    client: langsmithClient,
+  }) : undefined
+
   return {
     invoke: async (input: GeneratorChainInput) => {
       console.log('[GeneratorChain] Creating prompt template for input:', input)
@@ -150,18 +158,30 @@ export const createGeneratorChain = () => {
 
       console.log('[GeneratorChain] Variables prepared:', variables)
       
-      const messages = await template.invoke(variables)
+      const messages = await template.invoke(variables, {
+        callbacks: tracer ? [tracer] : undefined,
+        runName: 'AI Notes Generator',
+        tags: ['ai-notes', 'generator-chain']
+      })
       console.log('[GeneratorChain] Messages generated:', messages)
       
-      const modelOutput = await model.invoke(messages)
+      const modelOutput = await model.invoke(messages, {
+        callbacks: tracer ? [tracer] : undefined,
+        runName: 'AI Notes Model',
+        tags: ['ai-notes', 'llm-call']
+      })
       console.log('[GeneratorChain] Model output:', modelOutput)
       
-      const parsed = await parser.invoke(modelOutput)
+      const parsed = await parser.invoke(modelOutput, {
+        callbacks: tracer ? [tracer] : undefined,
+        runName: 'AI Notes Parser',
+        tags: ['ai-notes', 'output-parser']
+      })
       console.log('[GeneratorChain] Parsed output:', parsed)
       
       const result = {
         notes: parsed.notes || '',
-        tags: (parsed.tags || []).map(formatTag).filter(Boolean), // Format tags and remove any empty strings
+        tags: (parsed.tags || []).map(formatTag).filter(Boolean),
         explanation: parsed.explanation,
       }
       

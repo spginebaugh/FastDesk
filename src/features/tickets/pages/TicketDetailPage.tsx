@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { format } from 'date-fns'
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { Input } from '@/components/ui/input'
 import { useAuthStore } from '@/store/authStore'
 import { type TiptapContent } from '@/lib/tiptap'
