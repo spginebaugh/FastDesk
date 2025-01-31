@@ -20,15 +20,24 @@ function createChatModel() {
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
+    console.error('OpenAI API key is not configured');
     throw new OpenAIConfigError('OpenAI API key is not configured. Please check your environment variables.');
   }
 
-  return new ChatOpenAI({
-    modelName: OPENAI_CONFIG.DEFAULT_MODEL,
-    temperature: OPENAI_CONFIG.DEFAULT_TEMPERATURE,
-    maxTokens: OPENAI_CONFIG.DEFAULT_MAX_TOKENS,
-    openAIApiKey: apiKey,
-  });
+  try {
+    return new ChatOpenAI({
+      modelName: OPENAI_CONFIG.DEFAULT_MODEL,
+      temperature: OPENAI_CONFIG.DEFAULT_TEMPERATURE,
+      maxTokens: OPENAI_CONFIG.DEFAULT_MAX_TOKENS,
+      openAIApiKey: apiKey,
+      configuration: {
+        baseURL: process.env.OPENAI_API_BASE_URL || undefined,
+      }
+    });
+  } catch (error) {
+    console.error('Failed to initialize ChatOpenAI:', error);
+    throw new OpenAIConfigError('Failed to initialize OpenAI client. Please check your configuration.');
+  }
 }
 
 // Export shared ChatOpenAI instance for server-side usage
@@ -40,6 +49,9 @@ export const parserModel = new ChatOpenAI({
   temperature: 0,
   maxTokens: OPENAI_CONFIG.DEFAULT_MAX_TOKENS,
   openAIApiKey: process.env.OPENAI_API_KEY,
+  configuration: {
+    baseURL: process.env.OPENAI_API_BASE_URL || undefined,
+  }
 });
 
 // Export type for OpenAI response
