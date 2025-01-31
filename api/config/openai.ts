@@ -2,7 +2,7 @@ import { ChatOpenAI } from '@langchain/openai';
 
 // Constants for OpenAI configuration
 export const OPENAI_CONFIG = {
-  DEFAULT_MODEL: 'gpt-4-turbo-preview',
+  DEFAULT_MODEL: 'gpt-4o-mini',
   DEFAULT_TEMPERATURE: 0.7,
   DEFAULT_MAX_TOKENS: 500,
 } as const;

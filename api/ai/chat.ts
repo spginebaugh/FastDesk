@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getChatModel } from '../config/openai';
-import { ChatRequest, chatRequestSchema, ChatResponse, ErrorResponse } from '../types/openai';
-import type { ChatOpenAICallOptions } from '@langchain/openai';
+import { type ChatRequest, chatRequestSchema, type ChatResponse, type ErrorResponse } from '../types/openai';
 import { HumanMessage, SystemMessage, AIMessage } from '@langchain/core/messages';
 
 // Helper function to send error response
@@ -12,7 +11,7 @@ function sendError(res: VercelResponse, status: number, error: string, code: str
   } else {
     console.error(`[ERROR] ${code}: ${error}`);
   }
-  return res.status(status).json({ error, code } as ErrorResponse);
+  return res.status(status).json({ error, code } satisfies ErrorResponse);
 }
 
 // Convert our message format to LangChain format
@@ -32,7 +31,7 @@ function convertToLangChainMessages(messages: ChatRequest['messages']) {
 }
 
 // Export the handler function directly
-export default async function handler(
+const handler = async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
@@ -91,10 +90,7 @@ export default async function handler(
 
     console.log('[INFO] Calling OpenAI');
     // Call OpenAI with the validated messages
-    const response = await chatModel.call(langChainMessages, {
-      temperature: validatedData.temperature ?? 0.7,
-      maxTokens: validatedData.maxTokens ?? 500,
-    } as ChatOpenAICallOptions);
+    const response = await chatModel.call(langChainMessages);
 
     if (!response || !response.content) {
       return sendError(res, 500, 'Invalid response from OpenAI', 'OPENAI_RESPONSE_ERROR');
@@ -130,4 +126,6 @@ export default async function handler(
     
     return sendError(res, 500, 'An unexpected error occurred', 'INTERNAL_SERVER_ERROR');
   }
-} 
+};
+
+export default handler; 
