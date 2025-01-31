@@ -2,7 +2,7 @@ import { ChatOpenAI } from '@langchain/openai';
 
 // Constants for OpenAI configuration
 export const OPENAI_CONFIG = {
-  DEFAULT_MODEL: 'gpt-4o-mini-2024-07-18',
+  DEFAULT_MODEL: 'gpt-4-turbo-preview',
   DEFAULT_TEMPERATURE: 0.7,
   DEFAULT_MAX_TOKENS: 500,
 } as const;
@@ -30,9 +30,6 @@ function createChatModel() {
       temperature: OPENAI_CONFIG.DEFAULT_TEMPERATURE,
       maxTokens: OPENAI_CONFIG.DEFAULT_MAX_TOKENS,
       openAIApiKey: apiKey,
-      configuration: {
-        baseURL: process.env.OPENAI_API_BASE_URL || undefined,
-      }
     });
   } catch (error) {
     console.error('Failed to initialize ChatOpenAI:', error);
@@ -49,9 +46,6 @@ export const parserModel = new ChatOpenAI({
   temperature: 0,
   maxTokens: OPENAI_CONFIG.DEFAULT_MAX_TOKENS,
   openAIApiKey: process.env.OPENAI_API_KEY,
-  configuration: {
-    baseURL: process.env.OPENAI_API_BASE_URL || undefined,
-  }
 });
 
 // Export type for OpenAI response

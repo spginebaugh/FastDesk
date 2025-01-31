@@ -4,10 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev": "vite",
+    "dev:local": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
     "dev:web": "vite",
     "dev:api": "cross-env NODE_ENV=development tsx watch --env-file=.env.local api/server.ts",
-    "build": "tsc -b && vite build",
+    "build": "tsc && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "seed": "tsx --tsconfig supabase/seeds/tsconfig.seed.json supabase/seeds/seed.ts",

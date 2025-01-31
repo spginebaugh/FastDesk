@@ -1,6 +1,8 @@
 import { ChatRequest, ChatResponse, ParseRequest, ParseResponse } from '../../../api/types/openai';
 
-const API_BASE_URL = '/api/ai';
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://fast-desk-psi.vercel.app/api/ai'
+  : '/api/ai';
 
 class APIError extends Error {
   constructor(public code: string, message: string) {
@@ -10,11 +12,14 @@ class APIError extends Error {
 }
 
 async function handleResponse(response: Response) {
-  const data = await response.json();
   if (!response.ok) {
-    throw new APIError(data.code, data.error);
+    const errorData = await response.json().catch(() => ({ 
+      error: 'Unknown error occurred',
+      code: 'UNKNOWN_ERROR'
+    }));
+    throw new APIError(errorData.code, errorData.error);
   }
-  return data;
+  return response.json();
 }
 
 export const openAIClient = {
@@ -25,6 +30,7 @@ export const openAIClient = {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
+      credentials: 'include',
     });
     return handleResponse(response);
   },
@@ -36,6 +42,7 @@ export const openAIClient = {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
+      credentials: 'include',
     });
     return handleResponse(response);
   },
