@@ -13,16 +13,6 @@ const corsMiddleware = cors({
   credentials: true,
 });
 
-// Helper to wrap async route handlers
-const asyncHandler = (fn: Function) => (req: VercelRequest, res: VercelResponse) => {
-  Promise.resolve(fn(req, res)).catch((error) => {
-    console.error('Chat API Error:', error);
-    res.status(500).json({
-      error: error instanceof Error ? error.message : 'An unexpected error occurred',
-      code: 'INTERNAL_SERVER_ERROR',
-    } as ErrorResponse);
-  });
-};
 
 export default async function handler(
   req: VercelRequest,
