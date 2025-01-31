@@ -21,33 +21,37 @@ async function getUserInfo(userId: string): Promise<UserContext> {
     throw new Error('Failed to fetch user information')
   }
 
+  if (!user) {
+    throw new Error('User not found')
+  }
+
   return {
     id: user.id,
     fullName: user.full_name,
     email: user.email,
-    company: user.company,
-    createdAt: user.created_at,
+    company: user.company || '',
+    createdAt: user.created_at || '',
   }
 }
 
 async function getUserTicketMessages(userId: string): Promise<string> {
-  // Get all tickets created by the user, including custom_fields
   const { data: tickets, error: ticketsError } = await supabase
     .from('tickets')
     .select('id, title, ticket_status, custom_fields')
     .eq('user_id', userId)
+    .single()
 
   if (ticketsError) {
     console.error('Error fetching user tickets:', ticketsError)
     return ''
   }
 
-  if (!tickets || tickets.length === 0) {
+  if (!tickets) {
     return ''
   }
 
   // Get messages from all tickets
-  const messagePromises = tickets.map(async ticket => {
+  const messagePromises = [tickets].map(async (ticket) => {
     // Capitalize and format ticket status
     const formattedStatus = ticket.ticket_status.charAt(0).toUpperCase() + ticket.ticket_status.slice(1)
     
@@ -109,14 +113,23 @@ async function getNotesContext(userId: string, organizationId: string): Promise<
     throw new Error('Failed to fetch user notes')
   }
 
+  if (!userNotes) {
+    return {
+      existingNotes: '',
+      existingTags: [],
+      ticketMessages: '',
+    }
+  }
+
   console.log('[InfoGatherer] Raw user notes from DB:', userNotes.user_notes)
 
   // Extract plaintext from the notes structure
   let plaintext = ''
-  if (Array.isArray(userNotes.user_notes) && userNotes.user_notes.length > 0) {
-    const note = userNotes.user_notes[0]
+  const notes = userNotes.user_notes as Json[]
+  if (Array.isArray(notes) && notes.length > 0) {
+    const note = notes[0] as { plaintext?: string }
     if (typeof note === 'object' && note !== null && 'plaintext' in note) {
-      plaintext = note.plaintext as string
+      plaintext = note.plaintext || ''
     }
   }
 
@@ -127,12 +140,12 @@ async function getNotesContext(userId: string, organizationId: string): Promise<
   console.log('[InfoGatherer] Extracted ticket messages:', ticketMessages)
 
   // Transform user_tags from Json to the correct type
-  const tags = userNotes.user_tags as Json[] || []
-  const transformedTags = tags.map(tag => {
+  const tags = (userNotes.user_tags as Json[]) || []
+  const transformedTags = tags.map((tag: unknown) => {
     if (typeof tag === 'object' && tag !== null && 'id' in tag && 'name' in tag) {
       return {
-        id: String(tag.id),
-        name: String(tag.name)
+        id: String((tag as { id: unknown }).id),
+        name: String((tag as { name: unknown }).name)
       }
     }
     return null

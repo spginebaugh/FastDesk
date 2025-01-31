@@ -1,6 +1,5 @@
 import { createTiptapContent } from '@/lib/tiptap';
-import { chatModel } from '@/config/openai/client';
-import { SystemMessage, HumanMessage } from '@langchain/core/messages';
+import { openAIClient } from '@/config/api/openai';
 import {
   buildConversationThread,
   buildWorkerContext,
@@ -19,14 +18,15 @@ export const responseEditingService = {
       const editMessage = createEditResponseMessage({ currentResponse, prompt });
 
       const messages = [
-        new SystemMessage(
-          "You are a helpful support worker. Write your responses as if you are the worker. Provide clear, concise, and technically accurate guidance. Avoid revealing internal notes. Respond in a professional tone."
-        ),
-        new HumanMessage(editMessage.content?.toString() || '')
+        { 
+          role: 'system' as const, 
+          content: "You are a helpful support worker. Write your responses as if you are the worker. Provide clear, concise, and technically accurate guidance. Avoid revealing internal notes. Respond in a professional tone."
+        },
+        { role: 'user' as const, content: editMessage.content?.toString() || '' }
       ];
 
-      const response = await chatModel.invoke(messages);
-      return createTiptapContent(response.content.toString());
+      const response = await openAIClient.chat({ messages });
+      return createTiptapContent(response.content);
     } catch (error) {
       console.error('Error editing response:', error);
       throw new Error('Failed to edit response');
@@ -55,12 +55,12 @@ export const responseEditingService = {
       });
 
       const messages = [
-        new SystemMessage(baseSystemMessage.content?.toString() || ''),
-        new HumanMessage(editMessage.content?.toString() || '')
+        { role: 'system' as const, content: baseSystemMessage.content?.toString() || '' },
+        { role: 'user' as const, content: editMessage.content?.toString() || '' }
       ];
 
-      const response = await chatModel.invoke(messages);
-      return createTiptapContent(response.content.toString());
+      const response = await openAIClient.chat({ messages });
+      return createTiptapContent(response.content);
     } catch (error) {
       console.error('Error editing response with context:', error);
       throw new Error('Failed to edit response with context');

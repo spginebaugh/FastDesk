@@ -56,7 +56,7 @@ export function DashboardLayout() {
         return
       }
       
-      if (data?.user_status) {
+      if (data) {
         setUserStatus(data.user_status as UserStatus)
       }
     }

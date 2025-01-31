@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { supabase } from '@/config/supabase/client'
+import { auth } from '@/config/api/auth'
 import { useAuthStore } from '@/store/authStore'
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -10,18 +10,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true)
 
     // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    auth.getSession().then(({ session, user }) => {
       setSession(session)
-      setUser(session?.user ?? null)
+      setUser(user)
       setIsLoading(false)
     })
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
+    const { data: { subscription } } = auth.onAuthStateChange((user) => {
+      setUser(user)
       setIsLoading(false)
     })
 

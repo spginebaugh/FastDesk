@@ -1,6 +1,5 @@
 import { createTiptapContent } from '@/lib/tiptap';
-import { chatModel } from '@/config/openai/client';
-import { SystemMessage, HumanMessage } from '@langchain/core/messages';
+import { openAIClient } from '@/config/api/openai';
 import {
   buildConversationThread,
   buildWorkerContext,
@@ -37,12 +36,12 @@ export const responseGenerationService = {
       });
 
       const messages = [
-        new SystemMessage(baseSystemMessage.content?.toString() || ''),
-        new HumanMessage(ticketMessage.content?.toString() || '')
+        { role: 'system' as const, content: baseSystemMessage.content?.toString() || '' },
+        { role: 'user' as const, content: ticketMessage.content?.toString() || '' }
       ];
 
-      const response = await chatModel.invoke(messages);
-      return createTiptapContent(response.content.toString());
+      const response = await openAIClient.chat({ messages });
+      return createTiptapContent(response.content);
     } catch (error) {
       console.error('Error generating AI response:', error);
       throw new Error('Failed to generate AI response');
@@ -72,12 +71,12 @@ export const responseGenerationService = {
       });
 
       const messages = [
-        new SystemMessage(baseSystemMessage.content?.toString() || ''),
-        new HumanMessage(contextMessage.content?.toString() || '')
+        { role: 'system' as const, content: baseSystemMessage.content?.toString() || '' },
+        { role: 'user' as const, content: contextMessage.content?.toString() || '' }
       ];
 
-      const response = await chatModel.invoke(messages);
-      return createTiptapContent(response.content.toString());
+      const response = await openAIClient.chat({ messages });
+      return createTiptapContent(response.content);
     } catch (error) {
       console.error('Error generating AI response with prompt:', error);
       throw new Error('Failed to generate AI response with prompt');
@@ -87,14 +86,15 @@ export const responseGenerationService = {
   async generateCustomResponse({ prompt }: GenerateCustomResponseParams) {
     try {
       const messages = [
-        new SystemMessage(
-          "You are a helpful support worker. Write your responses as if you are the worker. Provide clear, concise, and technically accurate guidance. Avoid revealing internal notes. Respond in a professional tone."
-        ),
-        new HumanMessage(prompt)
+        { 
+          role: 'system' as const, 
+          content: "You are a helpful support worker. Write your responses as if you are the worker. Provide clear, concise, and technically accurate guidance. Avoid revealing internal notes. Respond in a professional tone."
+        },
+        { role: 'user' as const, content: prompt }
       ];
 
-      const response = await chatModel.invoke(messages);
-      return createTiptapContent(response.content.toString());
+      const response = await openAIClient.chat({ messages });
+      return createTiptapContent(response.content);
     } catch (error) {
       console.error('Error generating custom AI response:', error);
       throw new Error('Failed to generate custom AI response');

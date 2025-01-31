@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate } from '@langchain/core/prompts'
 import { StructuredOutputParser } from 'langchain/output_parsers'
 import type { ParsedPrompt, GenerationContext } from '../../types'
-import { chatModel } from '@/config/openai/client'
+import { openAIClient } from '@/config/api/openai'
 import { langsmithClient, LANGSMITH_PROJECT, ENABLE_TRACING } from '@/config/langsmith/client'
 import { LangChainTracer } from 'langchain/callbacks'
 
@@ -95,8 +95,6 @@ const generatePromptTemplate = (parsedPrompt: ParsedPrompt) => {
   ])
 }
 
-const model = chatModel
-
 interface GeneratorChainInput {
   parsedPrompt: ParsedPrompt
   context: GenerationContext
@@ -158,21 +156,30 @@ export const createGeneratorChain = () => {
 
       console.log('[GeneratorChain] Variables prepared:', variables)
       
-      const messages = await template.invoke(variables, {
+      // Generate messages using the template
+      const promptMessages = await template.invoke(variables, {
         callbacks: tracer ? [tracer] : undefined,
         runName: 'AI Notes Generator',
         tags: ['ai-notes', 'generator-chain']
       })
-      console.log('[GeneratorChain] Messages generated:', messages)
+      console.log('[GeneratorChain] Messages generated:', promptMessages)
       
-      const modelOutput = await model.invoke(messages, {
-        callbacks: tracer ? [tracer] : undefined,
-        runName: 'AI Notes Model',
-        tags: ['ai-notes', 'llm-call']
-      })
+      // Convert LangChain messages to API format
+      const apiMessages = promptMessages.messages.map(msg => {
+        const type = msg._getType();
+        const role = type === 'system' ? 'system' as const : 'user' as const;
+        return {
+          role,
+          content: msg.content.toString()
+        }
+      });
+      
+      // Call OpenAI through the API client
+      const modelOutput = await openAIClient.chat({ messages: apiMessages })
       console.log('[GeneratorChain] Model output:', modelOutput)
       
-      const parsed = await parser.invoke(modelOutput, {
+      // Parse the response
+      const parsed = await parser.invoke(modelOutput.content, {
         callbacks: tracer ? [tracer] : undefined,
         runName: 'AI Notes Parser',
         tags: ['ai-notes', 'output-parser']

@@ -103,12 +103,12 @@ export function DataPage() {
   const assignmentData = [
     {
       name: 'Assigned',
-      value: assignments.length,
+      value: assignments?.length || 0,
       color: ASSIGNMENT_COLORS.assigned
     },
     {
       name: 'Unassigned',
-      value: tickets.length - assignments.length,
+      value: tickets.length - (assignments?.length || 0),
       color: ASSIGNMENT_COLORS.unassigned
     }
   ]

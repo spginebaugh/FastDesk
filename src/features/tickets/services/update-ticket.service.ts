@@ -1,6 +1,9 @@
 import { supabase } from '@/config/supabase/client'
 import { TicketStatus, TicketPriority } from '../types'
 import { generateTicketSummary } from './ticket-summary.service'
+import { type Database } from '@/types/database'
+
+type Ticket = Database['public']['Tables']['tickets']['Row']
 
 interface UpdateTicketParams {
   ticketId: string
@@ -11,29 +14,30 @@ interface UpdateTicketParams {
   }>
 }
 
-export async function updateTicket({ ticketId, updates }: UpdateTicketParams) {
+export async function updateTicket({ ticketId, updates }: UpdateTicketParams): Promise<Ticket> {
   // Get current ticket data if we're updating status
-  let currentTicket;
+  let currentTicket: Ticket | undefined
   if (updates.ticket_status) {
-    const { data: ticket, error: getError } = await supabase
+    const { data, error } = await supabase
       .from('tickets')
-      .select('ticket_status, title')
+      .select('*')
       .eq('id', ticketId)
-      .single();
+      .single()
     
-    if (getError) throw getError;
-    currentTicket = ticket;
+    if (error) throw error
+    currentTicket = data
   }
 
   // Update the ticket
-  const { data, error } = await supabase
+  const { data: tickets, error: updateError } = await supabase
     .from('tickets')
     .update(updates)
     .eq('id', ticketId)
     .select()
-    .single()
 
-  if (error) throw error;
+  if (updateError) throw updateError
+  if (!tickets?.[0]) throw new Error('Failed to update ticket')
+  const updatedTicket = tickets[0]
 
   // Generate summary if status is changing to closed or resolved
   if (updates.ticket_status && 
@@ -42,13 +46,13 @@ export async function updateTicket({ ticketId, updates }: UpdateTicketParams) {
     try {
       await generateTicketSummary({ 
         ticketId, 
-        ticketTitle: data.title 
-      });
+        ticketTitle: updatedTicket.title 
+      })
     } catch (summaryError) {
-      console.error('Failed to generate ticket summary:', summaryError);
+      console.error('Failed to generate ticket summary:', summaryError)
       // Don't throw error here as the ticket update was successful
     }
   }
 
-  return data
+  return updatedTicket
 } 

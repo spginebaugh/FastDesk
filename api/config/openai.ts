@@ -17,7 +17,7 @@ export class OpenAIConfigError extends Error {
 
 // Initialize shared ChatOpenAI instance
 function createChatModel() {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
     throw new OpenAIConfigError('OpenAI API key is not configured. Please check your environment variables.');
@@ -31,7 +31,7 @@ function createChatModel() {
   });
 }
 
-// Export shared ChatOpenAI instance for general usage
+// Export shared ChatOpenAI instance for server-side usage
 export const chatModel = createChatModel();
 
 // Export zero-temperature model for parsing and classification tasks
@@ -39,7 +39,7 @@ export const parserModel = new ChatOpenAI({
   modelName: OPENAI_CONFIG.DEFAULT_MODEL,
   temperature: 0,
   maxTokens: OPENAI_CONFIG.DEFAULT_MAX_TOKENS,
-  openAIApiKey: import.meta.env.VITE_OPENAI_API_KEY,
+  openAIApiKey: process.env.OPENAI_API_KEY,
 });
 
 // Export type for OpenAI response

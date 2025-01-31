@@ -24,14 +24,23 @@ function useTicketViews({
   organizationId,
   showAllOrganizationTickets
 }: UseTicketListParams) {
-  const { data: tickets = [], isLoading } = useQuery({
+  const { data: tickets = [], isLoading, error } = useQuery({
     queryKey: ['tickets', { userId, status, unassigned, recentlyUpdated, organizationId, showAllOrganizationTickets }],
-    queryFn: () => getTickets({ userId, status, unassigned, recentlyUpdated, organizationId, showAllOrganizationTickets })
+    queryFn: async () => {
+      try {
+        const result = await getTickets({ userId, status, unassigned, recentlyUpdated, organizationId, showAllOrganizationTickets })
+        return result || []
+      } catch (error) {
+        console.error('Error fetching tickets:', error)
+        return []
+      }
+    }
   })
 
   return {
     tickets,
-    isLoading
+    isLoading,
+    error
   }
 }
 
@@ -85,7 +94,7 @@ export function useTicketList({
     showAllOrganizationTickets: view === 'all' || view === 'solved'
   }
 
-  const { tickets, isLoading } = useTicketViews(effectiveParams)
+  const { tickets, isLoading, error } = useTicketViews(effectiveParams)
   const {
     selectedTickets,
     setSelectedTickets,
@@ -96,6 +105,7 @@ export function useTicketList({
   return {
     tickets,
     isLoading,
+    error,
     selectedTickets,
     setSelectedTickets,
     handleTicketSelection,

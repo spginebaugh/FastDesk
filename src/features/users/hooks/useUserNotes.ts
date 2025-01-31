@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/config/supabase/client'
+import { api } from '@/config/api/client'
 import { useToast } from '@/components/ui/use-toast'
 import { type Json } from '@/types/database'
 import { type TiptapContent, createTiptapContent, extractPlainText } from '@/lib/tiptap'
@@ -34,18 +34,11 @@ export function useUserNotes({ userId, organizationId }: UseUserNotesOptions) {
   const { data: userNotes, isLoading } = useQuery({
     queryKey: ['user-notes', userId, organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: notes, error } = await api
         .from('user_notes')
-        .select(`
-          id,
-          user_notes,
-          user_tags,
-          updated_at,
-          updated_by:updated_by(full_name, email)
-        `)
+        .select('*')
         .eq('user_id', userId)
         .eq('organization_id', organizationId)
-        .maybeSingle()
 
       if (error) throw error
 
@@ -59,35 +52,37 @@ export function useUserNotes({ userId, organizationId }: UseUserNotesOptions) {
       }
 
       // If no record exists yet, return empty data
-      if (!data) {
+      if (!notes?.[0]) {
         return {
           notes: emptyNote,
           tags: []
         }
       }
 
+      const note = notes[0]
+
       // Safely cast the JSON data to our expected types
-      const notesArray = Array.isArray(data.user_notes) 
-        ? (data.user_notes as unknown as UserNotes[]) 
+      const notesArray = Array.isArray(note.user_notes) 
+        ? (note.user_notes as unknown as UserNotes[]) 
         : []
       
-      const notes = notesArray[0] || {
+      const noteData = notesArray[0] || {
         ...emptyNote,
-        updated_at: data.updated_at,
-        updated_by: data.updated_by
+        updated_at: note.updated_at,
+        updated_by: note.updated_by
       }
 
       // Ensure notes.content is a valid TiptapContent
-      if (!notes.content || typeof notes.content !== 'object' || !('type' in notes.content)) {
-        notes.content = createTiptapContent(notes.plaintext || '')
+      if (!noteData.content || typeof noteData.content !== 'object' || !('type' in noteData.content)) {
+        noteData.content = createTiptapContent(noteData.plaintext || '')
       }
 
-      const tags = Array.isArray(data.user_tags) 
-        ? (data.user_tags as unknown as UserTag[]) 
+      const tags = Array.isArray(note.user_tags) 
+        ? (note.user_tags as unknown as UserTag[]) 
         : []
 
       return {
-        notes,
+        notes: noteData,
         tags
       }
     },
@@ -96,14 +91,13 @@ export function useUserNotes({ userId, organizationId }: UseUserNotesOptions) {
 
   const updateNotesMutation = useMutation({
     mutationFn: async (content: TiptapContent) => {
-      const { data: existingData, error: fetchError } = await supabase
+      const { data: existingNotes, error: selectError } = await api
         .from('user_notes')
-        .select('id')
+        .select('*')
         .eq('user_id', userId)
         .eq('organization_id', organizationId)
-        .maybeSingle()
 
-      if (fetchError) throw fetchError
+      if (selectError) throw selectError
 
       const now = new Date().toISOString()
       const noteData: UserNotes = {
@@ -117,20 +111,18 @@ export function useUserNotes({ userId, organizationId }: UseUserNotesOptions) {
       // Wrap the note data in an array to satisfy the JSON array constraint
       const notesArray = [noteData] as unknown as Json
 
-      if (existingData) {
+      if (existingNotes?.[0]) {
         // Update existing record
-        const { error } = await supabase
+        const { error: updateError } = await api
           .from('user_notes')
-          .update({
-            user_notes: notesArray
-          })
+          .update({ user_notes: notesArray })
           .eq('user_id', userId)
           .eq('organization_id', organizationId)
 
-        if (error) throw error
+        if (updateError) throw updateError
       } else {
         // Create new record
-        const { error } = await supabase
+        const { error: insertError } = await api
           .from('user_notes')
           .insert({
             user_id: userId,
@@ -138,7 +130,7 @@ export function useUserNotes({ userId, organizationId }: UseUserNotesOptions) {
             user_notes: notesArray
           })
 
-        if (error) throw error
+        if (insertError) throw insertError
       }
 
       return noteData
@@ -162,31 +154,28 @@ export function useUserNotes({ userId, organizationId }: UseUserNotesOptions) {
 
   const updateTagsMutation = useMutation({
     mutationFn: async (tags: UserTag[]) => {
-      const { data: existingData, error: fetchError } = await supabase
+      const { data: existingNotes, error: selectError } = await api
         .from('user_notes')
-        .select('id')
+        .select('*')
         .eq('user_id', userId)
         .eq('organization_id', organizationId)
-        .maybeSingle()
 
-      if (fetchError) throw fetchError
+      if (selectError) throw selectError
 
       const tagsJson = tags as unknown as Json
 
-      if (existingData) {
+      if (existingNotes?.[0]) {
         // Update existing record
-        const { error } = await supabase
+        const { error: updateError } = await api
           .from('user_notes')
-          .update({ 
-            user_tags: tagsJson
-          })
+          .update({ user_tags: tagsJson })
           .eq('user_id', userId)
           .eq('organization_id', organizationId)
 
-        if (error) throw error
+        if (updateError) throw updateError
       } else {
         // Create new record
-        const { error } = await supabase
+        const { error: insertError } = await api
           .from('user_notes')
           .insert({
             user_id: userId,
@@ -194,7 +183,7 @@ export function useUserNotes({ userId, organizationId }: UseUserNotesOptions) {
             user_tags: tagsJson
           })
 
-        if (error) throw error
+        if (insertError) throw insertError
       }
 
       return tags

@@ -1,5 +1,9 @@
 import { supabase } from '@/config/supabase/client'
 import { type Worker } from '../types'
+import { type Database } from '@/types/database'
+
+type UserProfile = Database['public']['Tables']['user_profiles']['Row']
+type OrganizationMember = Database['public']['Tables']['organization_members']['Row']
 
 /**
  * Gets the authenticated user's profile or throws an error
@@ -16,78 +20,84 @@ export async function getAuthenticatedUser() {
 export async function getUserOrganizationIds(userId: string, specificOrgId?: string): Promise<string[]> {
   if (specificOrgId) return [specificOrgId]
   
-  const { data: userOrgs } = await supabase
+  const { data, error } = await supabase
     .from('organization_members')
     .select('organization_id')
     .eq('profile_id', userId)
 
-  return userOrgs?.map(org => org.organization_id) || []
+  if (error) throw error
+  return (data as OrganizationMember[])?.map(org => org.organization_id) || []
 }
 
 /**
  * Gets a user's profile by their email
  */
-export async function getUserProfileByEmail(email: string) {
-  const { data: profile } = await supabase
+export async function getUserProfileByEmail(email: string): Promise<UserProfile> {
+  const { data, error } = await supabase
     .from('user_profiles')
-    .select('id, email, user_type')
+    .select('*')
     .eq('email', email)
     .single()
 
-  if (!profile?.id) {
+  if (error) throw error
+  if (!data?.id) {
     throw new Error('User profile not found')
   }
 
-  return profile
+  return data
 }
 
 /**
  * Gets workers belonging to an organization
  */
 export async function getOrganizationWorkers(organizationId: string): Promise<Worker[]> {
-  const { data, error } = await supabase
+  const { data: members, error: membersError } = await supabase
     .from('organization_members')
-    .select(`
-      profile:user_profiles!inner(
-        id,
-        full_name,
-        email,
-        avatar_url
-      )
-    `)
+    .select('profile_id')
     .eq('organization_id', organizationId)
-    .eq('profile.user_type', 'worker')
 
-  if (error) throw error
-  return data.map(d => d.profile) as Worker[]
+  if (membersError) throw membersError
+  if (!members?.length) return []
+
+  const memberIds = members.map(m => m.profile_id)
+  const { data: workers, error: workersError } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .in('id', memberIds)
+    .eq('user_type', 'worker')
+
+  if (workersError) throw workersError
+  return (workers || []) as Worker[]
 }
 
 /**
  * Gets the primary worker assigned to a ticket
  */
-export async function getTicketAssignment(ticketId: string) {
-  const { data, error } = await supabase
+export async function getTicketAssignment(ticketId: string): Promise<Worker | null> {
+  const { data: assignments, error: assignmentsError } = await supabase
     .from('ticket_assignments')
-    .select(`
-      worker:user_profiles!ticket_assignments_worker_id_fkey(
-        id,
-        full_name,
-        email,
-        avatar_url
-      )
-    `)
+    .select('worker_id')
     .eq('ticket_id', ticketId)
     .eq('is_primary', true)
-    .maybeSingle()
+    .single()
 
-  if (error) throw error
-  return data?.worker as Worker | null
+  if (assignmentsError) return null
+  if (!assignments?.worker_id) return null
+
+  const { data: worker, error: workerError } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('id', assignments.worker_id)
+    .single()
+
+  if (workerError) return null
+  return worker as Worker
 }
 
 /**
  * Updates the timestamp of a ticket
  */
-export async function updateTicketTimestamp(ticketId: string) {
+export async function updateTicketTimestamp(ticketId: string): Promise<void> {
   const { error } = await supabase
     .from('tickets')
     .update({ updated_at: new Date().toISOString() })

@@ -1,8 +1,10 @@
-import { supabase } from '@/config/supabase/client'
+import { api } from '@/config/api/client'
+import { auth } from '@/config/api/auth'
 import { Organization, OrganizationMember } from '../types'
 import { Database } from '@/types/database'
 
 type UserProfile = Database['public']['Tables']['user_profiles']['Row']
+type OrganizationMemberRow = Database['public']['Tables']['organization_members']['Row']
 
 export interface OrganizationMemberWithProfile extends Omit<OrganizationMember, 'profile'> {
   profile: Pick<UserProfile, 'id' | 'email' | 'full_name' | 'avatar_url' | 'user_status'>
@@ -19,131 +21,116 @@ interface OrganizationTicket {
 
 export const organizationService = {
   async createOrganization({ name, description }: { name: string, description?: string }): Promise<Organization> {
-    const { data: userProfile } = await supabase.auth.getUser()
-    if (!userProfile.user) throw new Error('Not authenticated')
+    const { user } = await auth.getUser()
+    if (!user) throw new Error('Not authenticated')
 
-    // Start a transaction to create both the organization and add the creator as admin
-    const { data: organization, error: orgError } = await supabase
+    // Create the organization
+    const { data: organizations, error: createError } = await api
       .from('organizations')
       .insert({
         name,
         description
       })
       .select()
-      .single()
 
-    if (orgError) throw new Error(orgError.message)
+    if (createError) throw createError
+    if (!organizations?.[0]) throw new Error('Failed to create organization')
+    const organization = organizations[0]
 
     // Add the creating user as an admin
-    const { error: memberError } = await supabase
+    const { error: memberError } = await api
       .from('organization_members')
       .insert({
         organization_id: organization.id,
-        profile_id: userProfile.user.id,
+        profile_id: user.id,
         organization_role: 'admin'
-      })
+      } as OrganizationMemberRow)
 
-    if (memberError) throw new Error(memberError.message)
+    if (memberError) throw memberError
 
     return organization as Organization
   },
 
   async getOrganizations(): Promise<Organization[]> {
-    const { data: userProfile } = await supabase.auth.getUser()
-    if (!userProfile.user) throw new Error('Not authenticated')
+    const { user } = await auth.getUser()
+    if (!user) throw new Error('Not authenticated')
 
-    const { data, error } = await supabase
+    // First get organizations with members
+    const { data: organizations, error: orgsError } = await api
       .from('organizations')
-      .select(`
-        *,
-        organization_members!left(
-          organization_role,
-          profile_id
-        )
-      `)
-      .order('name')
+      .select('*, organization_members!inner(*)')
+      .eq('organization_members.profile_id', user.id)
 
-    if (error) {
-      throw new Error(error.message)
-    }
+    if (orgsError) throw orgsError
+    if (!organizations?.length) return []
 
-    // Transform the data to include role information
-    return data.map(org => ({
+    // Then get organization members with profiles
+    const { data: members, error: membersError } = await api
+      .from('organization_members')
+      .select('*, profile:user_profiles(*)')
+      .in('organization_id', organizations.map(org => org.id))
+      .eq('profile_id', user.id)
+
+    if (membersError) throw membersError
+
+    // Create a map for quick lookups
+    const memberMap = new Map(members?.map(m => [m.organization_id, m]) || [])
+
+    // Combine the data
+    return organizations.map(org => ({
       ...org,
-      organization_members: org.organization_members?.filter(
-        member => member.profile_id === userProfile.user?.id
-      ) || []
+      organization_members: memberMap.has(org.id) ? [memberMap.get(org.id)!] : []
     })) as Organization[]
   },
 
   async getOrganization(id: string): Promise<Organization> {
-    const { data, error } = await supabase
+    const { data: organizations, error } = await api
       .from('organizations')
       .select('*')
       .eq('id', id)
       .single()
 
-    if (error) throw new Error(error.message)
-    return data as Organization
+    if (error) throw error
+    if (!organizations) throw new Error('Organization not found')
+    
+    return organizations as Organization
   },
 
   async getOrganizationMembers(
     organizationId: string,
     userType: 'worker' | 'customer'
   ): Promise<OrganizationMemberWithProfile[]> {
-    const { data, error } = await supabase
+    const { data: members, error } = await api
       .from('organization_members')
-      .select(`
-        *,
-        profile:user_profiles!inner(
-          id,
-          email,
-          full_name,
-          avatar_url,
-          user_status
-        )
-      `)
+      .select('*, profile:user_profiles(*)')
       .eq('organization_id', organizationId)
       .eq('profile.user_type', userType)
 
-    if (error) throw new Error(error.message)
-    return data as unknown as OrganizationMemberWithProfile[]
+    if (error) throw error
+    return (members || []) as OrganizationMemberWithProfile[]
   },
 
   async getOrganizationTickets(organizationId: string): Promise<OrganizationTicket[]> {
-    const { data, error } = await supabase
+    const { data: tickets, error } = await api
       .from('tickets')
-      .select(`
-        id,
-        title,
-        ticket_status,
-        ticket_priority,
-        created_at,
-        updated_at
-      `)
+      .select('*')
       .eq('organization_id', organizationId)
       .order('created_at', { ascending: false })
 
-    if (error) throw new Error(error.message)
-    return data as OrganizationTicket[]
+    if (error) throw error
+    return (tickets || []) as OrganizationTicket[]
   },
 
   async getAvailableUsers(userType: 'worker' | 'customer') {
-    const { data, error } = await supabase
+    const { data: users, error } = await api
       .from('user_profiles')
-      .select(`
-        id,
-        email,
-        full_name,
-        avatar_url,
-        user_status
-      `)
+      .select('*')
       .eq('user_type', userType)
       .eq('is_active', true)
-      .order('full_name')
+      .order('full_name', { ascending: true })
 
-    if (error) throw new Error(error.message)
-    return data
+    if (error) throw error
+    return users || []
   },
 
   async addOrganizationMembers({ 
@@ -155,16 +142,17 @@ export const organizationService = {
     userIds: string[]
     role: 'admin' | 'member' | 'customer'
   }) {
-    const { error } = await supabase
-      .from('organization_members')
-      .insert(
-        userIds.map(userId => ({
+    // Add members one by one to avoid type issues with bulk insert
+    for (const userId of userIds) {
+      const { error } = await api
+        .from('organization_members')
+        .insert({
           organization_id: organizationId,
           profile_id: userId,
           organization_role: role
-        }))
-      )
+        } as OrganizationMemberRow)
 
-    if (error) throw new Error(error.message)
+      if (error) throw error
+    }
   }
 } 

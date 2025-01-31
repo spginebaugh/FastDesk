@@ -1,8 +1,11 @@
-import { supabase } from '@/config/supabase/client'
+import { api } from '@/config/api/client'
 import { TicketMessage } from '../types'
 import { type TiptapContent } from '@/lib/tiptap'
-import { type Json } from '@/types/database'
+import { type Database, type Json } from '@/types/database'
 import { getAuthenticatedUser, updateTicketTimestamp } from './helper'
+
+type UserProfile = Database['public']['Tables']['user_profiles']['Row']
+type TicketMessageRow = Database['public']['Tables']['ticket_messages']['Row']
 
 interface GetTicketMessagesParams {
   ticketId: string
@@ -16,21 +19,30 @@ interface CreateTicketMessageParams {
 
 export async function getTicketMessages({ ticketId }: GetTicketMessagesParams): Promise<TicketMessage[]> {
   // First get all messages
-  const { data: messages, error: messagesError } = await supabase
+  const { data: messages, error: messagesError } = await api
     .from('ticket_messages')
     .select('*')
     .eq('ticket_id', ticketId)
     .order('created_at', { ascending: true })
 
   if (messagesError) throw messagesError
+  if (!messages?.length) return []
 
   // Then get all unique sender IDs
   const senderIds = messages
     .map(m => m.sender_id)
     .filter((id): id is string => id !== null)
 
+  if (!senderIds.length) {
+    return messages.map((message): TicketMessage => ({
+      ...message,
+      content_format: 'tiptap',
+      sender_type: message.sender_type as 'customer' | 'worker'
+    }))
+  }
+
   // Fetch all senders in one query
-  const { data: senders, error: sendersError } = await supabase
+  const { data: senders, error: sendersError } = await api
     .from('user_profiles')
     .select('*')
     .in('id', senderIds)
@@ -38,10 +50,10 @@ export async function getTicketMessages({ ticketId }: GetTicketMessagesParams): 
   if (sendersError) throw sendersError
 
   // Create lookup map
-  const sendersMap = new Map(senders.map(p => [p.id, p]))
+  const sendersMap = new Map(senders?.map((p: UserProfile) => [p.id, p]) || [])
 
   // Map messages with their senders
-  return messages.map(message => ({
+  return messages.map((message): TicketMessage => ({
     ...message,
     content_format: 'tiptap',
     sender_type: message.sender_type as 'customer' | 'worker',
@@ -51,7 +63,7 @@ export async function getTicketMessages({ ticketId }: GetTicketMessagesParams): 
           avatar_url: sendersMap.get(message.sender_id)?.avatar_url ?? null
         }
       : undefined
-  })) as TicketMessage[]
+  }))
 }
 
 export async function createTicketMessage({ 
@@ -62,33 +74,32 @@ export async function createTicketMessage({
   const user = await getAuthenticatedUser()
 
   // First create the message
-  const { data: message, error: messageError } = await supabase
+  const { data: messages, error: createError } = await api
     .from('ticket_messages')
-    .insert([
-      {
-        ticket_id: ticketId,
-        content: content as Json,
-        content_format: 'tiptap' as const,
-        is_internal: isInternal,
-        sender_id: user.id,
-        sender_type: 'worker' as const
-      }
-    ])
+    .insert({
+      ticket_id: ticketId,
+      content: content as Json,
+      content_format: 'tiptap' as const,
+      is_internal: isInternal,
+      sender_id: user.id,
+      sender_type: 'worker' as const,
+      updated_at: new Date().toISOString()
+    } satisfies Omit<TicketMessageRow, 'id' | 'created_at'>)
     .select()
-    .single()
 
-  if (messageError) throw messageError
+  if (createError) throw createError
+  if (!messages?.[0]) throw new Error('Failed to create message')
 
   // Update the ticket's updated_at timestamp
   await updateTicketTimestamp(ticketId)
 
   return {
-    ...message,
+    ...messages[0],
     content_format: 'tiptap',
     sender_type: 'worker',
     sender: {
-      full_name: user.user_metadata?.full_name || user.email,
+      full_name: user.user_metadata?.full_name || user.email || 'Unknown User',
       avatar_url: user.user_metadata?.avatar_url || null
     }
-  } as TicketMessage
+  }
 } 

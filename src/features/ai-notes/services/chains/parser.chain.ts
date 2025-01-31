@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate } from '@langchain/core/prompts'
 import { StructuredOutputParser } from 'langchain/output_parsers'
-import { parserModel } from '@/config/openai/client'
+import { openAIClient } from '@/config/api/openai'
 import { langsmithClient, LANGSMITH_PROJECT, ENABLE_TRACING } from '@/config/langsmith/client'
 import { LangChainTracer } from 'langchain/callbacks'
 
@@ -15,10 +15,7 @@ const outputSchema = z.object({
   reasoning: z.string(),
 })
 
-
 const parser = StructuredOutputParser.fromZodSchema(outputSchema)
-
-const model = parserModel
 
 export const createParserChain = () => {
   const formatInstructions = parser.getFormatInstructions()
@@ -43,7 +40,7 @@ Original prompt: {originalPrompt}
 
   return {
     invoke: async (input: ParserChainInput) => {
-      const messages = await prompt.invoke({
+      const promptMessages = await prompt.invoke({
         originalPrompt: input.originalPrompt,
         format_instructions: formatInstructions
       }, {
@@ -52,13 +49,23 @@ Original prompt: {originalPrompt}
         tags: ['ai-notes', 'parser-chain']
       })
       
-      const modelOutput = await model.invoke(messages, {
-        callbacks: tracer ? [tracer] : undefined,
-        runName: 'AI Notes Parser Model',
-        tags: ['ai-notes', 'llm-call']
+      // Convert LangChain messages to API format
+      const apiMessages = promptMessages.messages.map(msg => {
+        const type = msg._getType();
+        const role = type === 'system' ? 'system' as const : 'user' as const;
+        return {
+          role,
+          content: msg.content.toString()
+        }
+      });
+      
+      // Call OpenAI through the API client
+      const modelOutput = await openAIClient.chat({ 
+        messages: apiMessages,
+        temperature: 0 // Use zero temperature for parsing
       })
 
-      const parsed = await parser.invoke(modelOutput, {
+      const parsed = await parser.invoke(modelOutput.content, {
         callbacks: tracer ? [tracer] : undefined,
         runName: 'AI Notes Parser Output',
         tags: ['ai-notes', 'output-parser']
