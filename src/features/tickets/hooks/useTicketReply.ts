@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '@/components/ui/use-toast'
 import { createTicketMessage } from '../services'
 import { responseGenerationService } from '@/features/ai-bot/services'
-import { TicketMessage } from '../types'
 import { type TiptapContent } from '@/lib/tiptap'
 import { type Json } from '@/types/database'
 
@@ -20,12 +19,6 @@ interface UseTicketReplyOptions {
   }>
   initialContent?: TiptapContent
   onSetContent?: (content: TiptapContent) => void
-}
-
-interface CreateMessageParams {
-  ticketId: string
-  content: TiptapContent
-  isInternal: boolean
 }
 
 const emptyTiptapContent: TiptapContent = {

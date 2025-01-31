@@ -1,7 +1,6 @@
 import { supabase } from '@/config/supabase/client';
 import { chatModel } from '@/config/openai/client';
 import { SystemMessage, HumanMessage } from '@langchain/core/messages';
-import { TicketMessage } from '../types';
 import { getTicketMessages } from './ticket-messages.service';
 
 interface GenerateTicketSummaryParams {

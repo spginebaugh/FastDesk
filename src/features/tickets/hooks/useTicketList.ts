@@ -6,11 +6,6 @@ import { TicketWithUser } from '../types'
 
 type TicketView = 'assigned' | 'unassigned' | 'all' | 'recent' | 'solved'
 
-interface UseTicketListOptions {
-  view?: TicketView
-  userId?: string
-}
-
 interface UseTicketListParams {
   userId?: string
   status?: TicketStatus[]

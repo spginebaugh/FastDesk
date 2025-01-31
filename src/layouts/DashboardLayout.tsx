@@ -25,8 +25,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { getTickets, getTicket } from '@/features/tickets/services'
+import { useQueryClient } from '@tanstack/react-query'
+import { getTicket } from '@/features/tickets/services'
 import { TicketWithUser } from '@/features/tickets/types'
 
 type UserStatus = Database['public']['Enums']['user_status']
@@ -197,15 +197,11 @@ export function DashboardLayout() {
         })
       }
       
-      createTab()
+      if (!hasTab(location.pathname)) {
+        createTab()
+      }
     }
   }, [location.pathname, addTab, hasTab, queryClient, updateTab])
-
-  // Get recent tickets for the sidebar
-  const { data: recentTickets = [] } = useQuery({
-    queryKey: ['recent-tickets'],
-    queryFn: () => getTickets({ recentlyUpdated: true })
-  })
 
   useEffect(() => {
     return () => console.log('[DashboardLayout] Unmount')

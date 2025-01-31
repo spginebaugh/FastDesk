@@ -1,4 +1,4 @@
-import { type TiptapContent, extractPlainText } from '@/lib/tiptap';
+import { extractPlainText } from '@/lib/tiptap';
 import { type Json } from '@/types/database';
 import type OpenAI from 'openai';
 import {
