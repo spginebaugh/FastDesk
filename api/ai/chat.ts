@@ -2,10 +2,27 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getChatModel } from '../config/openai';
 import { ChatRequest, chatRequestSchema, ChatResponse, ErrorResponse } from '../types/openai';
 import type { ChatOpenAICallOptions } from '@langchain/openai';
+import { HumanMessage, SystemMessage, AIMessage } from '@langchain/core/messages';
 
 // Helper function to send error response
 function sendError(res: VercelResponse, status: number, error: string, code: string) {
   return res.status(status).json({ error, code } as ErrorResponse);
+}
+
+// Convert our message format to LangChain format
+function convertToLangChainMessages(messages: ChatRequest['messages']) {
+  return messages.map(msg => {
+    switch (msg.role) {
+      case 'system':
+        return new SystemMessage(msg.content);
+      case 'user':
+        return new HumanMessage(msg.content);
+      case 'assistant':
+        return new AIMessage(msg.content);
+      default:
+        throw new Error(`Unsupported message role: ${msg.role}`);
+    }
+  });
 }
 
 // Export the handler function directly
@@ -48,8 +65,11 @@ export default async function handler(
     // Get the chat model instance
     const chatModel = getChatModel();
 
+    // Convert messages to LangChain format
+    const langChainMessages = convertToLangChainMessages(validatedData.messages);
+
     // Call OpenAI with the validated messages
-    const response = await chatModel.call(validatedData.messages, {
+    const response = await chatModel.call(langChainMessages, {
       temperature: validatedData.temperature ?? 0.7,
       maxTokens: validatedData.maxTokens ?? 500,
     } as ChatOpenAICallOptions);
