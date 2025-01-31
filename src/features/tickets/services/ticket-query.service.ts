@@ -65,7 +65,16 @@ export async function queryTickets({
   // First get all ticket IDs that match our criteria
   let ticketIds: string[] = []
 
-  if (unassigned) {
+  // If showing all organization tickets, skip assignment filtering
+  if (showAllOrganizationTickets) {
+    const { data: tickets } = await supabase
+      .from('tickets')
+      .select('id')
+      .in('organization_id', userOrgIds)
+      .in('ticket_status', status)
+
+    ticketIds = (tickets as { id: string }[])?.map(t => t.id) || []
+  } else if (unassigned) {
     const { data: assignments } = await supabase
       .from('ticket_assignments')
       .select('ticket_id')
