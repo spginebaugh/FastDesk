@@ -1,7 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { Home, NotebookText, Users, Building, BarChart3, Plus, Search } from 'lucide-react'
+import { Home, NotebookText, Users, Building, BarChart3, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useAuthStore } from '@/store/authStore'
 import { useTabStore } from '@/store/tabStore'
@@ -328,15 +327,7 @@ export function DashboardLayout() {
               </Button>
             </div>
             
-            <div className="flex items-center space-x-4 px-4">
-              <div className="w-64 relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search..."
-                  className="h-9 pl-8 bg-background-raised border-border/50 focus-visible:ring-primary placeholder:text-muted-foreground"
-                />
-              </div>
+            <div className="flex items-center px-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full p-0">

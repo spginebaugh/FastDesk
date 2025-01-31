@@ -1,5 +1,7 @@
-import { Filter, Ticket } from 'lucide-react'
+import { useState } from 'react'
+import { Ticket, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -38,13 +40,14 @@ const titles = {
 export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
   const { user } = useAuthStore()
   const navigate = useNavigate()
+  const [searchQuery, setSearchQuery] = useState('')
   const {
     tickets,
     isLoading,
     selectedTickets,
     handleTicketSelection,
     handleSelectAll
-  } = useTicketList({ view, userId: user?.id })
+  } = useTicketList({ view, userId: user?.id, searchQuery })
 
   if (isLoading) {
     return (
@@ -170,15 +173,17 @@ export function TicketListPage({ view = 'assigned' }: TicketListPageProps) {
           <h1 className="text-2xl font-semibold text-foreground glow-text">{titles[view]}</h1>
           
           <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-foreground hover:text-primary hover:bg-primary/10 border-border/50"
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
+            <div className="flex items-center gap-2 flex-1 max-w-md">
+              <div className="relative w-full">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search tickets..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-9 pl-8 bg-background-raised border-border/50 focus-visible:ring-primary placeholder:text-muted-foreground"
+                />
+              </div>
               <span className="text-sm text-muted-foreground">
                 {tickets.length} ticket{tickets.length !== 1 ? 's' : ''}
               </span>

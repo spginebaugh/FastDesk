@@ -13,6 +13,7 @@ interface UseTicketListParams {
   recentlyUpdated?: boolean
   organizationId?: string
   showAllOrganizationTickets?: boolean
+  searchQuery?: string
 }
 
 // Sub-hook for fetching tickets based on view type
@@ -79,7 +80,8 @@ export function useTicketList({
   unassigned = false,
   recentlyUpdated = false,
   organizationId,
-  view
+  view,
+  searchQuery = ''
 }: UseTicketListParams & { view?: TicketView } = {}) {
   // Convert view to appropriate flags
   const effectiveParams = {
@@ -102,8 +104,19 @@ export function useTicketList({
     handleSelectAll
   } = useTicketSelection(tickets)
 
+  // Filter tickets based on search query
+  const filteredTickets = tickets.filter((ticket) => {
+    if (!searchQuery) return true
+    const searchLower = searchQuery.toLowerCase()
+    return (
+      ticket.title.toLowerCase().includes(searchLower) ||
+      ticket.user.full_name?.toLowerCase().includes(searchLower) ||
+      ticket.user.email.toLowerCase().includes(searchLower)
+    )
+  })
+
   return {
-    tickets,
+    tickets: filteredTickets,
     isLoading,
     error,
     selectedTickets,

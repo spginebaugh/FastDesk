@@ -90,6 +90,17 @@ export async function queryTickets({
         .eq('worker_id', userId)
       
       ticketIds = (assignments as { ticket_id: string | null }[])?.map(t => t.ticket_id).filter((id): id is string => id !== null) || []
+
+      // Apply status filter to worker's tickets
+      if (ticketIds.length > 0) {
+        const { data: statusFilteredTickets } = await supabase
+          .from('tickets')
+          .select('id')
+          .in('id', ticketIds)
+          .in('ticket_status', status)
+
+        ticketIds = (statusFilteredTickets as { id: string }[])?.map(t => t.id) || []
+      }
     }
   } else {
     const { data: tickets } = await supabase

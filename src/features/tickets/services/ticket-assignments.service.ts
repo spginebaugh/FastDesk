@@ -29,6 +29,16 @@ interface Assignment {
 export { getTicketAssignment, getOrganizationWorkers }
 
 export async function updateTicketAssignment({ ticketId, workerId }: UpdateTicketAssignmentParams): Promise<void> {
+  // Get the ticket's organization ID first
+  const { data: ticket, error: ticketError } = await supabase
+    .from('tickets')
+    .select('organization_id')
+    .eq('id', ticketId)
+    .single()
+
+  if (ticketError) throw ticketError
+  if (!ticket) throw new Error('Ticket not found')
+
   // First remove any existing primary assignments
   const { error: deleteError } = await supabase
     .from('ticket_assignments')
@@ -45,6 +55,7 @@ export async function updateTicketAssignment({ ticketId, workerId }: UpdateTicke
       .insert({
         ticket_id: ticketId,
         worker_id: workerId,
+        organization_id: ticket.organization_id,
         is_primary: true
       } satisfies Partial<TicketAssignmentRow>)
 

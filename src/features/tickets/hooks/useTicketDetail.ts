@@ -100,15 +100,17 @@ function useTicketMutations(ticketId: string) {
     onError: () => {
       toast({
         title: 'Error',
-        description: 'Failed to update ticket settings. Please try again.',
+        description: 'Failed to update ticket settings.',
         variant: 'destructive'
       })
     }
   })
 
-  const { mutateAsync: assignTicketMutation } = useMutation({
+  const { mutateAsync: updateAssignmentMutation } = useMutation({
     mutationFn: (workerId: string | null) => updateTicketAssignment({ ticketId, workerId }),
     onSuccess: () => {
+      // Invalidate both ticket and assignment queries
+      queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
       queryClient.invalidateQueries({ queryKey: ['ticket-assignment', ticketId] })
       toast({
         title: 'Assignment updated',
@@ -118,28 +120,16 @@ function useTicketMutations(ticketId: string) {
     onError: () => {
       toast({
         title: 'Error',
-        description: 'Failed to update ticket assignment. Please try again.',
+        description: 'Failed to update ticket assignment.',
         variant: 'destructive'
       })
     }
   })
 
-  const updateTicketDetails = useCallback(async (updates: Partial<{ 
-    title: string
-    ticket_status: TicketStatus
-    ticket_priority: TicketPriority 
-  }>) => {
-    return updateTicketMutation(updates)
-  }, [updateTicketMutation])
-
-  const assignTicket = useCallback(async (workerId: string | null) => {
-    return assignTicketMutation(workerId)
-  }, [assignTicketMutation])
-
   return useMemo(() => ({
-    updateTicketDetails,
-    assignTicket
-  }), [updateTicketDetails, assignTicket])
+    updateTicket: updateTicketMutation,
+    updateTicketAssignment: updateAssignmentMutation
+  }), [updateTicketMutation, updateAssignmentMutation])
 }
 
 // Main hook that composes the sub-hooks

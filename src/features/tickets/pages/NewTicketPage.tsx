@@ -51,17 +51,10 @@ export function NewTicketPage() {
               >
                 <SelectTrigger className="w-full bg-background">
                   <SelectValue>
-                    {initialSettings.organizationId === 'unassigned' ? (
-                      'Unassigned'
-                    ) : (
-                      organizations.find(org => org.id === initialSettings.organizationId)?.name || 'Loading...'
-                    )}
+                    {organizations.find(org => org.id === initialSettings.organizationId)?.name || 'Loading...'}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="unassigned">
-                    <span className="text-muted-foreground">Unassigned</span>
-                  </SelectItem>
                   {organizations.map((org) => (
                     <SelectItem key={org.id} value={org.id}>
                       {org.name}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { useToast } from '@/components/ui/use-toast'
 import { createTicket as createTicketService, createTicketMessage, getOrganizationWorkers } from '../services'
@@ -25,7 +25,7 @@ function useTicketFormState() {
   const [initialSettings, setInitialSettings] = useState<InitialSettings>({
     ticket_priority: 'low',
     assignee: 'unassigned',
-    organizationId: 'unassigned'
+    organizationId: undefined // Start with undefined to allow setting first available org
   })
 
   const handleTicketPriorityChange = (ticket_priority: TicketPriority) => {
@@ -58,7 +58,7 @@ function useTicketFormState() {
 }
 
 // Sub-hook for fetching organizations and workers
-function useTicketOrganizationsAndWorkers(organizationId: string) {
+function useTicketOrganizationsAndWorkers(organizationId: string | undefined) {
   // Get user's organizations
   const { data: organizations = [] } = useQuery({
     queryKey: ['organizations'],
@@ -74,12 +74,12 @@ function useTicketOrganizationsAndWorkers(organizationId: string) {
   const { data: workers = [], isLoading: isLoadingWorkers } = useQuery({
     queryKey: ['organization-workers', organizationId],
     queryFn: async () => {
-      if (!organizationId || organizationId === 'unassigned') {
+      if (!organizationId) {
         return []
       }
       return getOrganizationWorkers(organizationId)
     },
-    enabled: !!organizationId && organizationId !== 'unassigned'
+    enabled: !!organizationId
   })
 
   return {
@@ -156,7 +156,17 @@ export function useNewTicket(userId: string | undefined) {
     organizations,
     workers,
     isLoadingWorkers
-  } = useTicketOrganizationsAndWorkers(initialSettings.organizationId || '')
+  } = useTicketOrganizationsAndWorkers(initialSettings.organizationId)
+
+  // Set initial organization when organizations are loaded
+  useEffect(() => {
+    if (organizations.length > 0 && !initialSettings.organizationId) {
+      setInitialSettings(prev => ({
+        ...prev,
+        organizationId: organizations[0].id
+      }))
+    }
+  }, [organizations, initialSettings.organizationId, setInitialSettings])
 
   const { createTicket, isPending } = useTicketCreation()
 

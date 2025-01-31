@@ -17,10 +17,14 @@ export async function createTicket({
   title, 
   priority = 'low',
   assignee = 'unassigned',
-  organizationId = null
+  organizationId
 }: CreateTicketParams): Promise<TicketWithUser> {
   const user = await getAuthenticatedUser()
   const profile = await getUserProfileByEmail(user.email!)
+
+  if (!organizationId) {
+    throw new Error('Organization is required')
+  }
 
   const ticketData = {
     title,
@@ -43,8 +47,8 @@ export async function createTicket({
   if (!tickets?.[0]) throw new Error('Failed to create ticket')
   const ticket = tickets[0]
 
-  // If no assignee specified and no organization, assign to creator
-  const finalAssignee = assignee === 'unassigned' && !organizationId ? profile.id : assignee
+  // If no assignee specified, assign to creator if they are a worker
+  const finalAssignee = assignee === 'unassigned' && profile.user_type === 'worker' ? profile.id : assignee
 
   if (finalAssignee && finalAssignee !== 'unassigned') {
     const { error: assignError } = await supabase
@@ -59,18 +63,15 @@ export async function createTicket({
     if (assignError) throw assignError
   }
 
-  // Get the full ticket with user data
-  const { data: fullTickets, error: fetchError } = await supabase
+  // Return the created ticket with user data
+  const { data: ticketWithUser, error: selectError } = await supabase
     .from('tickets')
-    .select(`
-      *,
-      user:user_profiles!tickets_user_id_fkey(*)
-    `)
+    .select('*, user:user_id(*)')
     .eq('id', ticket.id)
     .single()
 
-  if (fetchError) throw fetchError
-  if (!fullTickets) throw new Error('Failed to fetch created ticket')
+  if (selectError) throw selectError
+  if (!ticketWithUser) throw new Error('Failed to fetch created ticket')
 
-  return fullTickets as TicketWithUser
+  return ticketWithUser as TicketWithUser
 } 

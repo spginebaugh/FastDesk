@@ -43,7 +43,7 @@ export function TicketDetailPage() {
     currentAssignment,
     availableWorkers,
     isLoading,
-    mutations: { updateTicketDetails: updateTicket, assignTicket: updateTicketAssignment }
+    mutations: { updateTicket, updateTicketAssignment }
   } = useTicketDetail({ ticketId: ticketId! })
 
   console.log('[TicketDetailPage] Ticket data:', { 
@@ -175,19 +175,29 @@ export function TicketDetailPage() {
   )
 
   // Memoize props for child components
-  const ticketControlsProps = useMemo(() => ({
-    ticketStatus: (pendingChanges.ticket_status || ticket?.ticket_status)!,
-    ticketPriority: (pendingChanges.ticket_priority || ticket?.ticket_priority)!,
-    currentAssignment: currentAssignment || null,
-    availableWorkers,
-    onStatusChange: handleTicketStatusChange,
-    onPriorityChange: handleTicketPriorityChange,
-    onAssigneeChange: handleAssigneeChange,
-    onSaveChanges: handleSaveChanges,
-    hasChanges
-  }), [
+  const ticketControlsProps = useMemo(() => {
+    // Find the pending assignee in the available workers
+    const pendingAssigneeWorker = pendingChanges.assignee && pendingChanges.assignee !== 'unassigned'
+      ? availableWorkers.find(w => w.id === pendingChanges.assignee) || null
+      : null
+
+    return {
+      ticketStatus: (pendingChanges.ticket_status || ticket?.ticket_status)!,
+      ticketPriority: (pendingChanges.ticket_priority || ticket?.ticket_priority)!,
+      currentAssignment: pendingChanges.assignee !== undefined
+        ? (pendingChanges.assignee === 'unassigned' ? null : pendingAssigneeWorker)
+        : (currentAssignment || null),
+      availableWorkers,
+      onStatusChange: handleTicketStatusChange,
+      onPriorityChange: handleTicketPriorityChange,
+      onAssigneeChange: handleAssigneeChange,
+      onSaveChanges: handleSaveChanges,
+      hasChanges
+    }
+  }, [
     pendingChanges.ticket_status,
     pendingChanges.ticket_priority,
+    pendingChanges.assignee,
     ticket?.ticket_status,
     ticket?.ticket_priority,
     currentAssignment,
