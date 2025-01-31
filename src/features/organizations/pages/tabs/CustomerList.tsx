@@ -33,10 +33,15 @@ export function CustomerList({ organizationId }: CustomerListProps) {
     queryFn: () => organizationService.getOrganizationMembers(organizationId, 'customer')
   })
 
-  const filteredCustomers = customers.filter((customer) =>
-    customer.profile.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.profile.email.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredCustomers = customers.filter((customer) => {
+    if (!customer?.profile) return false
+    
+    const searchTerm = searchQuery.toLowerCase()
+    const fullName = customer.profile.full_name?.toLowerCase() || ''
+    const email = customer.profile.email?.toLowerCase() || ''
+    
+    return fullName.includes(searchTerm) || email.includes(searchTerm)
+  })
 
   const handleRowClick = (customer: typeof customers[0]) => {
     const path = `/customers/${customer.profile_id}/tickets`
