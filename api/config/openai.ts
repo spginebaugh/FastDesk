@@ -37,16 +37,29 @@ function createChatModel() {
   }
 }
 
-// Export shared ChatOpenAI instance for server-side usage
-export const chatModel = createChatModel();
+// Lazy-loaded instances
+let _chatModel: ChatOpenAI | null = null;
+let _parserModel: ChatOpenAI | null = null;
 
-// Export zero-temperature model for parsing and classification tasks
-export const parserModel = new ChatOpenAI({
-  modelName: OPENAI_CONFIG.DEFAULT_MODEL,
-  temperature: 0,
-  maxTokens: OPENAI_CONFIG.DEFAULT_MAX_TOKENS,
-  openAIApiKey: process.env.OPENAI_API_KEY,
-});
+// Export getter functions for models
+export function getChatModel() {
+  if (!_chatModel) {
+    _chatModel = createChatModel();
+  }
+  return _chatModel;
+}
+
+export function getParserModel() {
+  if (!_parserModel) {
+    _parserModel = new ChatOpenAI({
+      modelName: OPENAI_CONFIG.DEFAULT_MODEL,
+      temperature: 0,
+      maxTokens: OPENAI_CONFIG.DEFAULT_MAX_TOKENS,
+      openAIApiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return _parserModel;
+}
 
 // Export type for OpenAI response
-export type OpenAIResponse = Awaited<ReturnType<typeof chatModel.call>>; 
+export type OpenAIResponse = Awaited<ReturnType<typeof getChatModel>>; 

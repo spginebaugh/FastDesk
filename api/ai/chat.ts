@@ -1,52 +1,62 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { chatModel } from '../config/openai';
+import { getChatModel } from '../config/openai';
 import { ChatRequest, chatRequestSchema, ChatResponse, ErrorResponse } from '../types/openai';
 import type { ChatOpenAICallOptions } from '@langchain/openai';
-import cors from 'cors';
 
-// Initialize CORS middleware
-const corsMiddleware = cors({
-  methods: ['POST', 'OPTIONS'],
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://fast-desk-psi.vercel.app'] 
-    : ['http://localhost:3000', 'http://127.0.0.1:3000'],
-  credentials: true,
-});
+// Helper function to send error response
+function sendError(res: VercelResponse, status: number, error: string, code: string) {
+  return res.status(status).json({ error, code } as ErrorResponse);
+}
 
 // Export the handler function directly
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  // Handle CORS
-  await new Promise((resolve) => corsMiddleware(req, res, resolve));
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', process.env.NODE_ENV === 'production'
+    ? 'https://fast-desk-psi.vercel.app'
+    : 'http://localhost:5173');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+  );
 
-  // If the request is just the OPTIONS preflight, return 200 immediately
+  // Handle preflight request
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // Validate HTTP method
-  if (req.method !== 'POST') {
-    return res.status(405).json({ 
-      error: 'Method not allowed', 
-      code: 'METHOD_NOT_ALLOWED' 
-    } as ErrorResponse);
-  }
-
   try {
-    // Validate OpenAI API key
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OpenAI API key is not configured');
+    // Validate HTTP method
+    if (req.method !== 'POST') {
+      return sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
     }
 
+    // Validate OpenAI API key
+    if (!process.env.OPENAI_API_KEY) {
+      return sendError(res, 500, 'OpenAI API key is not configured', 'OPENAI_CONFIG_ERROR');
+    }
+
+    // Validate request body
     const validatedData = chatRequestSchema.parse(req.body) as ChatRequest;
+    if (!validatedData.messages || validatedData.messages.length === 0) {
+      return sendError(res, 400, 'Messages array cannot be empty', 'INVALID_REQUEST');
+    }
+
+    // Get the chat model instance
+    const chatModel = getChatModel();
 
     // Call OpenAI with the validated messages
     const response = await chatModel.call(validatedData.messages, {
-      temperature: validatedData.temperature,
-      maxTokens: validatedData.maxTokens,
+      temperature: validatedData.temperature ?? 0.7,
+      maxTokens: validatedData.maxTokens ?? 500,
     } as ChatOpenAICallOptions);
+
+    if (!response || !response.content) {
+      return sendError(res, 500, 'Invalid response from OpenAI', 'OPENAI_RESPONSE_ERROR');
+    }
 
     const chatResponse: ChatResponse = {
       content: response.content.toString(),
@@ -56,9 +66,18 @@ export default async function handler(
     return res.status(200).json(chatResponse);
   } catch (error) {
     console.error('Chat API Error:', error);
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : 'An unexpected error occurred',
-      code: 'INTERNAL_SERVER_ERROR',
-    } as ErrorResponse);
+    
+    if (error instanceof Error) {
+      // Handle specific error types
+      if (error.name === 'ZodError') {
+        return sendError(res, 400, 'Invalid request format', 'VALIDATION_ERROR');
+      }
+      if (error.name === 'OpenAIConfigError') {
+        return sendError(res, 500, error.message, 'OPENAI_CONFIG_ERROR');
+      }
+      return sendError(res, 500, error.message, 'INTERNAL_SERVER_ERROR');
+    }
+    
+    return sendError(res, 500, 'An unexpected error occurred', 'INTERNAL_SERVER_ERROR');
   }
 } 

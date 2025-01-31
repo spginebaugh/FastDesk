@@ -2,7 +2,7 @@ import { ChatRequest, ChatResponse, ParseRequest, ParseResponse } from '../../..
 
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? 'https://fast-desk-psi.vercel.app/api/ai'
-  : '/api/ai';
+  : 'http://localhost:5174/api/ai';
 
 class APIError extends Error {
   constructor(public code: string, message: string) {
@@ -24,26 +24,36 @@ async function handleResponse(response: Response) {
 
 export const openAIClient = {
   async chat(request: ChatRequest): Promise<ChatResponse> {
-    const response = await fetch(`${API_BASE_URL}/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
-      credentials: 'include',
-    });
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+        credentials: 'include',
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('OpenAI Chat Error:', error);
+      throw new APIError('OPENAI_ERROR', error instanceof Error ? error.message : 'Failed to communicate with OpenAI service');
+    }
   },
 
   async parse<T = any>(request: ParseRequest): Promise<ParseResponse<T>> {
-    const response = await fetch(`${API_BASE_URL}/parse`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
-      credentials: 'include',
-    });
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/parse`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+        credentials: 'include',
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('OpenAI Parse Error:', error);
+      throw new APIError('OPENAI_ERROR', error instanceof Error ? error.message : 'Failed to communicate with OpenAI service');
+    }
   },
 }; 
