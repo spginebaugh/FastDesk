@@ -13,7 +13,7 @@ const corsMiddleware = cors({
   credentials: true,
 });
 
-
+// Export the handler function directly
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
@@ -21,7 +21,7 @@ export default async function handler(
   // Handle CORS
   await new Promise((resolve) => corsMiddleware(req, res, resolve));
 
-  // If the request is just the OPTIONS preflight, return 200 immediately:
+  // If the request is just the OPTIONS preflight, return 200 immediately
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
