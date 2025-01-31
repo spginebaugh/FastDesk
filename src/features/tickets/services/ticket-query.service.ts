@@ -3,7 +3,15 @@ import { TicketStatus, TicketWithUser } from '../types'
 import { getAuthenticatedUser, getUserOrganizationIds } from './helper'
 
 const TICKET_SELECT_QUERY = `
-  *,
+  id,
+  title,
+  ticket_status,
+  ticket_priority,
+  custom_fields,
+  user_id,
+  organization_id,
+  created_at,
+  updated_at,
   user:user_profiles!tickets_user_id_fkey(*)
 ` as const
 
@@ -31,7 +39,12 @@ export async function getTicketById({ ticketId }: GetTicketByIdParams): Promise<
     .in('organization_id', userOrgIds)
     .single()
 
-  if (error || !data) throw new Error('Ticket not found')
+  if (error) {
+    console.error('Error fetching ticket:', error)
+    throw new Error('Ticket not found')
+  }
+  if (!data) throw new Error('Ticket not found')
+  
   return data as unknown as TicketWithUser
 }
 
@@ -67,7 +80,7 @@ export async function queryTickets({
       .in('ticket_status', status)
 
     ticketIds = (tickets as { id: string }[])?.map(t => t.id).filter(id => !assignedIds.includes(id)) || []
-  } else if (userId && !showAllOrganizationTickets) {
+  } else if (userId) {
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('user_type')
@@ -117,11 +130,16 @@ export async function queryTickets({
   }
 
   // Then get the full ticket data for these IDs
-  const { data: tickets } = await supabase
+  const { data: tickets, error } = await supabase
     .from('tickets')
     .select(TICKET_SELECT_QUERY)
     .in('id', ticketIds)
     .order('updated_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching tickets:', error)
+    return []
+  }
 
   return (tickets || []) as unknown as TicketWithUser[]
 } 

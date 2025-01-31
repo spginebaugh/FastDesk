@@ -4,6 +4,7 @@ import { resolve } from 'path';
 import { existsSync } from 'fs';
 import cors from 'cors';
 import chatHandler from './ai/chat';
+import langsmithHandler from './ai/langsmith';
 
 
 // Load environment variables
@@ -62,6 +63,7 @@ const vercelToExpress = (handler: any) => async (req: express.Request, res: expr
 
 // Routes
 app.use('/api/ai/chat', vercelToExpress(chatHandler));
+app.use('/api/ai/langsmith', vercelToExpress(langsmithHandler));
 
 // Start server
 app.listen(port, () => {

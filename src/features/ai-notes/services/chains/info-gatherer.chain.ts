@@ -39,19 +39,18 @@ async function getUserTicketMessages(userId: string): Promise<string> {
     .from('tickets')
     .select('id, title, ticket_status, custom_fields')
     .eq('user_id', userId)
-    .single()
 
   if (ticketsError) {
     console.error('Error fetching user tickets:', ticketsError)
     return ''
   }
 
-  if (!tickets) {
+  if (!tickets || tickets.length === 0) {
     return ''
   }
 
   // Get messages from all tickets
-  const messagePromises = [tickets].map(async (ticket) => {
+  const messagePromises = tickets.map(async (ticket) => {
     // Capitalize and format ticket status
     const formattedStatus = ticket.ticket_status.charAt(0).toUpperCase() + ticket.ticket_status.slice(1)
     
