@@ -88,9 +88,7 @@ export function DataPage() {
   // Calculate data for status pie chart
   const statusData = Object.entries(
     tickets.reduce((acc, ticket) => {
-      if (!['resolved', 'closed'].includes(ticket.ticket_status)) {
-        acc[ticket.ticket_status] = (acc[ticket.ticket_status] || 0) + 1
-      }
+      acc[ticket.ticket_status] = (acc[ticket.ticket_status] || 0) + 1
       return acc
     }, {} as Record<string, number>)
   ).map(([status, count]) => ({
