@@ -1,50 +1,128 @@
-# React + TypeScript + Vite
+# FastDesk: AI-Powered Help Desk Solution
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project was created in 2-weeks as part of the GauntletAI program.
 
-Currently, two official plugins are available:
+FastDesk is a modern, AI-enhanced help desk and customer support platform built with React, TypeScript, and Supabase. It streamlines customer support operations with intelligent ticket management, AI-assisted responses, and comprehensive analytics.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![Login Screen](./images/login_screen.png)
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### 🎫 Intelligent Ticket Management
+Efficiently manage support tickets with a comprehensive view of all customer issues, prioritization, and status tracking.
 
-- Configure the top-level `parserOptions` property like this:
+![Ticket Views](./images/ticket_views.png)
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+### 🤖 AI-Powered Assistance
+- **AI Reply Assistant**: Get intelligent response suggestions based on ticket context and history.
+  
+  ![AI Reply Assistant](./images/AI_reply_assistant.png)
+
+- **Note Generator**: Automatically generate structured notes from customer conversations.
+  
+  ![Ticket Example Note Generator](./images/ticket_example_notegenerator.png)
+
+- **Note Prompter**: Guide AI to create specific types of notes with customizable prompts.
+  
+  ![Note Prompter](./images/note_prompter.png)
+
+### 📊 Data Analytics Dashboard
+Track key performance metrics, ticket resolution times, and customer satisfaction scores.
+
+![Data Dashboard](./images/data_dashboard.png)
+
+### 👥 Customer & Organization Management
+Maintain detailed profiles for customers and organizations for context-aware support.
+
+![Customer View](./images/customer_view.png)
+![Organization View](./images/organization_view.png)
+
+### 📈 LangSmith Integration
+Advanced tracing and monitoring of AI interactions for continuous improvement.
+
+![LangSmith Tracing](./images/langsmith_tracing.png)
+
+### 🔄 Supabase Backend
+Robust database architecture with comprehensive data relationships.
+
+![Supabase Schema](./images/supabase_schema.png)
+
+## Tech Stack
+
+- **Frontend**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS, Radix UI components
+- **State Management**: Zustand, TanStack React Query
+- **Backend**: Supabase (PostgreSQL, Authentication, Storage)
+- **AI Integration**: LangChain, LangSmith
+- **Form Handling**: React Hook Form, Zod validation
+- **Testing**: Vitest, Testing Library
+
+## Getting Started
+
+### Prerequisites
+- Node.js (v18+)
+- npm or yarn
+- Supabase account
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/fastdesk.git
+   cd fastdesk
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Set up environment variables:
+   - Copy `.env.example` to `.env.local`
+   - Fill in your Supabase credentials and other required variables
+
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+5. Seed the database (optional):
+   ```bash
+   npm run seed
+   ```
+
+## Project Structure
+
+The project follows a feature-based modular architecture (vertical slice):
+
+```
+fastdesk/
+├─ src/
+│  ├─ features/           # Feature modules (tickets, customers, etc.)
+│  │  ├─ tickets/         # Example feature module
+│  │  │  ├─ components/   # Feature-specific components
+│  │  │  ├─ hooks/        # Feature-specific hooks
+│  │  │  ├─ pages/        # Feature pages
+│  │  │  ├─ services/     # API services
+│  │  │  ├─ store/        # State management
+│  │  │  └─ types.ts      # Feature-specific types
+│  ├─ components/         # Shared UI components
+│  ├─ layouts/            # Page layouts
+│  ├─ providers/          # Context providers
+│  ├─ routes/             # Application routing
+│  ├─ store/              # Global state management
+│  ├─ types/              # Global TypeScript types
+│  └─ ...
+├─ supabase/              # Supabase configuration and migrations
+└─ ...
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+## Acknowledgements
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+- [Supabase](https://supabase.io/)
+- [React](https://reactjs.org/)
+- [Vite](https://vitejs.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Radix UI](https://www.radix-ui.com/)
+- [LangChain](https://js.langchain.com/)
