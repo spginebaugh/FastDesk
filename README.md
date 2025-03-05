@@ -4,9 +4,11 @@ This project was created in 2-weeks as part of the GauntletAI program.
 
 FastDesk is a modern, AI-enhanced help desk and customer support platform built with React, TypeScript, and Supabase. It streamlines customer support operations with intelligent ticket management, AI-assisted responses, and comprehensive analytics.
 
-![Login Screen](./images/login_screen.png)
-
 ## Features
+
+### Supabase Auth
+
+![Login Screen](./images/login_screen.png)
 
 ### 🎫 Intelligent Ticket Management
 Efficiently manage support tickets with a comprehensive view of all customer issues, prioritization, and status tracking.
